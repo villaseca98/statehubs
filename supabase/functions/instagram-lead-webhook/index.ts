@@ -132,6 +132,58 @@ function mapLead(payload: Record<string, unknown>) {
   return data;
 }
 
+
+function mapInstagramMessage(text: string, senderId: string) {
+  const n = normalize(text);
+  let operation = "";
+  if (/\\b(vender|venta|vender mi|vender la)\\b/.test(n)) operation = "vender";
+  else if (/\\b(alquilar|alquiler|arrendar|rentar)\\b/.test(n)) operation = "alquilar";
+  else if (/\\b(comprar|compra|busco comprar|quiero comprar)\\b/.test(n)) operation = "comprar";
+
+  let budget = 0;
+  const budgetMatch = n.match(/(?:presupuesto|hasta|sobre|unos|aprox(?:imadamente)?)\\s*(?:de)?\\s*(\\d[\\d.,]*)\\s*(k|mil|euros?|eur|€)?|(?:€|eur)\\s*(\\d[\\d.,]*)/);
+  if (budgetMatch) {
+    const raw = budgetMatch[1] ?? budgetMatch[3] ?? "";
+    budget = asNumber(raw);
+    if (budgetMatch[2] === "k" || budgetMatch[2] === "mil") budget *= 1000;
+  }
+
+  let plazo = "";
+  if (/\\b(urgente|cuanto antes|este mes|proximo mes|pronto)\\b/.test(n)) plazo = "mes";
+  else if (/\\b(trimestre|3 meses|tres meses)\\b/.test(n)) plazo = "trimestre";
+  else if (/\\b(semestre|6 meses|seis meses)\\b/.test(n)) plazo = "semestre";
+
+  let financiacion = "";
+  if (/\\b(preaprobada|hipoteca aprobada|financiacion aprobada)\\b/.test(n)) financiacion = "preaprobada";
+  else if (/\\b(no necesito hipoteca|sin hipoteca|no necesito financiacion)\\b/.test(n)) financiacion = "no_necesita";
+  else if (/\\b(hipoteca en tramite|financiacion en tramite)\\b/.test(n)) financiacion = "en_tramite";
+
+  const email = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i)?.[0] ?? "";
+  const phone = text.match(/(?:\\+?\\d[\\d .()-]{7,}\\d)/)?.[0]?.trim() ?? "";
+  const data: Record<string, unknown> = {
+    nombre: "Contacto de Instagram",
+    telefono: phone,
+    email,
+    estado: "nuevo",
+    origen: "instagram",
+    fuente_lead: "instagram",
+    instagram_usuario: senderId,
+    notas: `Mensaje recibido por Instagram: ${text.slice(0, 1500)}`,
+    estado_cualificacion: "pendiente_datos",
+    contacto_autorizado: "pendiente",
+    siguiente_paso: "Revisar el mensaje y completar la cualificación con el canal autorizado",
+  };
+  if (operation) data.operacion_busca = operation;
+  if (budget > 0) data.presupuesto_max = budget;
+  if (plazo) data.plazo = plazo;
+  if (financiacion) data.financiacion = financiacion;
+  const { score, level } = qualify(data);
+  data.puntuacion_lead = score;
+  data.prioridad_comercial = level;
+  if (score >= 70) data.estado_cualificacion = "cualificado";
+  return data;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "GET") {
     const url = new URL(req.url);
@@ -156,13 +208,14 @@ Deno.serve(async (req) => {
   const accessToken = env("META_ACCESS_TOKEN");
   const pageId = env("META_PAGE_ID");
   const graphVersion = env("META_GRAPH_VERSION");
-  if (![url, serviceKey, appId, accessToken, pageId, graphVersion, env("META_VERIFY_TOKEN")].every(Boolean)) {
+  if (![url, serviceKey, appId, env("META_VERIFY_TOKEN")].every(Boolean)) {
     return json({ error: "Falta configuración del conector Meta en los secretos del servidor." }, 503);
   }
 
-  let event: { object?: string; entry?: { id?: string; changes?: { field?: string; value?: Record<string, unknown> }[] }[] };
+  let event: { object?: string; entry?: { id?: string; changes?: { field?: string; value?: Record<string, unknown> }[]; messaging?: { sender?: { id?: string }; message?: { mid?: string; text?: string; is_echo?: boolean } }[] }[] };
   try { event = JSON.parse(raw); } catch { return json({ error: "JSON no válido." }, 400); }
-  if (event.object !== "page" || !Array.isArray(event.entry)) return json({ received: true, ignored: true });
+  if (!Array.isArray(event.entry)) return json({ received: true, ignored: true });
+  if (event.object !== "page" && event.object !== "instagram") return json({ received: true, ignored: true });
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
   const { data: app } = await admin.from("crm_apps").select("id, current_version").eq("id", appId).maybeSingle();
