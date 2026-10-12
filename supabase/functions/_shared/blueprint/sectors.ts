@@ -127,7 +127,7 @@ export const SECTORS: SectorDef[] = [
         { key: 'siguiente_paso', label: 'Siguiente paso comercial', type: 'text', help: 'La acción concreta que debe ocurrir para avanzar este lead.' },
         { key: 'proximo_contacto', label: 'Próximo seguimiento', type: 'date', help: 'La vista Hoy lo señalará cuando toque o se retrase.' },
         { key: 'prioridad_comercial', label: 'Prioridad comercial', type: 'select', options: opts(['alta', 'Alta', 'red'], ['media', 'Media', 'amber'], ['baja', 'Baja', 'gray']) },
-        { key: 'fuente_lead', label: 'Origen del lead', type: 'select', options: opts(['instagram', 'Instagram', 'pink'], ['web', 'Web', 'teal'], ['portal', 'Portal inmobiliario', 'blue'], ['recomendacion', 'Recomendación', 'purple'], ['llamada', 'Llamada', 'gray'], ['otro', 'Otro', 'gray']) },
+        { key: 'fuente_lead', label: 'Origen del lead', type: 'select', options: opts(['instagram', 'Instagram', 'pink'], ['meta_ads', 'Meta Ads (Instagram/Facebook)', 'blue'], ['web', 'Web', 'teal'], ['portal', 'Portal inmobiliario', 'blue'], ['recomendacion', 'Recomendación', 'purple'], ['llamada', 'Llamada', 'gray'], ['otro', 'Otro', 'gray']) },
         { key: 'instagram_usuario', label: 'Usuario de Instagram', type: 'text', help: 'Nombre de usuario público, si el lead llega desde Instagram.' },
         { key: 'campana_instagram', label: 'Campaña de Instagram', type: 'text' },
         { key: 'estado_cualificacion', label: 'Cualificación', type: 'select', options: opts(['nuevo', 'Nuevo sin revisar', 'gray'], ['pendiente_datos', 'Faltan datos', 'amber'], ['cualificado', 'Cualificado', 'green'], ['no_cualificado', 'No cualificado', 'red']) },
