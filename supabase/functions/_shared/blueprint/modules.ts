@@ -1052,6 +1052,47 @@ const SAMPLES: Record<string, Record<string, unknown>[]> = {
   ],
 };
 
+// Every sample property has a photo of its own under public/demo.
+for (const r of SAMPLES.inmueble ?? []) r.foto ??= `/demo/inmuebles/${r.id}.jpg`;
+
+// A year behind the demo agency: finished stays in the tourist flats (busier
+// and dearer in summer) and the sales and rentals it closed, so the charts
+// and the past cases have something real to show. Same numbers every time.
+function history(): { reservas: Record<string, unknown>[]; operaciones: Record<string, unknown>[] } {
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const GUESTS = ['Lucas Moreau', 'Julia Becker', 'Tom Harris', 'Giulia Conti', 'Familia Navarro', 'Anna Kowalska', 'Pierre Laurent', 'Sara Lindqvist', 'Familia Romero', 'Oliver Smith', 'Marie Dupont', 'Jan de Vries', 'Laura Pons', 'Hannah Müller', 'Diego Santos', 'Emily Clark'];
+  const FLATS: [string, number, number][] = [['m-in5', 118, 45], ['m-in6', 95, 35], ['m-in7', 160, 60], ['m-in8', 240, 80]];
+  const reservas: Record<string, unknown>[] = [];
+  for (const [flat, night, clean] of FLATS) {
+    for (let back = 330; back > 14; back -= 1) {
+      if (rnd() > 0.08) continue;
+      const nights = 2 + Math.floor(rnd() * 6);
+      const d = new Date(); d.setDate(d.getDate() - back);
+      const summer = [5, 6, 7].includes(d.getMonth()) ? 1.45 : [3, 4, 8].includes(d.getMonth()) ? 1.15 : 0.85;
+      const canal = rnd() < 0.5 ? 'airbnb' : rnd() < 0.75 ? 'booking' : 'directa';
+      const importe = Math.round(night * summer * nights + clean);
+      reservas.push({
+        id: `m-rh${reservas.length + 1}`, huesped: GUESTS[Math.floor(rnd() * GUESTS.length)], alojamiento: flat, canal,
+        entrada: rel(-back), salida: rel(-back + nights), estado: 'finalizada', huespedes: 2 + Math.floor(rnd() * 3),
+        importe, comision: canal === 'directa' ? 0 : Math.round(importe * 0.15), gastos: clean, pago: 'cobrado',
+        ...(canal === 'directa' ? {} : { origen_sync: 'ical' }),
+      });
+      back -= nights + Math.floor(rnd() * 4);
+    }
+  }
+  const operaciones: Record<string, unknown>[] = [
+    ['Venta piso Benimaclet', 'compradores', 198000, 3, -300], ['Alquiler ático Ensanche', 'alquileres', 1350, 100, -270],
+    ['Venta casa Rocafort', 'compradores', 385000, 3, -240], ['Venta piso Campanar', 'compradores', 172000, 3, -190],
+    ['Alquiler piso Russafa', 'alquileres', 1100, 100, -150], ['Venta dúplex Patacona', 'compradores', 289000, 3, -110],
+    ['Venta piso Cabanyal', 'compradores', 154000, 3, -75], ['Alquiler estudio Centro', 'alquileres', 850, 100, -55],
+  ].map(([titulo, embudo, importe, comision, cierre], i) => ({ id: `m-oh${i + 1}`, titulo, embudo, etapa: 'cerrada', importe, comision, probabilidad: 100, agente: i % 2 ? 'm-pe-1' : 'm-pe-2', cierre: rel(cierre as number) }));
+  return { reservas, operaciones };
+}
+const past = history();
+SAMPLES.reserva.push(...past.reservas);
+SAMPLES.operacion.push(...past.operaciones);
+
 // Sample records for the entities a blueprint has, dropping links to entities it doesn't.
 export function sampleRecordsFor(bp: Blueprint): AppRecord[] {
   const out: AppRecord[] = [];

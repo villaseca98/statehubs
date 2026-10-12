@@ -33,6 +33,8 @@ export function themeVars(mode: ThemeMode = 'light'): CSSProperties {
     '--crm-nav-bg': s.colors.navBg,
     '--crm-nav-text': s.colors.navText,
     '--crm-nav-active': s.colors.navActive,
+    '--crm-soft': s.colors.soft,
+    '--crm-accent': s.colors.accent,
     '--crm-radius': `${s.radius}px`,
     '--crm-row': d.row,
     '--crm-font-size': d.font,

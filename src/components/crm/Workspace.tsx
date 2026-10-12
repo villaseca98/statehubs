@@ -20,7 +20,6 @@ import { useViewFilters } from './useViewFilters';
 import { CommandPalette } from './CommandPalette';
 import { HOY, hubsFor } from './hubs';
 import { AppLogo } from '@/components/brand/Logo';
-import { BRAND } from '@shared/blueprint/look.ts';
 
 // The app itself. No sidebar: the sections are grouped in a few hubs
 // (Hoy, Clientes, Inmuebles, Turístico, Empresa) in a floating bar at the
@@ -51,7 +50,7 @@ const ICON: Record<string, LucideIcon> = { table: Table2, kanban: Columns3, cale
 const HUB_ICON: Record<string, LucideIcon> = { hoy: Sun, clientes: Users, inmuebles: Building2, turistico: Palmtree, empresa: Briefcase };
 // Sections that get the filter bar (search, rules, sort, saved views).
 const FILTERED = new Set<string>(['table', 'kanban', 'worklist', 'calendar', 'cards']);
-const GRADIENT = `linear-gradient(135deg, ${BRAND.from}, ${BRAND.to})`;
+const GREEN = 'var(--crm-primary)';
 
 export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, onWebhook, onSyncIcal, tools = [], banner, now, className = '', appId }: WorkspaceProps) {
   const sections = useMemo(() => blueprint.views.filter((v) => v.type !== 'dashboard'), [blueprint.views]);
@@ -91,7 +90,6 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
   };
   const actions = useMemo(() => ({ createQuietly: onCreate, sendWebhook: onWebhook }), [onCreate, onWebhook]);
   const glass = { background: dark ? 'rgba(19,26,46,.72)' : 'rgba(255,255,255,.72)', border: '1px solid var(--crm-border)', backdropFilter: 'blur(18px) saturate(1.4)', WebkitBackdropFilter: 'blur(18px) saturate(1.4)' } as const;
-  const ink = dark ? '#ffffff' : BRAND.ink;
 
   // One element for the hub switcher: a pill in the top bar on a computer,
   // a dock at the bottom on a phone.
@@ -105,10 +103,10 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
         return (
           <button key={h.key} onClick={() => go(h.sections[0])} aria-current={active ? 'page' : undefined}
             className="relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-2 py-1.5 text-[0.72em] font-medium transition md:flex-none md:flex-row md:gap-1.5 md:rounded-full md:px-3.5 md:text-[0.95em]"
-            style={active ? { background: ink, color: dark ? BRAND.ink : '#fff' } : { color: 'var(--crm-muted)' }}>
-            <Icon className="h-[18px] w-[18px] md:h-4 md:w-4" style={active ? { color: dark ? BRAND.red : BRAND.light } : undefined} />
+            style={active ? { background: GREEN, color: '#fff' } : { color: 'var(--crm-muted)' }}>
+            <Icon className="h-[18px] w-[18px] md:h-4 md:w-4" style={active ? { color: 'var(--crm-accent)' } : undefined} />
             <span className="truncate">{h.label}</span>
-            {badge !== undefined && <span className="absolute right-1 top-0.5 rounded-full px-1.5 text-[10px] font-semibold leading-4 text-white md:static md:leading-[18px]" style={{ background: GRADIENT }}>{badge}</span>}
+            {badge !== undefined && <span className="absolute right-1 top-0.5 rounded-full px-1.5 text-[10px] font-semibold leading-4 text-white md:static md:leading-[18px]" style={{ background: GREEN }}>{badge}</span>}
           </button>
         );
       })}
@@ -120,8 +118,8 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
       <div className={`relative flex h-full min-h-0 flex-col overflow-hidden ${className}`} style={themeVars(mode)} data-app="statehubs" data-theme={mode}>
         {/* Soft brand light behind everything. */}
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -left-40 -top-56 h-[520px] w-[520px] rounded-full blur-3xl" style={{ background: BRAND.from, opacity: dark ? 0.16 : 0.1 }} />
-          <div className="absolute -right-40 -top-40 h-[460px] w-[460px] rounded-full blur-3xl" style={{ background: BRAND.to, opacity: dark ? 0.14 : 0.08 }} />
+          <div className="absolute -left-40 -top-56 h-[520px] w-[520px] rounded-full blur-3xl" style={{ background: '#7fb89c', opacity: dark ? 0.12 : 0.18 }} />
+          <div className="absolute -right-40 -top-40 h-[460px] w-[460px] rounded-full blur-3xl" style={{ background: 'var(--crm-accent)', opacity: dark ? 0.06 : 0.22 }} />
         </div>
 
         {banner}
@@ -154,13 +152,13 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
             <div className="mb-5 flex flex-wrap items-end gap-x-4 gap-y-3">
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2 text-[0.78em] font-semibold uppercase tracking-[0.16em]" style={{ color: 'var(--crm-muted)' }}>
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: GRADIENT }} />{hub.label}
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: GREEN }} />{hub.label}
                 </p>
-                <h1 className="mt-1 truncate text-[1.6em] font-semibold leading-tight tracking-tight md:text-[2em]">{view ? view.label : 'Hoy'}</h1>
+                <h1 className="mt-1 truncate text-[1.9em] font-normal leading-tight tracking-[-0.02em] md:text-[2.6em]">{view ? view.label : 'Hoy'}</h1>
               </div>
               {entity && (
-                <button onClick={() => create(entity.key)} className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(229,48,74,.35)] transition hover:-translate-y-px"
-                  style={{ background: GRADIENT }}>
+                <button onClick={() => create(entity.key)} className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(31,92,69,.28)] transition hover:-translate-y-px"
+                  style={{ background: GREEN }}>
                   <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Nuevo: {entity.label.toLowerCase()}</span><span className="sm:hidden">Nuevo</span>
                 </button>
               )}
@@ -176,7 +174,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
                       className="relative flex shrink-0 items-center gap-1.5 px-3 pb-2.5 pt-1 text-[0.95em] font-medium transition"
                       style={{ color: active ? 'var(--crm-text)' : 'var(--crm-muted)' }}>
                       <Icon className="h-4 w-4" /> {labelOf(key)}
-                      {active && <span className="absolute inset-x-2 -bottom-px h-[2px] rounded-full" style={{ background: GRADIENT }} />}
+                      {active && <span className="absolute inset-x-2 -bottom-px h-[2px] rounded-full" style={{ background: GREEN }} />}
                     </button>
                   );
                 })}
@@ -239,10 +237,10 @@ function ToolButton({ tool: t, dark }: { tool: Tool; dark: boolean }) {
   return (
     <button onClick={t.onClick} aria-label={t.label} title={t.label} aria-pressed={t.active || undefined}
       className={`relative inline-flex items-center gap-1.5 rounded-full p-2 text-[0.92em] font-medium transition hover:opacity-85 ${ai ? 'xl:px-3 xl:py-1.5' : ''}`}
-      style={ai ? { background: GRADIENT, color: '#fff' } : t.active ? { background: dark ? 'rgba(255,255,255,.1)' : 'rgba(11,16,32,.07)', color: 'var(--crm-text)' } : { color: 'var(--crm-muted)' }}>
+      style={ai ? { background: GREEN, color: '#fff' } : t.active ? { background: dark ? 'rgba(255,255,255,.1)' : 'rgba(11,16,32,.07)', color: 'var(--crm-text)' } : { color: 'var(--crm-muted)' }}>
       <Icon className="h-4 w-4" />
       {ai && <span className="hidden xl:inline">IA</span>}
-      {t.badge !== undefined && <span className="absolute -right-0.5 -top-0.5 rounded-full px-1 text-[10px] font-semibold leading-4 text-white" style={{ background: BRAND.red }}>{t.badge}</span>}
+      {t.badge !== undefined && <span className="absolute -right-0.5 -top-0.5 rounded-full px-1 text-[10px] font-semibold leading-4 text-white" style={{ background: GREEN }}>{t.badge}</span>}
     </button>
   );
 }

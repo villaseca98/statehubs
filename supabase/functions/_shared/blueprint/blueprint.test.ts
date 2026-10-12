@@ -4,7 +4,7 @@ import { diffBlueprints } from './diff.ts';
 import { runAgent, cleanSamples, MAX_ATTEMPTS } from './agent.ts';
 import type { CallModel, ContentBlock, ModelRequest } from './agent.ts';
 import { DEMO_APPS } from './samples.ts';
-import { BRAND, LOOK } from './look.ts';
+import { LOOK } from './look.ts';
 import { buildSlots } from './slots.ts';
 import { composeApp } from './modules.ts';
 import type { Blueprint } from './types.ts';
@@ -20,8 +20,10 @@ const base = (): Blueprint => {
 const full = (): Blueprint => clone(DEMO_APPS[0].blueprint);
 
 describe('look', () => {
-  it('is a single look with the brand red of the logo', () => {
-    expect(LOOK.colors.primary).toBe(BRAND.red);
+  it('is a single look: forest green on cream, with a lime accent', () => {
+    expect(LOOK.colors.primary).toBe('#1f5c45');
+    expect(LOOK.colors.bg).toBe('#f3f1eb');
+    expect(LOOK.colors.accent).toBe('#e4ec7c');
   });
 });
 
