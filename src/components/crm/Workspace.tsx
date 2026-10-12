@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { BrainCircuit, CalendarDays, Columns3, ListChecks, Menu, Plus, Sun, Table2, X } from 'lucide-react';
+import { BrainCircuit, CalendarDays, Columns3, LayoutDashboard, LayoutGrid, ListChecks, Menu, Plus, Sun, Table2, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { AppRecord, Blueprint, RecordData, View } from '@shared/blueprint/types.ts';
 import { computeToday } from '@/lib/crm/today';
@@ -10,6 +10,8 @@ import { WorklistView } from './WorklistView';
 import { AnalysisView } from './AnalysisView';
 import { RecordPanel } from './RecordPanel';
 import { TodayView } from './TodayView';
+import { OpsView } from './OpsView';
+import { CardsView } from './CardsView';
 import { RuntimeContext } from './runtimeContext';
 import { AppLogo } from '@/components/brand/Logo';
 import { BRAND } from '@shared/blueprint/look.ts';
@@ -34,16 +36,18 @@ export interface WorkspaceProps {
   className?: string;
 }
 
-const ICON: Record<string, LucideIcon> = { table: Table2, kanban: Columns3, calendar: CalendarDays, worklist: ListChecks, analysis: BrainCircuit };
+const ICON: Record<string, LucideIcon> = { table: Table2, kanban: Columns3, calendar: CalendarDays, worklist: ListChecks, analysis: BrainCircuit, ops: LayoutDashboard, cards: LayoutGrid };
 const HOY = 'hoy';
 
 export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, onWebhook, tools = [], banner, now, className = '' }: WorkspaceProps) {
   const sections = useMemo(() => blueprint.views.filter((v) => v.type !== 'dashboard'), [blueprint.views]);
-  const [section, setSection] = useState<string>(HOY);
+  // With an operations centre first, the app opens there and it replaces «Hoy».
+  const home = sections[0]?.type === 'ops' ? sections[0].key : HOY;
+  const [section, setSection] = useState<string>(home);
   const [openId, setOpenId] = useState<string | null>(null);
   const [menu, setMenu] = useState(false);
 
-  useEffect(() => { if (section !== HOY && !sections.some((v) => v.key === section)) setSection(HOY); }, [sections, section]);
+  useEffect(() => { if (section === HOY ? home !== HOY : !sections.some((v) => v.key === section)) setSection(home); }, [sections, section, home]);
   useEffect(() => { if (openId && !records.some((r) => r.id === openId)) setOpenId(null); }, [records, openId]);
 
   const view: View | null = sections.find((v) => v.key === section) ?? null;
@@ -61,7 +65,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
 
   const nav = (
     <nav aria-label="Secciones" className="flex flex-col gap-0.5">
-      <NavButton icon={Sun} label="Hoy" active={section === HOY} badge={pending || undefined} onClick={() => go(HOY)} />
+      {home === HOY && <NavButton icon={Sun} label="Hoy" active={section === HOY} badge={pending || undefined} onClick={() => go(HOY)} />}
       {sections.map((v) => <NavButton key={v.key} icon={ICON[v.type] ?? Table2} label={v.label} active={section === v.key} onClick={() => go(v.key)} />)}
     </nav>
   );
@@ -121,7 +125,9 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
               <AnalysisView blueprint={blueprint} view={view} records={records} dark={false} titleOf={titleOf} selectedId={openId}
                 onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
             )}
-            {view && view.type !== 'worklist' && view.type !== 'analysis' && (
+            {view && view.type === 'ops' && <OpsView blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
+            {view && view.type === 'cards' && <CardsView blueprint={blueprint} view={view} records={records} titleOf={titleOf} onOpen={(r) => setOpenId(r.id)} />}
+            {view && !['worklist', 'analysis', 'ops', 'cards'].includes(view.type) && (
               <ViewBody blueprint={blueprint} view={view} records={records} dark={false} titleOf={titleOf} selectedId={openId}
                 onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
             )}
