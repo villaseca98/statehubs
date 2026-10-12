@@ -35,6 +35,7 @@ begin
  ('crm-property-media','22222222-2222-4222-8222-222222222222/44444444-4444-4444-8444-444444444444/66666666-6666-4666-8666-666666666666.pdf');
 end $test$;
 
+select set_config('test.other_org', (select org_id::text from public.crm_apps where id='22222222-2222-4222-8222-222222222222'),true);
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',true);
 -- Agency A owner must never see or modify B.
@@ -80,13 +81,19 @@ begin
  exception when raise_exception then
   if sqlerrm='Owner invoked B RPC' then raise; end if;
  end;
- select id into other_org from public.crm_organizations where owner_id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+ other_org := current_setting('test.other_org')::uuid;
  -- SECURITY DEFINER helper visibility must not permit management.
  begin
   perform public.crm_set_org_member(other_org,'cccccccc-cccc-4ccc-8ccc-cccccccccccc','admin');
   raise exception 'Cross-agency membership granted';
  exception when raise_exception then
   if sqlerrm='Cross-agency membership granted' then raise; end if;
+ end;
+begin
+  perform public.crm_remove_org_member(other_org,'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+  raise exception 'Cross-agency member removal succeeded';
+ exception when raise_exception then
+  if sqlerrm='Cross-agency member removal succeeded' then raise; end if;
  end;
 end $test$;
 
