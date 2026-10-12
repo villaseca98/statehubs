@@ -10,7 +10,7 @@ function Tile({ icon: Icon, kicker, title, text, children, className = '', delay
 }) {
   return (
     <Reveal delay={delay} className={className}>
-      <figure className={`group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-estate-line bg-white p-5 shadow-[0_1px_2px_rgba(19,42,30,.04)] transition duration-500 hover:shadow-[0_30px_60px_-34px_rgba(19,42,30,.45)] sm:p-6 ${side ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2.1fr)] lg:items-center lg:gap-8' : ''}`}>
+      <figure className={`group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-estate-line bg-white p-5 shadow-[0_1px_2px_rgba(19,42,30,.04)] transform-gpu transition-all duration-500 hover:-translate-y-2 hover:rotate-[.3deg] hover:border-estate-sage hover:shadow-[0_42px_75px_-34px_rgba(19,42,30,.42)] motion-reduce:transform-none sm:p-6 ${side ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2.1fr)] lg:items-center lg:gap-8' : ''}`}>
         <figcaption className="relative">
           <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-estate-moss">
             <span className="grid h-7 w-7 place-items-center rounded-full bg-estate-forest text-estate-lime"><Icon className="h-3.5 w-3.5" /></span>{kicker}
