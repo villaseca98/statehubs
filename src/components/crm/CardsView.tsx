@@ -4,6 +4,7 @@ import type { AppRecord, Blueprint, Field, View } from '@shared/blueprint/types.
 import { chipStyle, formatValue, titleOfRecord } from './theme';
 import { Cell } from './views';
 import { photoOf } from '@/lib/crm/estate';
+import { PropertyCover } from './PropertyCover';
 
 // Fichas: a gallery of records with a cover photo (imageField), a status badge
 // (groupBy), the title, the price and the fields in `columns`. Made for the
@@ -105,7 +106,7 @@ export function CardsView({ blueprint, view, records, titleOf, onOpen }: Props) 
                 <button onClick={() => onOpen(r)} aria-label={title}
                   className="group flex h-full w-full flex-col overflow-hidden text-left transition hover:-translate-y-0.5 hover:shadow-lg" style={card}>
                   <div className="relative aspect-[16/10] w-full overflow-hidden">
-                    <Cover src={photoOf(img) || undefined} label={ref || type || entity.label} sub={ref ? type : undefined} />
+                    <PropertyCover value={r.data.statehubs_media} alt={title} fallback={<Cover src={photoOf(img) || undefined} label={ref || type || entity.label} sub={ref ? type : undefined} />} />
                     {badge && <span className="absolute left-3 top-3 rounded-full px-2.5 py-0.5 text-[0.8em] font-semibold shadow-sm" style={chipStyle(badge.color, false)}>{badge.label}</span>}
                     {price && photoOf(img) && <span className="absolute bottom-3 left-3 rounded-full px-3 py-1 text-[0.95em] font-semibold tabular-nums shadow-sm" style={{ background: 'rgba(255,255,255,.92)', color: '#15231b' }}>{price}</span>}
                   </div>
