@@ -232,7 +232,7 @@ export const LIBRARY: Record<string, Entity> = {
       { key: 'referencia', label: 'Referencia', type: 'text' },
       { key: 'direccion', label: 'Dirección', type: 'text', required: true },
       { key: 'tipo', label: 'Tipo', type: 'select', options: opts(['piso', 'Piso', 'blue'], ['casa', 'Casa o chalet', 'green'], ['atico', 'Ático', 'purple'], ['local', 'Local', 'amber'], ['oficina', 'Oficina', 'gray'], ['garaje', 'Garaje', 'gray'], ['terreno', 'Terreno', 'teal']) },
-      { key: 'operacion', label: 'Operación', type: 'select', options: opts(['venta', 'Venta', 'blue'], ['alquiler', 'Alquiler', 'teal']) },
+      { key: 'operacion', label: 'Operación', type: 'select', options: opts(['venta', 'Venta', 'blue'], ['alquiler', 'Alquiler', 'teal'], ['turistico', 'Alquiler turístico', 'pink']) },
       { key: 'estado', label: 'Estado', type: 'select', options: opts(['captacion', 'En captación', 'gray'], ['disponible', 'Disponible', 'blue'], ['reservado', 'Reservado', 'amber'], ['vendido', 'Vendido', 'green'], ['alquilado', 'Alquilado', 'teal'], ['retirado', 'Retirado', 'red']) },
       { key: 'precio', label: 'Precio', type: 'money' },
       { key: 'metros', label: 'm²', type: 'number' },
@@ -243,6 +243,16 @@ export const LIBRARY: Record<string, Entity> = {
       { key: 'exclusiva', label: 'En exclusiva', type: 'boolean' },
       { key: 'propietario', label: 'Propietario', type: 'relation', relation: 'cliente' },
       { key: 'captado', label: 'Captado el', type: 'date' },
+      { key: 'foto', label: 'Foto', type: 'url', help: 'Enlace a la foto principal.' },
+      { key: 'agente', label: 'Agente', type: 'relation', relation: 'persona' },
+      { key: 'capacidad', label: 'Huéspedes', type: 'number' },
+      { key: 'licencia', label: 'Licencia turística', type: 'text' },
+      { key: 'precio_noche', label: 'Precio por noche', type: 'money' },
+      { key: 'tarifa_limpieza', label: 'Tarifa de limpieza', type: 'money' },
+      { key: 'airbnb_url', label: 'Anuncio en Airbnb', type: 'url' },
+      { key: 'booking_url', label: 'Anuncio en Booking', type: 'url' },
+      { key: 'ical_airbnb', label: 'Calendario iCal de Airbnb', type: 'url', help: 'Airbnb → Calendario → Exportar calendario. Las reservas se importan solas.' },
+      { key: 'ical_booking', label: 'Calendario iCal de Booking', type: 'url', help: 'Extranet de Booking → Tarifas y disponibilidad → Sincronizar calendarios.' },
       { key: 'notas', label: 'Notas', type: 'longtext' },
     ],
   },
@@ -299,6 +309,110 @@ export const LIBRARY: Record<string, Entity> = {
       { key: 'categoria', label: 'Categoría', type: 'select', options: opts(['alquiler', 'Alquiler', 'blue'], ['suministros', 'Suministros', 'teal'], ['marketing', 'Marketing', 'pink'], ['personal', 'Personal', 'purple'], ['otros', 'Otros', 'gray']) },
       { key: 'importe', label: 'Importe', type: 'money' },
       { key: 'deducible', label: 'Deducible', type: 'boolean' },
+    ],
+  },
+  contacto_inmo: {
+    key: 'contacto_inmo', label: 'Contacto', labelPlural: 'Contactos', titleField: 'nombre',
+    fields: [
+      { key: 'nombre', label: 'Nombre', type: 'text', required: true },
+      { key: 'apellidos', label: 'Apellidos', type: 'text' },
+      { key: 'telefono', label: 'Teléfono', type: 'phone' },
+      { key: 'email', label: 'Email', type: 'email' },
+      { key: 'tipo', label: 'Es', type: 'select', options: opts(['comprador', 'Comprador', 'blue'], ['vendedor', 'Vendedor', 'pink'], ['propietario', 'Propietario', 'purple'], ['inversor', 'Inversor', 'green'], ['arrendatario', 'Inquilino', 'teal'], ['colaborador', 'Colaborador', 'amber'], ['huesped', 'Huésped', 'gray']) },
+      { key: 'temperatura', label: 'Temperatura', type: 'select', required: true, options: opts(['caliente', 'Caliente', 'red'], ['templado', 'Templado', 'amber'], ['frio', 'Frío', 'blue'], ['cerrado', 'Cerrado', 'green'], ['descartado', 'Descartado', 'gray']) },
+      { key: 'proxima_accion', label: 'Próxima acción', type: 'text' },
+      { key: 'seguimiento', label: 'Seguimiento', type: 'datetime' },
+      { key: 'presupuesto', label: 'Presupuesto', type: 'money' },
+      { key: 'zonas', label: 'Zonas', type: 'text' },
+      { key: 'tipo_deseado', label: 'Busca', type: 'select', options: opts(['piso', 'Piso', 'blue'], ['casa', 'Casa o chalet', 'green'], ['atico', 'Ático', 'purple'], ['local', 'Local', 'amber'], ['oficina', 'Oficina', 'gray'], ['terreno', 'Terreno', 'teal']) },
+      { key: 'habitaciones_min', label: 'Habitaciones mínimas', type: 'number' },
+      { key: 'metros_min', label: 'm² mínimos', type: 'number' },
+      { key: 'origen', label: 'Origen', type: 'select', options: opts(['idealista', 'Idealista', 'green'], ['fotocasa', 'Fotocasa', 'blue'], ['web', 'Web', 'teal'], ['instagram', 'Instagram', 'pink'], ['recomendacion', 'Recomendación', 'purple'], ['cartel', 'Cartel', 'amber'], ['llamada', 'Llamada', 'gray'], ['airbnb', 'Airbnb', 'red'], ['booking', 'Booking', 'blue']) },
+      { key: 'agente', label: 'Agente', type: 'relation', relation: 'persona' },
+      { key: 'prioridad', label: 'Prioridad', type: 'select', options: opts(['alta', 'Alta', 'red'], ['media', 'Media', 'amber'], ['baja', 'Baja', 'gray']) },
+      { key: 'alta', label: 'Alta', type: 'date' },
+      { key: 'notas', label: 'Notas', type: 'longtext' },
+    ],
+  },
+  operacion: {
+    key: 'operacion', label: 'Operación', labelPlural: 'Operaciones', titleField: 'titulo',
+    fields: [
+      { key: 'titulo', label: 'Operación', type: 'text', required: true },
+      { key: 'embudo', label: 'Embudo', type: 'select', options: opts(['compradores', 'Compradores', 'blue'], ['vendedores', 'Vendedores', 'pink'], ['captacion', 'Captación', 'purple'], ['alquileres', 'Alquileres', 'teal']) },
+      { key: 'etapa', label: 'Etapa', type: 'select', required: true, options: opts(['lead_nuevo', 'Lead nuevo', 'gray'], ['contactado', 'Contactado', 'blue'], ['cualificado', 'Cualificado', 'teal'], ['visita', 'Visita', 'purple'], ['negociacion', 'Negociación', 'amber'], ['oferta', 'Oferta', 'pink'], ['cerrada', 'Cerrada', 'green'], ['perdida', 'Perdida', 'red']) },
+      { key: 'contacto', label: 'Contacto', type: 'relation', relation: 'contacto_inmo' },
+      { key: 'inmueble', label: 'Inmueble', type: 'relation', relation: 'inmueble' },
+      { key: 'importe', label: 'Importe', type: 'money' },
+      { key: 'comision', label: 'Comisión', type: 'percent' },
+      { key: 'probabilidad', label: 'Probabilidad', type: 'percent' },
+      { key: 'agente', label: 'Agente', type: 'relation', relation: 'persona' },
+      { key: 'cierre', label: 'Cierre previsto', type: 'date' },
+      { key: 'motivo_perdida', label: 'Por qué se perdió', type: 'select', options: opts(['precio', 'Precio', 'red'], ['financiacion', 'Financiación', 'amber'], ['otra_agencia', 'Otra agencia', 'purple'], ['no_encaja', 'No encaja', 'gray'], ['sin_respuesta', 'Sin respuesta', 'blue']) },
+      { key: 'notas', label: 'Notas', type: 'longtext' },
+    ],
+  },
+  cita_inmo: {
+    key: 'cita_inmo', label: 'Cita', labelPlural: 'Agenda', titleField: 'titulo',
+    fields: [
+      { key: 'titulo', label: 'Cita', type: 'text', required: true },
+      { key: 'tipo', label: 'Tipo', type: 'select', options: opts(['visita', 'Visita', 'purple'], ['captacion', 'Captación', 'pink'], ['firma', 'Firma', 'green'], ['llamada', 'Llamada', 'blue'], ['tasacion', 'Tasación', 'amber']) },
+      { key: 'cuando', label: 'Cuándo', type: 'datetime', required: true },
+      { key: 'contacto', label: 'Contacto', type: 'relation', relation: 'contacto_inmo' },
+      { key: 'inmueble', label: 'Inmueble', type: 'relation', relation: 'inmueble' },
+      { key: 'agente', label: 'Agente', type: 'relation', relation: 'persona' },
+      { key: 'resultado', label: 'Resultado', type: 'select', options: opts(['pendiente', 'Pendiente', 'gray'], ['interesa', 'Le interesa', 'green'], ['no_encaja', 'No encaja', 'red'], ['oferta', 'Hace oferta', 'purple'], ['hecha', 'Hecha', 'blue']) },
+      { key: 'notas', label: 'Notas', type: 'longtext' },
+    ],
+  },
+  reserva: {
+    key: 'reserva', label: 'Reserva', labelPlural: 'Reservas', titleField: 'huesped',
+    fields: [
+      { key: 'huesped', label: 'Huésped', type: 'text', required: true },
+      { key: 'alojamiento', label: 'Alojamiento', type: 'relation', relation: 'inmueble', required: true },
+      { key: 'canal', label: 'Canal', type: 'select', options: opts(['airbnb', 'Airbnb', 'red'], ['booking', 'Booking', 'blue'], ['directa', 'Directa', 'green'], ['otro', 'Otro', 'gray']) },
+      { key: 'entrada', label: 'Entrada', type: 'date', required: true },
+      { key: 'salida', label: 'Salida', type: 'date', required: true },
+      { key: 'estado', label: 'Estado', type: 'select', required: true, options: opts(['confirmada', 'Confirmada', 'blue'], ['en_casa', 'En la casa', 'purple'], ['finalizada', 'Finalizada', 'green'], ['cancelada', 'Cancelada', 'red'], ['bloqueo', 'Bloqueo', 'gray']) },
+      { key: 'huespedes', label: 'Huéspedes', type: 'number' },
+      { key: 'importe', label: 'Importe', type: 'money' },
+      { key: 'comision', label: 'Comisión del canal', type: 'money' },
+      { key: 'gastos', label: 'Gastos', type: 'money', help: 'Limpieza, lavandería, suministros…' },
+      { key: 'pago', label: 'Pago', type: 'select', options: opts(['pendiente', 'Pendiente', 'amber'], ['parcial', 'Parcial', 'purple'], ['cobrado', 'Cobrado', 'green'], ['sin_dato', 'Sin dato', 'gray']) },
+      { key: 'localizador', label: 'Localizador', type: 'text' },
+      { key: 'telefono', label: 'Teléfono', type: 'phone' },
+      { key: 'email', label: 'Email', type: 'email' },
+      { key: 'llegada', label: 'Hora de llegada', type: 'text' },
+      { key: 'ref_externa', label: 'Referencia del canal', type: 'text', help: 'La pone la sincronización iCal; no la cambies.' },
+      { key: 'origen_sync', label: 'Origen', type: 'select', options: opts(['manual', 'A mano', 'gray'], ['ical', 'Calendario iCal', 'teal']) },
+      { key: 'notas', label: 'Notas', type: 'longtext' },
+    ],
+  },
+  servicio: {
+    key: 'servicio', label: 'Servicio', labelPlural: 'Limpiezas y tareas', titleField: 'titulo',
+    fields: [
+      { key: 'titulo', label: 'Tarea', type: 'text', required: true },
+      { key: 'tipo', label: 'Tipo', type: 'select', options: opts(['limpieza', 'Limpieza', 'teal'], ['check_in', 'Check-in', 'blue'], ['check_out', 'Check-out', 'purple'], ['mantenimiento', 'Mantenimiento', 'amber'], ['revision', 'Revisión', 'gray']) },
+      { key: 'alojamiento', label: 'Alojamiento', type: 'relation', relation: 'inmueble' },
+      { key: 'reserva', label: 'Reserva', type: 'relation', relation: 'reserva' },
+      { key: 'fecha', label: 'Cuándo', type: 'datetime' },
+      { key: 'responsable', label: 'Responsable', type: 'relation', relation: 'persona' },
+      { key: 'estado', label: 'Estado', type: 'select', required: true, options: opts(['pendiente', 'Pendiente', 'gray'], ['asignada', 'Asignada', 'blue'], ['hecha', 'Hecha', 'green'], ['problema', 'Con problema', 'red']) },
+      { key: 'coste', label: 'Coste', type: 'money' },
+      { key: 'checklist', label: 'Checklist (uno por línea)', type: 'longtext' },
+      { key: 'notas', label: 'Notas', type: 'longtext' },
+    ],
+  },
+  incidencia: {
+    key: 'incidencia', label: 'Incidencia', labelPlural: 'Incidencias', titleField: 'asunto',
+    fields: [
+      { key: 'asunto', label: 'Asunto', type: 'text', required: true },
+      { key: 'alojamiento', label: 'Alojamiento', type: 'relation', relation: 'inmueble' },
+      { key: 'prioridad', label: 'Prioridad', type: 'select', options: opts(['alta', 'Alta', 'red'], ['media', 'Media', 'amber'], ['baja', 'Baja', 'gray']) },
+      { key: 'estado', label: 'Estado', type: 'select', required: true, options: opts(['abierta', 'Abierta', 'red'], ['en_curso', 'En curso', 'amber'], ['resuelta', 'Resuelta', 'green']) },
+      { key: 'responsable', label: 'Responsable', type: 'relation', relation: 'persona' },
+      { key: 'abierta', label: 'Abierta el', type: 'date' },
+      { key: 'coste', label: 'Coste', type: 'money' },
+      { key: 'notas', label: 'Notas', type: 'longtext' },
     ],
   },
 };
@@ -488,6 +602,81 @@ export const MODULES: ModuleDef[] = [
     }],
   },
   {
+    key: 'centro', kinds: ['crm'], name: 'Centro de operaciones', icon: 'LayoutDashboard',
+    pitch: 'Lo que pasa hoy: entradas, salidas, limpiezas, visitas, operaciones abiertas y avisos.',
+    entities: [],
+    views: [{ key: 'centro', label: 'Centro de operaciones', type: 'ops' }],
+  },
+  {
+    key: 'contactos_inmo', kinds: ['crm'], name: 'Contactos', icon: 'Users',
+    pitch: 'Compradores, vendedores, propietarios e inversores con su temperatura y su próxima acción.',
+    entities: ['contacto_inmo'],
+    views: [{
+      key: 'contactos_inmo', label: 'Contactos', type: 'worklist', entity: 'contacto_inmo', groupBy: 'temperatura', columns: ['tipo', 'proxima_accion', 'seguimiento', 'presupuesto', 'zonas', 'origen'],
+      actions: [
+        { kind: 'call', label: 'Llamar', field: 'telefono', when: ['caliente', 'templado', 'frio'] },
+        { kind: 'whatsapp', label: 'WhatsApp', field: 'telefono', when: ['caliente', 'templado', 'frio'] },
+        { kind: 'email', label: 'Escribir', field: 'email', when: ['caliente', 'templado', 'frio'] },
+        { kind: 'schedule', label: 'Agendar seguimiento', field: 'seguimiento', when: ['caliente', 'templado', 'frio'] },
+        { kind: 'move', label: 'Caliente', to: 'caliente', when: ['templado', 'frio'] },
+        { kind: 'move', label: 'Enfriar', to: 'frio', when: ['caliente', 'templado'] },
+        { kind: 'move', label: 'Descartar', to: 'descartado', when: ['caliente', 'templado', 'frio'] },
+        { kind: 'move', label: 'Recuperar', to: 'templado', when: ['descartado', 'cerrado'] },
+      ],
+      availability: HOURS,
+    }],
+  },
+  {
+    key: 'operaciones_inmo', kinds: ['crm'], name: 'Operaciones', icon: 'Filter',
+    pitch: 'Compradores, vendedores, captación y alquileres por etapas, con importe y comisión.',
+    entities: ['operacion'],
+    views: [{ key: 'pipeline', label: 'Operaciones', type: 'kanban', entity: 'operacion', groupBy: 'etapa', sumField: 'importe' }],
+  },
+  {
+    key: 'cartera', kinds: ['crm'], name: 'Cartera de inmuebles', icon: 'Building2',
+    pitch: 'Venta, alquiler y turísticos en fichas con foto, precio, estado y agente.',
+    entities: ['inmueble'],
+    views: [{ key: 'cartera', label: 'Inmuebles', type: 'cards', entity: 'inmueble', imageField: 'foto', groupBy: 'estado', columns: ['operacion', 'precio', 'zona', 'habitaciones', 'metros', 'agente'] }],
+  },
+  {
+    key: 'agenda_inmo', kinds: ['crm'], name: 'Agenda', icon: 'CalendarDays',
+    pitch: 'Visitas, captaciones, tasaciones y firmas de todo el equipo.',
+    entities: ['cita_inmo'],
+    views: [{ key: 'agenda_inmo', label: 'Agenda', type: 'calendar', entity: 'cita_inmo', dateField: 'cuando' }],
+  },
+  {
+    key: 'turistico', kinds: ['crm'], name: 'Alquiler turístico', icon: 'Palmtree',
+    pitch: 'Calendario de reservas por alojamiento, ingresos netos, limpiezas e incidencias. Airbnb y Booking por iCal.',
+    entities: ['reserva', 'servicio', 'incidencia'],
+    views: [
+      { key: 'calendario', label: 'Calendario', type: 'timeline', entity: 'reserva', rowField: 'alojamiento', startField: 'entrada', endField: 'salida', groupBy: 'canal' },
+      { key: 'reservas', label: 'Reservas', type: 'table', entity: 'reserva', columns: ['huesped', 'alojamiento', 'canal', 'entrada', 'salida', 'estado', 'importe', 'pago'] },
+      {
+        key: 'limpiezas', label: 'Limpiezas y tareas', type: 'worklist', entity: 'servicio', groupBy: 'estado', columns: ['tipo', 'alojamiento', 'fecha', 'responsable'],
+        actions: [
+          { kind: 'move', label: 'Asignar', to: 'asignada', when: ['pendiente'] },
+          { kind: 'move', label: 'Hecha', to: 'hecha', when: ['pendiente', 'asignada', 'problema'] },
+          { kind: 'move', label: 'Hay un problema', to: 'problema', when: ['pendiente', 'asignada'] },
+          { kind: 'move', label: 'Reabrir', to: 'pendiente', when: ['hecha'] },
+        ],
+      },
+      {
+        key: 'incidencias', label: 'Incidencias', type: 'worklist', entity: 'incidencia', groupBy: 'estado', columns: ['alojamiento', 'prioridad', 'responsable', 'abierta'],
+        actions: [
+          { kind: 'move', label: 'Empezar', to: 'en_curso', when: ['abierta'] },
+          { kind: 'move', label: 'Resuelta', to: 'resuelta', when: ['abierta', 'en_curso'] },
+          { kind: 'move', label: 'Reabrir', to: 'abierta', when: ['resuelta'] },
+        ],
+      },
+    ],
+  },
+  {
+    key: 'equipo', kinds: ['crm'], name: 'Equipo', icon: 'UserRound',
+    pitch: 'Agentes, limpieza y mantenimiento: a quién se asigna cada cosa.',
+    entities: ['persona'],
+    views: [{ key: 'agentes', label: 'Equipo', type: 'table', entity: 'persona', columns: ['nombre', 'puesto', 'area', 'telefono', 'email'] }],
+  },
+  {
     key: 'analisis', kinds: ['crm', 'erp'], name: 'Análisis de datos', icon: 'BrainCircuit',
     pitch: 'Puntúa tus leads, prevé lo que vas a cerrar y te dice qué tipo de cliente se gana y cuál se pierde.',
     entities: [],
@@ -507,6 +696,20 @@ export const STARTER: Record<AppKind, string[]> = {
 };
 
 // Widgets each entity contributes to the "Cifras clave" panel.
+// What the agency does decides the pieces it starts with. Everything is one
+// app: the same contacts, properties and team serve sales and tourist rentals.
+export type PackKey = 'compraventa' | 'turistico' | 'ambos';
+export const PACKS: { key: PackKey; name: string; pitch: string; modules: string[] }[] = [
+  { key: 'compraventa', name: 'Compraventa', pitch: 'Captación, compradores, vendedores, visitas y cierres.', modules: ['centro', 'contactos_inmo', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'equipo', 'analisis', 'documentos'] },
+  { key: 'turistico', name: 'Alquiler turístico', pitch: 'Reservas de Airbnb y Booking, calendario, limpiezas e ingresos.', modules: ['centro', 'turistico', 'cartera', 'contactos_inmo', 'equipo', 'analisis'] },
+  { key: 'ambos', name: 'Las dos cosas', pitch: 'Vendes, alquilas y gestionas pisos turísticos.', modules: ['centro', 'contactos_inmo', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'turistico', 'equipo', 'analisis', 'documentos'] },
+];
+// The pieces an agency picks from; the older generic ones stay available under «Más piezas».
+const AGENCY = ['centro', 'contactos_inmo', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'turistico', 'equipo', 'analisis', 'documentos', 'automatizaciones', 'gastos'];
+export const agencyModules = () => AGENCY.map((k) => MODULES.find((m) => m.key === k)!);
+export const extraModules = () => MODULES.filter((m) => !AGENCY.includes(m.key));
+export const composePack = (pack: PackKey, name: string) => composeApp('crm', name, PACKS.find((p) => p.key === pack)?.modules ?? PACKS[2].modules);
+
 const PANEL: Record<string, DashboardWidget[]> = {
   lead: [{ kind: 'metric', label: 'Leads', entity: 'lead', agg: 'count' }, { kind: 'bars', label: 'Leads por estado', entity: 'lead', agg: 'count', groupBy: 'estado' }],
   oportunidad: [{ kind: 'metric', label: 'En el embudo', entity: 'oportunidad', agg: 'sum', field: 'importe' }, { kind: 'bars', label: 'Importe por etapa', entity: 'oportunidad', agg: 'sum', field: 'importe', groupBy: 'etapa' }],
@@ -524,6 +727,9 @@ const PANEL: Record<string, DashboardWidget[]> = {
   inmueble: [{ kind: 'metric', label: 'En cartera', entity: 'inmueble', agg: 'sum', field: 'precio' }, { kind: 'bars', label: 'Inmuebles por estado', entity: 'inmueble', agg: 'count', groupBy: 'estado' }],
   visita: [{ kind: 'metric', label: 'Visitas', entity: 'visita', agg: 'count' }],
   movimiento: [{ kind: 'bars', label: 'Movimientos por tipo', entity: 'movimiento', agg: 'sum', field: 'cantidad', groupBy: 'tipo' }],
+  operacion: [{ kind: 'metric', label: 'En operaciones', entity: 'operacion', agg: 'sum', field: 'importe' }, { kind: 'bars', label: 'Operaciones por etapa', entity: 'operacion', agg: 'count', groupBy: 'etapa' }],
+  reserva: [{ kind: 'metric', label: 'Reservado', entity: 'reserva', agg: 'sum', field: 'importe' }, { kind: 'bars', label: 'Ingresos por canal', entity: 'reserva', agg: 'sum', field: 'importe', groupBy: 'canal' }],
+  contacto_inmo: [{ kind: 'metric', label: 'Contactos', entity: 'contacto_inmo', agg: 'count' }, { kind: 'bars', label: 'Por temperatura', entity: 'contacto_inmo', agg: 'count', groupBy: 'temperatura' }],
   contacto: [{ kind: 'metric', label: 'Contactos', entity: 'contacto', agg: 'count' }, { kind: 'bars', label: 'Consentimiento RGPD', entity: 'contacto', agg: 'count', groupBy: 'consentimiento' }],
 };
 
@@ -531,8 +737,8 @@ const clone = <T>(x: T): T => JSON.parse(JSON.stringify(x));
 export const getModule = (key: string) => MODULES.find((m) => m.key === key);
 // Order of the cards and of the panels on the page: what each kind of business looks at first.
 const ORDER: Record<AppKind, string[]> = {
-  crm: ['panel', 'analisis', 'leads', 'inmuebles', 'visitas', 'embudo', 'agenda', 'contactos', 'clientes', 'presupuestos', 'soporte', 'operaciones', 'proyectos', 'documentos', 'automatizaciones', 'facturas', 'pedidos', 'inventario', 'movimientos', 'compras', 'gastos'],
-  erp: ['panel', 'analisis', 'facturas', 'pedidos', 'inventario', 'movimientos', 'clientes', 'compras', 'gastos', 'operaciones', 'presupuestos', 'proyectos', 'contactos', 'documentos', 'automatizaciones', 'agenda', 'leads', 'embudo', 'inmuebles', 'visitas', 'soporte'],
+  crm: ['centro', 'contactos_inmo', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'turistico', 'equipo', 'panel', 'analisis', 'leads', 'inmuebles', 'visitas', 'embudo', 'agenda', 'contactos', 'clientes', 'presupuestos', 'soporte', 'operaciones', 'proyectos', 'documentos', 'automatizaciones', 'facturas', 'pedidos', 'inventario', 'movimientos', 'compras', 'gastos'],
+  erp: ['panel', 'analisis', 'facturas', 'pedidos', 'inventario', 'movimientos', 'clientes', 'compras', 'gastos', 'operaciones', 'presupuestos', 'proyectos', 'contactos', 'documentos', 'automatizaciones', 'agenda', 'leads', 'embudo', 'inmuebles', 'visitas', 'soporte', 'centro', 'contactos_inmo', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'turistico', 'equipo'],
 };
 const rankIn = (kind: AppKind, key: string) => { const i = ORDER[kind].indexOf(key); return i < 0 ? ORDER[kind].length : i; };
 export const modulesFor = (kind: AppKind) => MODULES.filter((m) => m.kinds.includes(kind)).sort((a, b) => rankIn(kind, a.key) - rankIn(kind, b.key));
@@ -731,6 +937,7 @@ const SAMPLES: Record<string, Record<string, unknown>[]> = {
     { id: 'm-pe-1', nombre: 'Laura Martí', puesto: 'Gerente', area: 'administracion', telefono: '600 112 233', email: 'laura@miempresa.es' },
     { id: 'm-pe-2', nombre: 'Iván Soler', puesto: 'Comercial', area: 'ventas', telefono: '600 445 566', email: 'ivan@miempresa.es' },
     { id: 'm-pe-3', nombre: 'Sara Peris', puesto: 'Operaciones', area: 'operaciones', telefono: '600 778 899', email: 'sara@miempresa.es' },
+    { id: 'm-pe-4', nombre: 'Rosa Gil', puesto: 'Limpieza y check-in', area: 'operaciones', telefono: '600 334 455', email: 'rosa@miempresa.es' },
   ],
   proceso: [
     { id: 'm-ps1', nombre: 'Alta de cliente nuevo', area: 'ventas', estado: 'activo', frecuencia: 'cada_cliente', pasos: 'Pedir NIF y datos de facturación\nEnviar contrato para firmar\nDar de alta en facturación\nLlamada de bienvenida' },
@@ -754,10 +961,14 @@ const SAMPLES: Record<string, Record<string, unknown>[]> = {
     { id: 'm-au2', nombre: 'Factura cobrada → contabilidad', seccion: 'Facturas', evento: 'cambio', estado_destino: 'Cobrada', url: 'https://tu-n8n.ejemplo.com/webhook/cobro', estado: 'pausada' },
   ],
   inmueble: [
-    { id: 'm-in1', referencia: 'V-1043', direccion: 'C/ Sueca 41, 3.º', tipo: 'piso', operacion: 'venta', estado: 'disponible', precio: 215000, metros: 88, habitaciones: 3, banos: 1, zona: 'Ruzafa', certificado: 'd', exclusiva: true, propietario: 'm-cl1', captado: rel(-21) },
-    { id: 'm-in2', referencia: 'A-0388', direccion: 'Av. Primado Reig 112', tipo: 'piso', operacion: 'alquiler', estado: 'reservado', precio: 1050, metros: 95, habitaciones: 3, banos: 2, zona: 'Benimaclet', certificado: 'c', propietario: 'm-cl4', captado: rel(-9) },
-    { id: 'm-in3', referencia: 'V-1051', direccion: 'C/ Mayor 8, Godella', tipo: 'casa', operacion: 'venta', estado: 'captacion', precio: 435000, metros: 210, habitaciones: 4, banos: 3, zona: 'Godella', certificado: 'tramite', captado: rel(-2) },
-    { id: 'm-in4', referencia: 'V-0997', direccion: 'Plaza Redonda 3, ático', tipo: 'atico', operacion: 'venta', estado: 'vendido', precio: 330000, metros: 104, habitaciones: 2, banos: 2, zona: 'Centro', certificado: 'e', exclusiva: true, captado: rel(-80) },
+    { id: 'm-in1', agente: 'm-pe-2', referencia: 'V-1043', direccion: 'C/ Sueca 41, 3.º', tipo: 'piso', operacion: 'venta', estado: 'disponible', precio: 215000, metros: 88, habitaciones: 3, banos: 1, zona: 'Ruzafa', certificado: 'd', exclusiva: true, propietario: 'm-cl1', captado: rel(-21) },
+    { id: 'm-in2', agente: 'm-pe-2', referencia: 'A-0388', direccion: 'Av. Primado Reig 112', tipo: 'piso', operacion: 'alquiler', estado: 'reservado', precio: 1050, metros: 95, habitaciones: 3, banos: 2, zona: 'Benimaclet', certificado: 'c', propietario: 'm-cl4', captado: rel(-9) },
+    { id: 'm-in3', agente: 'm-pe-1', referencia: 'V-1051', direccion: 'C/ Mayor 8, Godella', tipo: 'casa', operacion: 'venta', estado: 'captacion', precio: 435000, metros: 210, habitaciones: 4, banos: 3, zona: 'Godella', certificado: 'tramite', captado: rel(-2) },
+    { id: 'm-in4', agente: 'm-pe-1', referencia: 'V-0997', direccion: 'Plaza Redonda 3, ático', tipo: 'atico', operacion: 'venta', estado: 'vendido', precio: 330000, metros: 104, habitaciones: 2, banos: 2, zona: 'Centro', certificado: 'e', exclusiva: true, captado: rel(-80) },
+    { id: 'm-in5', referencia: 'T-01', direccion: 'Apartamento Malvarrosa Sol · C/ Pavía 12', tipo: 'piso', operacion: 'turistico', estado: 'disponible', zona: 'Malvarrosa', habitaciones: 2, banos: 1, metros: 64, capacidad: 4, licencia: 'VT-48211-V', precio_noche: 118, tarifa_limpieza: 45, agente: 'm-pe-3', airbnb_url: 'https://www.airbnb.es/rooms/demo-malvarrosa' },
+    { id: 'm-in6', referencia: 'T-02', direccion: 'Loft Carmen · C/ Quart 40', tipo: 'piso', operacion: 'turistico', estado: 'disponible', zona: 'El Carmen', habitaciones: 1, banos: 1, metros: 48, capacidad: 2, licencia: 'VT-50170-V', precio_noche: 95, tarifa_limpieza: 35, agente: 'm-pe-3', booking_url: 'https://www.booking.com/hotel/es/demo-loft-carmen.html' },
+    { id: 'm-in7', referencia: 'T-03', direccion: 'Ático Ruzafa Terraza · C/ Cádiz 77', tipo: 'atico', operacion: 'turistico', estado: 'disponible', zona: 'Ruzafa', habitaciones: 3, banos: 2, metros: 92, capacidad: 6, licencia: 'VT-47002-V', precio_noche: 165, tarifa_limpieza: 60, agente: 'm-pe-3' },
+    { id: 'm-in8', referencia: 'T-04', direccion: 'Casa Patacona Playa · Av. Mare Nostrum 5', tipo: 'casa', operacion: 'turistico', estado: 'disponible', zona: 'Patacona', habitaciones: 4, banos: 3, metros: 140, capacidad: 8, licencia: 'VT-52990-V', precio_noche: 240, tarifa_limpieza: 80, agente: 'm-pe-1' },
   ],
   visita: [
     { id: 'm-vi1', titulo: 'Visita V-1043', inmueble: 'm-in1', lead: 'm-l1', cuando: rel(1, '18:00'), resultado: 'pendiente' },
@@ -778,6 +989,61 @@ const SAMPLES: Record<string, Record<string, unknown>[]> = {
     { id: 'm-ct5', nombre: 'Andrés', apellidos: 'Molina', email: 'andres@molina-old.es', telefono: '+34 655 781 902', fuente: 'importacion', consentimiento: 'no', estado: 'rebotado' },
     { id: 'm-ct6', nombre: 'Ana', apellidos: 'Belda', email: 'ana@belda.studio', telefono: '655781902', empresa: 'Estudio Belda', fuente: 'referido', consentimiento: 'pendiente', estado: 'revisar' },
   ],
+  contacto_inmo: [
+    { id: 'm-ki1', nombre: 'Clara', apellidos: 'Vidal', telefono: '611 402 887', email: 'clara.vidal@correo.es', tipo: 'comprador', temperatura: 'caliente', proxima_accion: 'Enseñarle V-1043 con su pareja', seguimiento: rel(1, '18:00'), presupuesto: 230000, zonas: 'Ruzafa, Ensanche', tipo_deseado: 'piso', habitaciones_min: 3, metros_min: 80, origen: 'idealista', agente: 'm-pe-2', prioridad: 'alta', alta: rel(-6) },
+    { id: 'm-ki2', nombre: 'Hugo', apellidos: 'Ferrer', telefono: '677 993 120', email: 'hugo.ferrer@correo.es', tipo: 'arrendatario', temperatura: 'templado', proxima_accion: 'Mandar contrato de alquiler', seguimiento: rel(0, '12:00'), presupuesto: 1100, zonas: 'Benimaclet', tipo_deseado: 'piso', habitaciones_min: 3, origen: 'fotocasa', agente: 'm-pe-2', prioridad: 'media', alta: rel(-14) },
+    { id: 'm-ki3', nombre: 'Pilar', apellidos: 'Navarro', telefono: '622 118 450', email: 'pilar.navarro@correo.es', tipo: 'vendedor', temperatura: 'caliente', proxima_accion: 'Tasación y propuesta de exclusiva', seguimiento: rel(2, '10:00'), zonas: 'Godella', origen: 'cartel', agente: 'm-pe-1', prioridad: 'alta', alta: rel(-3) },
+    { id: 'm-ki4', nombre: 'Tomás', apellidos: 'Ribes', telefono: '633 870 214', email: 'tomas@ribesinversiones.es', tipo: 'inversor', temperatura: 'templado', proxima_accion: 'Enviar 3 pisos con rentabilidad turística', seguimiento: rel(-2, '09:30'), presupuesto: 400000, zonas: 'Ruzafa, El Carmen, Malvarrosa', tipo_deseado: 'piso', origen: 'recomendacion', agente: 'm-pe-1', prioridad: 'alta', alta: rel(-30) },
+    { id: 'm-ki5', nombre: 'Lucía', apellidos: 'Moreno', telefono: '644 556 019', email: 'lucia.moreno@correo.es', tipo: 'propietario', temperatura: 'cerrado', proxima_accion: 'Liquidación mensual del T-01', zonas: 'Malvarrosa', origen: 'web', agente: 'm-pe-3', alta: rel(-200) },
+    { id: 'm-ki6', nombre: 'Javier', apellidos: 'Cano', telefono: '655 210 734', email: 'javi.cano@correo.es', tipo: 'comprador', temperatura: 'frio', proxima_accion: 'Llamar cuando tenga la hipoteca', seguimiento: rel(-9, '17:00'), presupuesto: 180000, zonas: 'Campanar', tipo_deseado: 'piso', habitaciones_min: 2, origen: 'instagram', agente: 'm-pe-2', prioridad: 'baja', alta: rel(-40) },
+    { id: 'm-ki7', nombre: 'Elena', apellidos: 'Sorní', telefono: '666 902 381', email: 'elena.sorni@correo.es', tipo: 'comprador', temperatura: 'descartado', proxima_accion: 'Compró con otra agencia', presupuesto: 300000, zonas: 'Centro', tipo_deseado: 'atico', origen: 'idealista', agente: 'm-pe-1', alta: rel(-90) },
+    { id: 'm-ki8', nombre: 'Marc', apellidos: 'Albert', telefono: '677 440 128', email: 'marc.albert@correo.es', tipo: 'comprador', temperatura: 'cerrado', proxima_accion: 'Firmó Plaza Redonda 3', presupuesto: 340000, zonas: 'Centro', tipo_deseado: 'atico', origen: 'fotocasa', agente: 'm-pe-1', alta: rel(-120) },
+    { id: 'm-ki9', nombre: 'Sofía', apellidos: 'Llorens', telefono: '688 330 915', email: 'sofia.llorens@correo.es', tipo: 'propietario', temperatura: 'templado', proxima_accion: 'Propuesta de gestión turística de su casa', seguimiento: rel(3, '11:00'), zonas: 'Patacona', origen: 'llamada', agente: 'm-pe-3', prioridad: 'media', alta: rel(-8) },
+  ],
+  operacion: [
+    { id: 'm-op1', titulo: 'Clara Vidal · V-1043', embudo: 'compradores', etapa: 'visita', contacto: 'm-ki1', inmueble: 'm-in1', importe: 215000, comision: 3, probabilidad: 60, agente: 'm-pe-2', cierre: rel(25) },
+    { id: 'm-op2', titulo: 'Hugo Ferrer · A-0388', embudo: 'alquileres', etapa: 'oferta', contacto: 'm-ki2', inmueble: 'm-in2', importe: 1050, comision: 100, probabilidad: 80, agente: 'm-pe-2', cierre: rel(5) },
+    { id: 'm-op3', titulo: 'Captación casa Godella', embudo: 'captacion', etapa: 'negociacion', contacto: 'm-ki3', inmueble: 'm-in3', importe: 435000, comision: 3, probabilidad: 50, agente: 'm-pe-1', cierre: rel(12) },
+    { id: 'm-op4', titulo: 'Tomás Ribes · cartera turística', embudo: 'compradores', etapa: 'cualificado', contacto: 'm-ki4', importe: 400000, comision: 2.5, probabilidad: 30, agente: 'm-pe-1', cierre: rel(60) },
+    { id: 'm-op5', titulo: 'Marc Albert · Plaza Redonda', embudo: 'compradores', etapa: 'cerrada', contacto: 'm-ki8', inmueble: 'm-in4', importe: 330000, comision: 3, probabilidad: 100, agente: 'm-pe-1', cierre: rel(-20) },
+    { id: 'm-op6', titulo: 'Elena Sorní · ático Centro', embudo: 'compradores', etapa: 'perdida', contacto: 'm-ki7', importe: 300000, comision: 3, agente: 'm-pe-1', cierre: rel(-35), motivo_perdida: 'otra_agencia' },
+    { id: 'm-op7', titulo: 'Javier Cano · piso Campanar', embudo: 'compradores', etapa: 'contactado', contacto: 'm-ki6', importe: 180000, comision: 3, probabilidad: 15, agente: 'm-pe-2', cierre: rel(90) },
+    { id: 'm-op8', titulo: 'Gestión turística Casa Patacona', embudo: 'captacion', etapa: 'lead_nuevo', contacto: 'm-ki9', importe: 6000, comision: 20, probabilidad: 40, agente: 'm-pe-3', cierre: rel(15) },
+  ],
+  cita_inmo: [
+    { id: 'm-cv1', titulo: 'Visita V-1043 con Clara', tipo: 'visita', cuando: rel(1, '18:00'), contacto: 'm-ki1', inmueble: 'm-in1', agente: 'm-pe-2', resultado: 'pendiente' },
+    { id: 'm-cv2', titulo: 'Tasación casa Godella', tipo: 'tasacion', cuando: rel(2, '10:00'), contacto: 'm-ki3', inmueble: 'm-in3', agente: 'm-pe-1', resultado: 'pendiente' },
+    { id: 'm-cv3', titulo: 'Firma alquiler A-0388', tipo: 'firma', cuando: rel(0, '17:30'), contacto: 'm-ki2', inmueble: 'm-in2', agente: 'm-pe-2', resultado: 'pendiente' },
+    { id: 'm-cv4', titulo: 'Visita A-0388 con Hugo', tipo: 'visita', cuando: rel(-4, '12:30'), contacto: 'm-ki2', inmueble: 'm-in2', agente: 'm-pe-2', resultado: 'oferta' },
+    { id: 'm-cv5', titulo: 'Reunión gestión turística Patacona', tipo: 'captacion', cuando: rel(3, '11:00'), contacto: 'm-ki9', agente: 'm-pe-3', resultado: 'pendiente' },
+  ],
+  reserva: [
+    { id: 'm-rs1', huesped: 'Emma Schneider', alojamiento: 'm-in5', canal: 'airbnb', entrada: rel(-3), salida: rel(0), estado: 'en_casa', huespedes: 3, importe: 472, comision: 71, gastos: 45, pago: 'cobrado', localizador: 'HMQ4ZK2', llegada: '16:00', origen_sync: 'ical' },
+    { id: 'm-rs2', huesped: 'Paolo Ricci', alojamiento: 'm-in5', canal: 'booking', entrada: rel(0), salida: rel(4), estado: 'confirmada', huespedes: 2, importe: 520, comision: 78, gastos: 45, pago: 'pendiente', localizador: '4021887733', llegada: '19:30', telefono: '+39 333 120 4410', origen_sync: 'ical' },
+    { id: 'm-rs3', huesped: 'Familia Dubois', alojamiento: 'm-in5', canal: 'directa', entrada: rel(6), salida: rel(13), estado: 'confirmada', huespedes: 4, importe: 910, comision: 0, gastos: 45, pago: 'parcial', email: 'dubois@correo.fr' },
+    { id: 'm-rs4', huesped: 'Liam O\'Connor', alojamiento: 'm-in6', canal: 'airbnb', entrada: rel(-1), salida: rel(2), estado: 'en_casa', huespedes: 2, importe: 315, comision: 47, gastos: 35, pago: 'cobrado', origen_sync: 'ical' },
+    { id: 'm-rs5', huesped: 'Ana Pérez', alojamiento: 'm-in6', canal: 'booking', entrada: rel(2), salida: rel(5), estado: 'confirmada', huespedes: 2, importe: 300, comision: 45, gastos: 35, pago: 'pendiente', origen_sync: 'ical' },
+    { id: 'm-rs6', huesped: 'Sven Larsen', alojamiento: 'm-in6', canal: 'airbnb', entrada: rel(4), salida: rel(8), estado: 'confirmada', huespedes: 2, importe: 420, comision: 63, gastos: 35, pago: 'pendiente', origen_sync: 'ical', notas: 'Se solapa con la reserva de Booking: revisar.' },
+    { id: 'm-rs7', huesped: 'Grupo Martínez', alojamiento: 'm-in7', canal: 'booking', entrada: rel(1), salida: rel(4), estado: 'confirmada', huespedes: 6, importe: 610, comision: 92, gastos: 60, pago: 'pendiente', llegada: '15:00', origen_sync: 'ical' },
+    { id: 'm-rs8', huesped: 'Bloqueo propietario', alojamiento: 'm-in7', canal: 'otro', entrada: rel(9), salida: rel(12), estado: 'bloqueo' },
+    { id: 'm-rs9', huesped: 'Charlotte Evans', alojamiento: 'm-in7', canal: 'airbnb', entrada: rel(-8), salida: rel(-4), estado: 'finalizada', huespedes: 4, importe: 780, comision: 117, gastos: 60, pago: 'cobrado', origen_sync: 'ical' },
+    { id: 'm-rs10', huesped: 'Familia Ortega', alojamiento: 'm-in8', canal: 'directa', entrada: rel(-2), salida: rel(5), estado: 'en_casa', huespedes: 7, importe: 1750, comision: 0, gastos: 80, pago: 'cobrado' },
+    { id: 'm-rs11', huesped: 'Noah Weber', alojamiento: 'm-in8', canal: 'airbnb', entrada: rel(7), salida: rel(14), estado: 'confirmada', huespedes: 6, importe: 1820, comision: 273, gastos: 80, pago: 'pendiente', origen_sync: 'ical' },
+    { id: 'm-rs12', huesped: 'Marta Gil', alojamiento: 'm-in6', canal: 'booking', entrada: rel(-10), salida: rel(-7), estado: 'cancelada', huespedes: 2, importe: 0, origen_sync: 'ical' },
+  ],
+  servicio: [
+    { id: 'm-sv1', titulo: 'Limpieza salida Emma · T-01', tipo: 'limpieza', alojamiento: 'm-in5', reserva: 'm-rs1', fecha: rel(0, '11:00'), responsable: 'm-pe-4', estado: 'asignada', coste: 45, checklist: 'Sábanas y toallas\nCocina\nBaños\nReponer café y papel\nFoto final' },
+    { id: 'm-sv2', titulo: 'Check-in Paolo · T-01', tipo: 'check_in', alojamiento: 'm-in5', reserva: 'm-rs2', fecha: rel(0, '19:30'), responsable: 'm-pe-4', estado: 'pendiente' },
+    { id: 'm-sv3', titulo: 'Limpieza antes del grupo · T-03', tipo: 'limpieza', alojamiento: 'm-in7', reserva: 'm-rs7', fecha: rel(1, '10:00'), estado: 'pendiente', coste: 60 },
+    { id: 'm-sv4', titulo: 'Limpieza salida Liam · T-02', tipo: 'limpieza', alojamiento: 'm-in6', reserva: 'm-rs4', fecha: rel(2, '11:00'), responsable: 'm-pe-4', estado: 'asignada', coste: 35 },
+    { id: 'm-sv5', titulo: 'Revisar aire acondicionado · T-04', tipo: 'mantenimiento', alojamiento: 'm-in8', fecha: rel(-1, '09:00'), responsable: 'm-pe-3', estado: 'problema', coste: 90, notas: 'El técnico no viene hasta el jueves.' },
+    { id: 'm-sv6', titulo: 'Limpieza salida Charlotte · T-03', tipo: 'limpieza', alojamiento: 'm-in7', reserva: 'm-rs9', fecha: rel(-4, '11:00'), responsable: 'm-pe-4', estado: 'hecha', coste: 60 },
+  ],
+  incidencia: [
+    { id: 'm-ic1', asunto: 'Aire acondicionado no enfría', alojamiento: 'm-in8', prioridad: 'alta', estado: 'en_curso', responsable: 'm-pe-3', abierta: rel(-1), coste: 90 },
+    { id: 'm-ic2', asunto: 'Falta un juego de llaves', alojamiento: 'm-in6', prioridad: 'media', estado: 'abierta', abierta: rel(0) },
+    { id: 'm-ic3', asunto: 'Grifo de la ducha gotea', alojamiento: 'm-in5', prioridad: 'baja', estado: 'resuelta', responsable: 'm-pe-3', abierta: rel(-12), coste: 25 },
+  ],
   gasto: [
     { id: 'm-g1', concepto: 'Alquiler del local', fecha: rel(-9), categoria: 'alquiler', importe: 950, deducible: true },
     { id: 'm-g2', concepto: 'Luz y agua', fecha: rel(-7), categoria: 'suministros', importe: 184.3, deducible: true },
@@ -790,8 +1056,11 @@ const SAMPLES: Record<string, Record<string, unknown>[]> = {
 export function sampleRecordsFor(bp: Blueprint): AppRecord[] {
   const out: AppRecord[] = [];
   const sector = getSector(bp.sector);
+  const bookings = bp.entities.some((e) => e.key === 'reserva');
   for (const e of bp.entities) {
     for (const { id, ...base } of SAMPLES[e.key] ?? []) {
+      // Tourist flats only come with an app that takes bookings.
+      if (e.key === 'inmueble' && base.operacion === 'turistico' && !bookings) continue;
       const data = { ...base, ...sector?.samples?.[String(id)] };
       const clean: Record<string, unknown> = {};
       for (const f of e.fields) {

@@ -20,25 +20,26 @@ function figure(w: DashboardWidget, bp: Blueprint, records: AppRecord[]): string
   return f?.type === 'money' ? formatMoney(v) : f ? formatValue(f, v) : String(Math.round(v));
 }
 
-function Row({ item, onOpen }: { item: TodayItem; onOpen: (r: AppRecord) => void }) {
-  const tone = item.bucket === 'atrasado' ? '#c2410c' : item.bucket === 'hoy' ? 'var(--crm-primary)' : 'var(--crm-border)';
+function Row({ item, dark, onOpen }: { item: TodayItem; dark: boolean; onOpen: (r: AppRecord) => void }) {
+  const late = dark ? '#fb923c' : '#c2410c';
+  const tone = item.bucket === 'atrasado' ? late : item.bucket === 'hoy' ? 'var(--crm-primary)' : 'var(--crm-border)';
   return (
     <li className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-[color:var(--crm-bg)]">
       <span className="h-9 w-1 shrink-0 rounded-full" style={{ background: tone }} />
       <button onClick={() => onOpen(item.record)} className="min-w-0 flex-1 text-left">
         <span className="flex items-center gap-2">
           <span className="truncate font-medium">{item.title}</span>
-          <span className="hidden shrink-0 rounded-full px-2 py-px text-[0.78em] sm:inline" style={chipStyle(item.stage?.color ?? 'gray', false)}>
+          <span className="hidden shrink-0 rounded-full px-2 py-px text-[0.78em] sm:inline" style={chipStyle(item.stage?.color ?? 'gray', dark)}>
             {item.stage?.label ?? item.entity.label}
           </span>
         </span>
-        <span className="mt-0.5 block truncate text-[0.9em]" style={{ color: item.bucket === 'atrasado' ? '#c2410c' : 'var(--crm-muted)' }}>
+        <span className="mt-0.5 block truncate text-[0.9em]" style={{ color: item.bucket === 'atrasado' ? late : 'var(--crm-muted)' }}>
           {item.reason.startsWith(item.entity.label) ? item.reason : `${item.entity.label} · ${item.reason}`}
         </span>
       </button>
       {item.phone && (
         <span className="flex shrink-0 gap-1">
-          <a href={whatsappUrl(item.phone)} target="_blank" rel="noreferrer" aria-label={`WhatsApp a ${item.title}`} className="rounded-full p-2 hover:bg-[color:var(--crm-bg)]" style={{ color: '#15803d' }}><MessageCircle className="h-4 w-4" /></a>
+          <a href={whatsappUrl(item.phone)} target="_blank" rel="noreferrer" aria-label={`WhatsApp a ${item.title}`} className="rounded-full p-2 hover:bg-[color:var(--crm-bg)]" style={{ color: dark ? '#4ade80' : '#15803d' }}><MessageCircle className="h-4 w-4" /></a>
           <a href={`tel:${item.phone.replace(/\s/g, '')}`} aria-label={`Llamar a ${item.title}`} className="hidden rounded-full p-2 hover:bg-[color:var(--crm-bg)] sm:block" style={{ color: 'var(--crm-muted)' }}><Phone className="h-4 w-4" /></a>
         </span>
       )}
@@ -47,15 +48,15 @@ function Row({ item, onOpen }: { item: TodayItem; onOpen: (r: AppRecord) => void
   );
 }
 
-function Group({ title, icon: Icon, items, empty, onOpen, accent }: { title: string; icon: typeof Sun; items: TodayItem[]; empty: string; onOpen: (r: AppRecord) => void; accent?: string }) {
+function Group({ title, icon: Icon, items, empty, onOpen, accent, dark }: { title: string; icon: typeof Sun; items: TodayItem[]; empty: string; onOpen: (r: AppRecord) => void; accent?: string; dark: boolean }) {
   return (
-    <section aria-label={title} style={{ ...card, padding: '14px 10px' }}>
+    <section aria-label={title} className="min-w-0" style={{ ...card, padding: '14px 10px' }}>
       <h2 className="mb-1 flex items-center gap-2 px-3 text-[1.02em] font-semibold">
         <Icon className="h-4 w-4" style={{ color: accent ?? 'var(--crm-muted)' }} /> {title}
         <span className="ml-auto rounded-full px-2 text-[0.8em] font-medium" style={{ background: 'var(--crm-bg)', color: 'var(--crm-muted)' }}>{items.length}</span>
       </h2>
       {items.length ? (
-        <ul className="flex flex-col">{items.map((i) => <Row key={i.id} item={i} onOpen={onOpen} />)}</ul>
+        <ul className="flex flex-col">{items.map((i) => <Row key={i.id} item={i} dark={dark} onOpen={onOpen} />)}</ul>
       ) : (
         <p className="px-3 py-3 text-[0.92em]" style={{ color: 'var(--crm-muted)' }}>{empty}</p>
       )}
@@ -63,7 +64,7 @@ function Group({ title, icon: Icon, items, empty, onOpen, accent }: { title: str
   );
 }
 
-export function TodayView({ blueprint, records, onOpen, now }: { blueprint: Blueprint; records: AppRecord[]; onOpen: (r: AppRecord) => void; now?: Date }) {
+export function TodayView({ blueprint, records, onOpen, now, dark = false }: { blueprint: Blueprint; records: AppRecord[]; onOpen: (r: AppRecord) => void; now?: Date; dark?: boolean }) {
   const today = useMemo(() => computeToday(blueprint, records, now), [blueprint, records, now]);
   const metrics = (blueprint.views.find((v) => v.type === 'dashboard')?.widgets ?? []).filter((w) => w.kind === 'metric').slice(0, 4);
   const raw = (now ?? new Date()).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -91,12 +92,12 @@ export function TodayView({ blueprint, records, onOpen, now }: { blueprint: Blue
         </section>
       )}
 
-      <div className="grid items-start gap-4 lg:grid-cols-2">
-        <div className="flex flex-col gap-4">
-          {today.atrasado.length > 0 && <Group title="Atrasado" icon={AlertTriangle} accent="#c2410c" items={today.atrasado} empty="" onOpen={onOpen} />}
-          <Group title="Para hoy" icon={Sun} accent="var(--crm-primary)" items={today.hoy} empty="Nada para hoy." onOpen={onOpen} />
+      <div className="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-4">
+          {today.atrasado.length > 0 && <Group title="Atrasado" icon={AlertTriangle} accent={dark ? '#fb923c' : '#c2410c'} dark={dark} items={today.atrasado} empty="" onOpen={onOpen} />}
+          <Group title="Para hoy" icon={Sun} dark={dark} accent="var(--crm-primary)" items={today.hoy} empty="Nada para hoy." onOpen={onOpen} />
         </div>
-        <Group title="Próximos días" icon={CalendarClock} items={today.proximo} empty="Nada en los próximos días." onOpen={onOpen} />
+        <Group title="Próximos días" icon={CalendarClock} dark={dark} items={today.proximo} empty="Nada en los próximos días." onOpen={onOpen} />
       </div>
 
       {today.total === 0 && (

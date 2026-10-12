@@ -1,6 +1,6 @@
 import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import { cardProposal } from '@shared/blueprint/modules.ts';
-import type { CrmApp, CrmMessage, CrmProposal, CrmVersion, crmApi } from './api';
+import type { CrmApp, CrmMessage, CrmProposal, CrmVersion, IcalSyncResult, crmApi } from './api';
 import { localAgent } from './localAgent';
 
 // Guest mode: the same API as crmApi, kept in this browser (localStorage).
@@ -132,5 +132,11 @@ export const localCrmApi: typeof crmApi = {
     const message: CrmMessage = { id: uid(), role: 'assistant', content: `${made.proposal.summary}. Así quedaría; aplícalo si te convence.`, proposal_id: proposal.id, created_at: now() };
     a.messages.push(message);
     return { message, proposal };
+  }),
+  // The browser can't read Airbnb or Booking calendars (they don't allow it),
+  // and inventing bookings would be lying: say what it needs instead.
+  syncIcal: async (): Promise<IcalSyncResult> => ({
+    nuevas: 0, actualizadas: 0, canceladas: 0, errores: [],
+    mensaje: 'Sincronizar con Airbnb y Booking necesita una cuenta: los calendarios se leen desde nuestro servidor. En modo prueba puedes apuntar las reservas a mano.',
   }),
 };

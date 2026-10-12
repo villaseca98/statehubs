@@ -9,6 +9,7 @@ interface Props {
   record: AppRecord;
   records: AppRecord[];
   groupBy?: string;
+  dark?: boolean;
   titleOf: (id: string) => string | undefined;
   onUpdate: (id: string, data: RecordData) => void;
   onDelete: (id: string) => void;
@@ -79,9 +80,8 @@ export function StagePath({ field, value, dark, onPick }: { field: Field; value:
   );
 }
 
-export function RecordPanel({ blueprint, record, records, groupBy, titleOf, onUpdate, onDelete, onClose }: Props) {
+export function RecordPanel({ blueprint, record, records, groupBy, dark = false, titleOf, onUpdate, onDelete, onClose }: Props) {
   const entity = blueprint.entities.find((e) => e.key === record.entity)!;
-  const dark = false;
   const stage = stageField(entity, groupBy);
   const highlights = entity.fields.filter((f) => f.key !== entity.titleField && f.key !== stage?.key && (isNumeric(f) || f.type === 'select' || f.type === 'date' || f.type === 'datetime' || f.type === 'relation')).slice(0, 4);
   const set = (key: string) => (v: unknown) => onUpdate(record.id, { [key]: v });

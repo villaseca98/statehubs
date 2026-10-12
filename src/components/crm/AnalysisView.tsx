@@ -57,7 +57,7 @@ export function AnalysisView({ blueprint, view, records, dark, solid, titleOf, o
       <p className="text-[0.9em]" style={muted}>{LENS_INFO[lens].pitch}</p>
 
       {lens === 'datos' ? (
-        <DataBase blueprint={blueprint} records={records} titleOf={titleOf} />
+        <DataBase blueprint={blueprint} records={records} titleOf={titleOf} dark={dark} />
       ) : !result ? (
         <div style={{ ...card, padding: 'var(--crm-pad)', ...muted }}>Pon alguna pieza con etapas o importes (leads, embudo, presupuestos, facturas…) y aquí verás el análisis.</div>
       ) : lens === 'oportunidades' ? (
@@ -211,7 +211,7 @@ function download(name: string, text: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function DataBase({ blueprint, records, titleOf }: { blueprint: Blueprint; records: AppRecord[]; titleOf: (id: string) => string | undefined }) {
+function DataBase({ blueprint, records, titleOf, dark }: { blueprint: Blueprint; records: AppRecord[]; titleOf: (id: string) => string | undefined; dark: boolean }) {
   return (
     <section aria-label="Base de datos" style={{ ...card, padding: 'var(--crm-pad)' }}>
       <h3 className="mb-1 flex items-center gap-2 font-semibold" style={{ fontFamily: 'var(--crm-heading-font)' }}><Database className="h-4 w-4" /> Tu base de datos</h3>
@@ -231,7 +231,7 @@ function DataBase({ blueprint, records, titleOf }: { blueprint: Blueprint; recor
                   <td className="whitespace-nowrap font-medium" style={{ padding: 'var(--crm-row)', borderBottom: '1px solid var(--crm-border)' }}>{e.labelPlural}</td>
                   <td style={{ padding: 'var(--crm-row)', borderBottom: '1px solid var(--crm-border)', fontFamily: 'var(--crm-number-font)' }}>{n}</td>
                   <td className="text-[0.88em]" style={{ padding: 'var(--crm-row)', borderBottom: '1px solid var(--crm-border)', ...muted }}>
-                    {twins > 0 && <span className="mr-1.5 rounded px-1.5 font-medium" style={{ background: '#fef3c7', color: '#92400e' }}>{twins} posibles duplicados</span>}
+                    {twins > 0 && <span className="mr-1.5 rounded px-1.5 font-medium" style={chipStyle('amber', dark)}>{twins} posibles duplicados</span>}
                     {n === 0 ? '—' : gaps.length ? gaps.map((g) => `${g.missing} sin ${lowerFirst(g.field.label)}`).join(' · ') : 'Todo relleno'}
                   </td>
                   <td className="text-right" style={{ padding: 'var(--crm-row)', borderBottom: '1px solid var(--crm-border)' }}>

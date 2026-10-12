@@ -13,7 +13,7 @@ const TYPE_LABEL: Record<string, string> = {
   date: 'fecha', datetime: 'fecha y hora', boolean: 'sí/no', email: 'email', phone: 'teléfono', url: 'enlace', select: 'lista de opciones',
   relation: 'relación', nif: 'NIF/CIF',
 };
-const VIEW_LABEL: Record<string, string> = { table: 'tabla', kanban: 'tablero', calendar: 'calendario', dashboard: 'panel', worklist: 'lista de trabajo', analysis: 'análisis' };
+const VIEW_LABEL: Record<string, string> = { table: 'tabla', kanban: 'tablero', calendar: 'calendario', dashboard: 'panel', worklist: 'lista de trabajo', analysis: 'análisis', ops: 'centro de operaciones', timeline: 'calendario de reservas', cards: 'fichas' };
 
 const byKey = <T extends { key: string }>(list: T[] = []) => new Map(list.map((x) => [x.key, x]));
 
@@ -26,6 +26,7 @@ export function diffBlueprints(before: Blueprint | null, after: Blueprint): Chan
     return out;
   }
 
+  if (before.logo !== after.logo) out.push({ kind: 'change', text: after.logo ? 'Poner tu logo en la aplicación.' : 'Volver al logo de StateHubs.' });
   if (before.name !== after.name) out.push({ kind: 'change', text: `Renombrar la aplicación de «${before.name}» a «${after.name}».` });
 
   const oldE = byKey(before.entities);

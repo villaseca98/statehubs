@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { LOOK } from '@shared/blueprint/look.ts';
+import { LOOK, LOOK_DARK } from '@shared/blueprint/look.ts';
 import type { Field, OptionColor, RecordData, AppRecord, Entity } from '@shared/blueprint/types.ts';
 
 const FONTS = {
@@ -15,9 +15,12 @@ const DENSITY = {
 };
 
 // Every runtime component reads colours and spacing from these variables,
-// so the look lives in one place (_shared/blueprint/look.ts).
-export function themeVars(): CSSProperties {
-  const s = LOOK;
+// so the look lives in one place (_shared/blueprint/look.ts). `dark` swaps
+// the colours for LOOK_DARK; everything else stays the same.
+export type ThemeMode = 'light' | 'dark';
+
+export function themeVars(mode: ThemeMode = 'light'): CSSProperties {
+  const s = mode === 'dark' ? { ...LOOK, colors: LOOK_DARK } : LOOK;
   const d = DENSITY[s.density];
   return {
     '--crm-bg': s.colors.bg,
@@ -41,8 +44,27 @@ export function themeVars(): CSSProperties {
     fontSize: d.font,
     color: s.colors.text,
     background: s.colors.bg,
-    colorScheme: 'light',
+    colorScheme: mode,
   } as CSSProperties;
+}
+
+const MODE_KEY = 'statehubs.tema';
+
+// The person's choice if they made one in this browser, else the system's.
+export function initialMode(): ThemeMode {
+  try {
+    const v = window.localStorage.getItem(MODE_KEY);
+    if (v === 'light' || v === 'dark') return v;
+  } catch { /* storage blocked */ }
+  try {
+    return window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
+}
+
+export function storeMode(mode: ThemeMode): void {
+  try { window.localStorage.setItem(MODE_KEY, mode); } catch { /* storage blocked: lasts this visit */ }
 }
 
 const CHIP: Record<OptionColor, [string, string, string]> = {

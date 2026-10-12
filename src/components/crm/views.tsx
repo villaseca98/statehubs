@@ -9,6 +9,8 @@ export interface ViewProps {
   records: AppRecord[];
   dark: boolean;
   solid?: boolean;
+  /** The section already has the filter bar above it: no own search box. */
+  filtered?: boolean;
   titleOf: (id: string) => string | undefined;
   selectedId?: string | null;
   onOpen: (r: AppRecord) => void;
@@ -49,7 +51,7 @@ export function Cell({ field, value, dark, solid, titleOf }: { field: Field; val
 
 const entityOf = (bp: Blueprint, key?: string) => bp.entities.find((e) => e.key === key) as Entity;
 
-export function TableView({ blueprint, view, records, dark, solid, titleOf, selectedId, onOpen }: ViewProps) {
+export function TableView({ blueprint, view, records, dark, solid, filtered, titleOf, selectedId, onOpen }: ViewProps) {
   const entity = entityOf(blueprint, view.entity);
   const columns = (view.columns?.length ? view.columns : entity.fields.slice(0, 6).map((f) => f.key))
     .map((k) => entity.fields.find((f) => f.key === k))
@@ -77,11 +79,13 @@ export function TableView({ blueprint, view, records, dark, solid, titleOf, sele
 
   return (
     <div className="flex flex-col" style={{ gap: 'var(--crm-gap)' }}>
-      <label className="flex max-w-xs items-center gap-2 px-2 py-1.5" style={card}>
-        <Search className="h-3.5 w-3.5" style={{ color: 'var(--crm-muted)' }} />
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={`Buscar en ${entity.labelPlural.toLowerCase()}`}
-          className="w-full bg-transparent outline-none" style={{ color: 'var(--crm-text)' }} />
-      </label>
+      {!filtered && (
+        <label className="flex max-w-xs items-center gap-2 px-2 py-1.5" style={card}>
+          <Search className="h-3.5 w-3.5" style={{ color: 'var(--crm-muted)' }} />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={`Buscar en ${entity.labelPlural.toLowerCase()}`}
+            className="w-full bg-transparent outline-none" style={{ color: 'var(--crm-text)' }} />
+        </label>
+      )}
       <div className="overflow-x-auto" style={card}>
         <table className="w-full border-collapse text-left">
           <thead>
@@ -106,7 +110,7 @@ export function TableView({ blueprint, view, records, dark, solid, titleOf, sele
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={columns.length} style={{ padding: 'var(--crm-pad)', color: 'var(--crm-muted)' }}>No hay {entity.labelPlural.toLowerCase()} todavía.</td></tr>
+              <tr><td colSpan={columns.length} style={{ padding: 'var(--crm-pad)', color: 'var(--crm-muted)' }}>{filtered ? `No hay ${entity.labelPlural.toLowerCase()} que mostrar con estos filtros.` : `No hay ${entity.labelPlural.toLowerCase()} todavía.`}</td></tr>
             )}
           </tbody>
           {totals.some((t) => t !== null) && rows.length > 0 && (

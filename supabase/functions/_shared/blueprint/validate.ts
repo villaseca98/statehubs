@@ -2,6 +2,8 @@ import { ACTION_KINDS, ANALYSIS_LENSES, FIELD_TYPES, OPTION_COLORS, VIEW_TYPES }
 import type { Availability, Blueprint, Entity, Field, View } from './types.ts';
 
 const KEY = /^[a-z][a-z0-9_]{0,39}$/;
+const LOGO = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+export const MAX_LOGO = 200_000;
 const NUMERIC = new Set(['number', 'money', 'percent']);
 const DATE_TYPES = new Set(['date', 'datetime']);
 const TITLE_TYPES = new Set(['text', 'email', 'phone', 'nif', 'url']);
@@ -18,6 +20,8 @@ export function validateBlueprint(bp: unknown): string[] {
   if (typeof b.name !== 'string' || !b.name.trim() || b.name.length > 60) err('name es obligatorio (máx. 60 caracteres).');
   if (b.kind !== undefined && b.kind !== 'crm' && b.kind !== 'erp') err('kind debe ser crm o erp.');
   if (b.modules !== undefined && (!Array.isArray(b.modules) || b.modules.some((m) => typeof m !== 'string'))) err('modules debe ser una lista de claves.');
+  // [SECURITY] Only small raster images as data URLs: no SVG (it can carry script) and no remote URLs.
+  if (b.logo !== undefined && (typeof b.logo !== 'string' || b.logo.length > MAX_LOGO || !LOGO.test(b.logo))) err('logo debe ser una imagen PNG, JPEG o WebP pequeña.');
   if (b.sector !== undefined && (typeof b.sector !== 'string' || !KEY.test(b.sector))) err('sector debe ser una clave.');
   if (!Array.isArray(b.entities) || b.entities.length === 0) return [...errors, 'Hace falta al menos una entidad.'];
   if (b.entities.length > 30) err('Máximo 30 entidades.');
@@ -82,6 +86,7 @@ export function validateBlueprint(bp: unknown): string[] {
       for (const k of Array.isArray(a.entities) ? a.entities : []) if (!entities.has(k)) err(`Vista ${v.key}: analysis.entities incluye "${k}", que no existe.`);
       continue;
     }
+    if (v.type === 'ops') continue;
     if (!entities.has(v.entity ?? '')) { err(`Vista ${v.key}: la entidad "${v.entity}" no existe.`); continue; }
     const ent = v.entity as string;
     if (v.type === 'table') {
@@ -93,6 +98,16 @@ export function validateBlueprint(bp: unknown): string[] {
     }
     if (v.type === 'calendar' && !DATE_TYPES.has(fieldOf(ent, v.dateField)?.type ?? '')) err(`Vista ${v.key}: dateField debe ser un campo date o datetime de ${ent}.`);
     if (v.type === 'worklist') checkWorklist(v, entities.get(ent)!, entities, err);
+    if (v.type === 'timeline') {
+      if (!DATE_TYPES.has(fieldOf(ent, v.startField)?.type ?? '')) err(`Vista ${v.key}: startField debe ser un campo date o datetime de ${ent}.`);
+      if (!DATE_TYPES.has(fieldOf(ent, v.endField)?.type ?? '')) err(`Vista ${v.key}: endField debe ser un campo date o datetime de ${ent}.`);
+      if (fieldOf(ent, v.rowField)?.type !== 'relation') err(`Vista ${v.key}: rowField debe ser un campo relation de ${ent}.`);
+    }
+    if (v.type === 'cards') {
+      for (const c of v.columns ?? []) if (!fieldOf(ent, c)) err(`Vista ${v.key}: la columna "${c}" no es un campo de ${ent}.`);
+      if (v.imageField && fieldOf(ent, v.imageField)?.type !== 'url') err(`Vista ${v.key}: imageField debe ser un campo url de ${ent}.`);
+    }
+    if ((v.type === 'timeline' || v.type === 'cards') && v.groupBy && fieldOf(ent, v.groupBy)?.type !== 'select') err(`Vista ${v.key}: groupBy debe ser un campo select de ${ent}.`);
   }
   return errors;
 }

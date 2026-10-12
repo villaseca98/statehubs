@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Box, Check, Eye, History, Home, Loader2, Minus, Pencil, Plus, Puzzle, Send, Sparkles, X } from 'lucide-react';
+import { Check, Eye, History, Home, Loader2, Minus, Pencil, Plus, Puzzle, Send, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 import { useToast } from '@/lib/toast';
 import { crmApi } from '@/lib/crm/api';
@@ -12,14 +12,15 @@ import { Workspace } from '@/components/crm/Workspace';
 import type { Tool } from '@/components/crm/Workspace';
 import { ModuleCards } from '@/components/crm/ModuleCards';
 import { AnalysisSetup } from '@/components/crm/AnalysisSetup';
-import { Presentation3D } from '@/components/crm/Presentation3D';
+import { LogoSetup } from '@/components/brand/LogoSetup';
 import { makeTitleLookup } from '@/components/crm/theme';
-import { addModule, modulesFor, otherModules, removeModule } from '@shared/blueprint/modules.ts';
+import { addModule, agencyModules, extraModules, removeModule } from '@shared/blueprint/modules.ts';
 import { AUTOMATION_ENTITY } from '@shared/blueprint/automations.ts';
 import type { HookEvent } from '@shared/blueprint/automations.ts';
 import { DEFAULT_ANALYSIS, withAnalysis } from '@shared/blueprint/analysis.ts';
 import type { AnalysisConfig, AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import type { Change } from '@shared/blueprint/diff.ts';
+import { syncSummaryText } from '@shared/blueprint/ical.ts';
 
 // One app, open: the workspace for daily work, and three side panels to
 // change it (pieces, the AI, history). Every change arrives as a proposal you
@@ -79,7 +80,6 @@ export default function AppPage() {
   const [applying, setApplying] = useState(false);
   const [preview, setPreview] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
-  const [show3d, setShow3d] = useState(false);
   const [draft, setDraft] = useState('');
   const sentFirst = useRef(false);
   const chatEnd = useRef<HTMLDivElement>(null);
@@ -113,7 +113,6 @@ export default function AppPage() {
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, thinking, panel]);
 
   const current = versions.find((v) => v.version === app?.current_version) ?? null;
-  const kind = current?.blueprint.kind ?? proposal?.blueprint.kind ?? 'crm';
   const previewRecords = useMemo<AppRecord[]>(() => {
     if (!proposal) return records;
     return [...records, ...proposal.samples.map((s, i) => ({ id: s.id ?? `muestra-${i}`, entity: s.entity, data: s.data, is_sample: true }))];
@@ -142,6 +141,14 @@ export default function AppPage() {
     const base = proposal?.blueprint ?? current?.blueprint;
     if (!base || thinking) return;
     await proposeBlueprint(base.modules?.includes(key) ? removeModule(base, key) : addModule(base, key));
+  }
+
+  async function setLogo(logo: string | undefined) {
+    const base = proposal?.blueprint ?? current?.blueprint;
+    if (!base || thinking) return;
+    const next = { ...base };
+    if (logo) next.logo = logo; else delete next.logo;
+    await proposeBlueprint(next);
   }
 
   async function setAnalysis(config: AnalysisConfig) {
@@ -231,6 +238,12 @@ export default function AppPage() {
     setRecords((rs) => rs.filter((r) => r.id !== id));
     api.deleteRecord(id).catch((e) => { fail(e); setRecords(prev); });
   };
+  // Airbnb/Booking calendars (iCal), read on the server; guest mode says it needs an account.
+  const syncIcal = async () => {
+    const res = await api.syncIcal(appId);
+    if (res.nuevas + res.actualizadas + res.canceladas > 0) setRecords(await api.records(appId));
+    return syncSummaryText(res);
+  };
   const testWebhook = async (r: AppRecord) => (await automate(r, 'prueba', null)).join(' · ') || 'No hay nada que probar.';
   const clearSamples = async () => {
     if (!window.confirm('¿Quitar todos los datos de ejemplo? Tus datos reales no se tocan.')) return;
@@ -245,7 +258,6 @@ export default function AppPage() {
     { key: 'piezas', label: 'Piezas', icon: Puzzle, onClick: () => setPanel('piezas'), active: panel === 'piezas' },
     { key: 'ia', label: 'Pedírselo a la IA', icon: Sparkles, onClick: () => setPanel('ia'), active: panel === 'ia' },
     { key: 'historial', label: 'Historial', icon: History, onClick: () => setPanel('historial'), badge: versions.length || undefined, active: panel === 'historial' },
-    { key: '3d', label: 'Verlo en 3D', icon: Box, onClick: () => setShow3d(true) },
     { key: 'inicio', label: 'Todas mis apps', icon: Home, onClick: () => navigate('/') },
   ];
 
@@ -264,11 +276,12 @@ export default function AppPage() {
   return (
     <div className="h-[100dvh]">
       {showing ? (
-        <Workspace key={showing.name} blueprint={showing} records={previewing ? previewRecords : records} tools={tools} banner={proposalBar} className="h-full"
+        <Workspace key={showing.name} appId={appId} blueprint={showing} records={previewing ? previewRecords : records} tools={tools} banner={proposalBar} className="h-full"
           onCreate={previewing ? () => undefined : createRecord}
           onUpdate={previewing ? () => undefined : updateRecord}
           onDelete={previewing ? () => undefined : deleteRecord}
-          onWebhook={previewing ? undefined : testWebhook} />
+          onWebhook={previewing ? undefined : testWebhook}
+          onSyncIcal={previewing ? undefined : syncIcal} />
       ) : (
         <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
           <Sparkles className="h-8 w-8 text-primary" />
@@ -282,13 +295,14 @@ export default function AppPage() {
           footer={hasSamples && <div className="border-t p-3"><button onClick={clearSamples} className="w-full rounded-lg border px-3 py-2 text-sm">Quitar los datos de ejemplo</button></div>}>
           <p className="mb-3 text-sm text-muted-foreground">Toca una pieza para ponerla o quitarla. Primero ves cómo queda; quitarla no borra lo que habías apuntado.</p>
           {thinking && <p className="mb-2 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Preparando la propuesta…</p>}
-          <ModuleCards compact disabled={thinking} modules={modulesFor(kind)} selected={(proposal?.blueprint ?? current.blueprint).modules ?? []} onToggle={toggleModule} />
-          {otherModules(kind).length > 0 && (
-            <details className="mt-4">
-              <summary className="cursor-pointer text-sm font-medium">Más piezas, de {kind === 'crm' ? 'ERP' : 'CRM'}</summary>
-              <div className="mt-3"><ModuleCards compact disabled={thinking} modules={otherModules(kind)} selected={(proposal?.blueprint ?? current.blueprint).modules ?? []} onToggle={toggleModule} /></div>
-            </details>
-          )}
+          <ModuleCards compact disabled={thinking} modules={agencyModules()} selected={(proposal?.blueprint ?? current.blueprint).modules ?? []} onToggle={toggleModule} />
+          <details className="mt-4">
+            <summary className="cursor-pointer text-sm font-medium">Más piezas</summary>
+            <div className="mt-3"><ModuleCards compact disabled={thinking} modules={extraModules()} selected={(proposal?.blueprint ?? current.blueprint).modules ?? []} onToggle={toggleModule} /></div>
+          </details>
+          <div className="mt-5">
+            <LogoSetup name={(proposal?.blueprint ?? current.blueprint).name} logo={(proposal?.blueprint ?? current.blueprint).logo} disabled={thinking} onChange={setLogo} />
+          </div>
           {analysisView && (
             <div className="mt-5">
               <AnalysisSetup blueprint={proposal?.blueprint ?? current.blueprint} value={analysisView.analysis ?? DEFAULT_ANALYSIS} onChange={setAnalysis} />
@@ -360,7 +374,6 @@ export default function AppPage() {
         </SidePanel>
       )}
 
-      {show3d && showing && <Presentation3D blueprint={showing} records={previewing ? previewRecords : records} onClose={() => setShow3d(false)} />}
     </div>
   );
 }
