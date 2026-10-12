@@ -50,7 +50,7 @@ function Row({ item, dark, onOpen }: { item: TodayItem; dark: boolean; onOpen: (
 
 function Group({ title, icon: Icon, items, empty, onOpen, accent, dark }: { title: string; icon: typeof Sun; items: TodayItem[]; empty: string; onOpen: (r: AppRecord) => void; accent?: string; dark: boolean }) {
   return (
-    <section aria-label={title} style={{ ...card, padding: '14px 10px' }}>
+    <section aria-label={title} className="min-w-0" style={{ ...card, padding: '14px 10px' }}>
       <h2 className="mb-1 flex items-center gap-2 px-3 text-[1.02em] font-semibold">
         <Icon className="h-4 w-4" style={{ color: accent ?? 'var(--crm-muted)' }} /> {title}
         <span className="ml-auto rounded-full px-2 text-[0.8em] font-medium" style={{ background: 'var(--crm-bg)', color: 'var(--crm-muted)' }}>{items.length}</span>
@@ -92,8 +92,8 @@ export function TodayView({ blueprint, records, onOpen, now, dark = false }: { b
         </section>
       )}
 
-      <div className="grid items-start gap-4 lg:grid-cols-2">
-        <div className="flex flex-col gap-4">
+      <div className="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-4">
           {today.atrasado.length > 0 && <Group title="Atrasado" icon={AlertTriangle} accent={dark ? '#fb923c' : '#c2410c'} dark={dark} items={today.atrasado} empty="" onOpen={onOpen} />}
           <Group title="Para hoy" icon={Sun} dark={dark} accent="var(--crm-primary)" items={today.hoy} empty="Nada para hoy." onOpen={onOpen} />
         </div>
