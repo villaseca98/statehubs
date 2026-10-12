@@ -90,13 +90,14 @@ function mapLead(payload: Record<string, unknown>) {
   const consent = ["si", "yes", "true", "acepto", "confirmado", "1"].includes(consentRaw)
     ? "confirmado"
     : ["no", "false", "no acepto", "0"].includes(consentRaw) ? "no" : "pendiente";
+  const leadSource = env("META_LEAD_SOURCE") === "instagram" ? "instagram" : "meta_ads";
   const data: Record<string, unknown> = {
     nombre: name,
     telefono: pick(f, ["phone_number", "phone", "telefono", "teléfono", "movil", "móvil"]),
     email: pick(f, ["email", "correo electronico", "correo"]),
     estado: "nuevo",
-    origen: "instagram",
-    fuente_lead: env("META_LEAD_SOURCE") === "instagram" ? "instagram" : "meta_ads",
+    origen: leadSource,
+    fuente_lead: leadSource,
     campana_instagram: pick(f, ["campaign_name", "campana", "campaña"]) || String(payload.campaign_id ?? payload.form_id ?? "Formulario Meta"),
     estado_cualificacion: "nuevo",
     contacto_autorizado: consent,
