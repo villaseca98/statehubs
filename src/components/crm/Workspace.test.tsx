@@ -52,7 +52,7 @@ describe('Workspace', () => {
     fireEvent.change(name, { target: { value: 'Clara V.' } });
     fireEvent.blur(name);
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
-    expect(screen.getByText('Clara V.')).toBeTruthy();
+    expect(screen.getAllByText('Clara V.').length).toBeGreaterThan(0);
   });
 
   it('opens on the operations centre when it comes first, instead of «Hoy»', () => {

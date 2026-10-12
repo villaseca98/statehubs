@@ -13,6 +13,7 @@ import { TimelineView } from './TimelineView';
 import { RecordPanel } from './RecordPanel';
 import { TodayView } from './TodayView';
 import { OpsView } from './OpsView';
+import { OperationsDashboard } from './OperationsDashboard';
 import { CardsView } from './CardsView';
 import { RuntimeContext } from './runtimeContext';
 import { FilterBar } from './FilterBar';
@@ -182,6 +183,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
             )}
 
             {view && filters.entity && <div className="mb-4"><FilterBar filters={filters} records={records} titleOf={titleOf} dark={dark} /></div>}
+            {(!view || view.type === 'ops') && <OperationsDashboard blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
             {!view && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
             {view && view.type === 'worklist' && (
               <WorklistView blueprint={blueprint} view={view} records={shown} dark={dark} titleOf={titleOf} selectedId={openId}
