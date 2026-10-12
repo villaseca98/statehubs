@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { AlertTriangle, ArrowRight, CalendarClock, CheckCircle2, Home, MessageCircle, Phone, Sun, TrendingUp, Users, WalletCards, Building2, Clock3, Sparkles } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CalendarClock, CheckCircle2, Home, MessageCircle, Phone, Sun, TrendingUp, Users, Building2, Clock3, Sparkles } from 'lucide-react';
 import type { AppRecord, Blueprint, DashboardWidget, Entity } from '@shared/blueprint/types.ts';
 import { computeToday } from '@/lib/crm/today';
 import type { TodayItem } from '@/lib/crm/today';
