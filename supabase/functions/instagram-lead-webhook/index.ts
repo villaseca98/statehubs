@@ -242,7 +242,7 @@ Deno.serve(async (req) => {
         const text = String(message?.text ?? "").trim();
         if (!senderId || !messageId || !text || message?.is_echo) continue;
         const normalized = normalize(text);
-        const hasIntent = /\\b(comprar|compra|busco|buscando|alquilar|alquiler|vender|venta|piso|casa|inmueble|propiedad|vivienda|hipoteca|presupuesto|visita)\\b/.test(normalized);
+        const hasIntent = /\b(comprar|compra|busco|buscando|alquilar|alquiler|vender|venta|piso|casa|inmueble|propiedad|vivienda|hipoteca|presupuesto|visita)\b/.test(normalized);
         if (!hasIntent) continue;
         const data = mapInstagramMessage(text, senderId);
         const { error } = await admin.from("crm_records").insert({
