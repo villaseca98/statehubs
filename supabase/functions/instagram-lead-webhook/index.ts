@@ -136,12 +136,12 @@ function mapLead(payload: Record<string, unknown>) {
 function mapInstagramMessage(text: string, senderId: string) {
   const n = normalize(text);
   let operation = "";
-  if (/\\b(vender|venta|vender mi|vender la)\\b/.test(n)) operation = "vender";
-  else if (/\\b(alquilar|alquiler|arrendar|rentar)\\b/.test(n)) operation = "alquilar";
-  else if (/\\b(comprar|compra|busco comprar|quiero comprar)\\b/.test(n)) operation = "comprar";
+  if (/\b(vender|venta|vender mi|vender la)\b/.test(n)) operation = "vender";
+  else if (/\b(alquilar|alquiler|arrendar|rentar)\b/.test(n)) operation = "alquilar";
+  else if (/\b(comprar|compra|busco comprar|quiero comprar)\b/.test(n)) operation = "comprar";
 
   let budget = 0;
-  const budgetMatch = n.match(/(?:presupuesto|hasta|sobre|unos|aprox(?:imadamente)?)\\s*(?:de)?\\s*(\\d[\\d.,]*)\\s*(k|mil|euros?|eur|€)?|(?:€|eur)\\s*(\\d[\\d.,]*)/);
+  const budgetMatch = n.match(/(?:presupuesto|hasta|sobre|unos|aprox(?:imadamente)?)\s*(?:de)?\s*(\d[\d.,]*)\s*(k|mil|euros?|eur|€)?|(?:€|eur)\s*(\d[\d.,]*)/);
   if (budgetMatch) {
     const raw = budgetMatch[1] ?? budgetMatch[3] ?? "";
     budget = asNumber(raw);
@@ -149,17 +149,17 @@ function mapInstagramMessage(text: string, senderId: string) {
   }
 
   let plazo = "";
-  if (/\\b(urgente|cuanto antes|este mes|proximo mes|pronto)\\b/.test(n)) plazo = "mes";
-  else if (/\\b(trimestre|3 meses|tres meses)\\b/.test(n)) plazo = "trimestre";
-  else if (/\\b(semestre|6 meses|seis meses)\\b/.test(n)) plazo = "semestre";
+  if (/\b(urgente|cuanto antes|este mes|proximo mes|pronto)\b/.test(n)) plazo = "mes";
+  else if (/\b(trimestre|3 meses|tres meses)\b/.test(n)) plazo = "trimestre";
+  else if (/\b(semestre|6 meses|seis meses)\b/.test(n)) plazo = "semestre";
 
   let financiacion = "";
-  if (/\\b(preaprobada|hipoteca aprobada|financiacion aprobada)\\b/.test(n)) financiacion = "preaprobada";
-  else if (/\\b(no necesito hipoteca|sin hipoteca|no necesito financiacion)\\b/.test(n)) financiacion = "no_necesita";
-  else if (/\\b(hipoteca en tramite|financiacion en tramite)\\b/.test(n)) financiacion = "en_tramite";
+  if (/\b(preaprobada|hipoteca aprobada|financiacion aprobada)\b/.test(n)) financiacion = "preaprobada";
+  else if (/\b(no necesito hipoteca|sin hipoteca|no necesito financiacion)\b/.test(n)) financiacion = "no_necesita";
+  else if (/\b(hipoteca en tramite|financiacion en tramite)\b/.test(n)) financiacion = "en_tramite";
 
-  const email = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i)?.[0] ?? "";
-  const phone = text.match(/(?:\\+?\\d[\\d .()-]{7,}\\d)/)?.[0]?.trim() ?? "";
+  const email = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ?? "";
+  const phone = text.match(/(?:\+?\d[\d .()-]{7,}\d)/)?.[0]?.trim() ?? "";
   const data: Record<string, unknown> = {
     nombre: "Contacto de Instagram",
     telefono: phone,
