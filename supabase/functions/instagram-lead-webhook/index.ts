@@ -229,6 +229,42 @@ Deno.serve(async (req) => {
 
   let imported = 0;
   let duplicates = 0;
+
+  if (event.object === "instagram") {
+    const instagramAccountId = env("INSTAGRAM_ACCOUNT_ID");
+    if (!instagramAccountId) return json({ error: "Falta INSTAGRAM_ACCOUNT_ID para recibir mensajes directos." }, 503);
+    for (const entry of event.entry) {
+      if (entry.id !== instagramAccountId) continue;
+      for (const messageEvent of entry.messaging ?? []) {
+        const message = messageEvent.message;
+        const senderId = String(messageEvent.sender?.id ?? "");
+        const messageId = String(message?.mid ?? "");
+        const text = String(message?.text ?? "").trim();
+        if (!senderId || !messageId || !text || message?.is_echo) continue;
+        const normalized = normalize(text);
+        const hasIntent = /\\b(comprar|compra|busco|buscando|alquilar|alquiler|vender|venta|piso|casa|inmueble|propiedad|vivienda|hipoteca|presupuesto|visita)\\b/.test(normalized);
+        if (!hasIntent) continue;
+        const data = mapInstagramMessage(text, senderId);
+        const { error } = await admin.from("crm_records").insert({
+          app_id: appId,
+          entity: "lead",
+          data,
+          is_sample: false,
+          source: "instagram_dm",
+          external_event_id: messageId,
+        });
+        if (error?.code === "23505") { duplicates++; continue; }
+        if (error) return json({ error: "No se pudo guardar el mensaje como lead; Meta puede reintentar el webhook." }, 500);
+        imported++;
+      }
+    }
+    return json({ received: true, imported, duplicates });
+  }
+
+  if (![accessToken, pageId, graphVersion].every(Boolean)) {
+    return json({ error: "Falta configuración de Meta Lead Ads en los secretos del servidor." }, 503);
+  }
+
   for (const entry of event.entry) {
     if (entry.id !== pageId) continue;
     for (const change of entry.changes ?? []) {
