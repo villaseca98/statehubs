@@ -26,7 +26,7 @@ export function Nav({ account, onStart }: { account?: ReactNode; onStart: () => 
         </div>
         <div className="ml-auto flex min-w-0 items-center gap-2 text-sm">
           {account}
-          <button onClick={onStart} className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-estate-forest px-3.5 py-2 font-semibold text-white shadow-[0_12px_28px_-12px_rgba(19,42,30,.7)] transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.035] hover:bg-estate-deep active:scale-[.98] sm:px-4">
+          <button onClick={onStart} className="sh-focus sh-elevate inline-flex shrink-0 items-center gap-1.5 rounded-full bg-estate-forest px-3.5 py-2 font-semibold text-white shadow-[0_12px_28px_-12px_rgba(19,42,30,.7)] transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.035] hover:bg-estate-deep active:scale-[.98] sm:px-4">
             Empezar<span className="hidden sm:inline"> gratis</span> <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>

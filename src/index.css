@@ -10,15 +10,15 @@
   :root {
     /* StateHubs: warm paper, near-black ink, one red (the logo's). */
     --background: 45 17% 95%;
-    --foreground: 40 11% 10%;
+    --foreground: 144 21% 12%;
     --card: 0 0% 100%;
     --border: 40 18% 88%;
     --muted: 42 16% 92%;
     --muted-foreground: 40 5% 40%;
-    --primary: 352 77% 54%;
+    --primary: 156 50% 24%;
     --primary-foreground: 0 0% 100%;
     --destructive: 0 70% 46%;
-    --ink: 36 13% 7%;
+    --ink: 144 21% 12%;
   }
   * { @apply border-border; }
   html { -webkit-text-size-adjust: 100%; }
@@ -71,3 +71,10 @@
   .sh-interactive:hover { transform: perspective(900px) translateY(-5px) rotateX(1.2deg); box-shadow: 0 28px 55px -25px rgba(19,42,30,.3); }
 }
 @media (prefers-reduced-motion: reduce) { .sh-interactive, .sh-interactive:hover { transition: none !important; transform: none !important; } }
+
+@layer components {
+ .sh-surface { @apply rounded-sh-md border border-estate-line bg-white shadow-sh-sm; }
+ .sh-focus { @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-estate-moss; }
+ .sh-elevate { @apply transform-gpu transition-all duration-300 ease-sh motion-reduce:transform-none motion-reduce:transition-none; }
+ @media (hover: hover) and (pointer: fine) { .sh-elevate:hover { transform: translate3d(0,-3px,0); box-shadow: 0 20px 42px -20px rgba(19,42,30,.28); } }
+}

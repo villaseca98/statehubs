@@ -21,10 +21,13 @@ export default {
         destructive: { DEFAULT: "hsl(var(--destructive))", foreground: "#fff" },
         ink: "hsl(var(--ink))",
         // The logo's colours (BRAND in _shared/blueprint/look.ts), for the public web.
-        brand: { from: "#ff5a36", to: "#ff2d87", red: "#e5304a", light: "#ff7a8c", ink: "#0b1020" },
+        brand: { from: "#1e3a2b", to: "#3f8060", red: "#1f5c45", light: "#a8d6b2", ink: "#17231b" },
         // The estate palette of the public web (see components/landing/palette.ts).
         estate: { forest: "#1e3a2b", deep: "#132a1e", moss: "#2f5a41", sage: "#8fae8b", cream: "#f4f2ec", sand: "#e9e5da", line: "#e2ded2", ink: "#17231b", muted: "#5f6a61", lime: "#d4ec7a", sun: "#f2cf63" },
       },
+      boxShadow: { 'sh-sm': '0 3px 12px -5px rgba(19,42,30,.16)', 'sh-md': '0 16px 36px -18px rgba(19,42,30,.27)', 'sh-lg': '0 30px 72px -32px rgba(19,42,30,.36)' },
+      borderRadius: { 'sh-sm': '12px', 'sh-md': '18px', 'sh-lg': '28px' },
+      transitionTimingFunction: { sh: 'cubic-bezier(.2,.8,.2,1)' },
       borderColor: { DEFAULT: "hsl(var(--border))" },
     },
   },
