@@ -28,7 +28,7 @@ export function ModuleCards({ modules = MODULES, selected, onToggle, disabled, c
         return (
           <li key={m.key}>
             <button type="button" aria-pressed={on} disabled={disabled} onClick={() => onToggle(m.key)}
-              className={`group flex w-full items-start gap-3 rounded-xl border-2 p-3 text-left transition disabled:opacity-60 ${on ? 'border-primary bg-primary/5 shadow-sm' : 'border-dashed border-border bg-card hover:border-primary/50 hover:bg-muted/40'}`}>
+              className={`sh-press sh-focus group flex w-full items-start gap-3 rounded-xl border-2 p-3 text-left transition-colors duration-200 disabled:opacity-60 ${on ? 'border-primary bg-primary/5 shadow-sm' : 'border-dashed border-border bg-card hover:border-primary/50 hover:bg-muted/40'}`}>
               <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${on ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground group-hover:text-foreground'}`}>
                 <ModuleIcon name={m.icon} className="h-5 w-5" />
               </span>

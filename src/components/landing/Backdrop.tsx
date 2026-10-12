@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 // Shared pieces of the public web: the soft estate mesh with grain and light,
 // a reveal-on-scroll wrapper and the section heading. Motion is reduced by
@@ -30,8 +30,9 @@ export function Mesh({ className = '', intensity = 1, dark = false }: { classNam
 
 /** Rises into place the first time it scrolls into view. */
 export function Reveal({ children, delay = 0, className = '', y = 28 }: { children: ReactNode; delay?: number; className?: string; y?: number }) {
-  // Without IntersectionObserver (old browsers, tests) it is simply there.
-  if (typeof IntersectionObserver === 'undefined') return <div className={className}>{children}</div>;
+  const reduceMotion = useReducedMotion();
+  // Render visible content when motion is reduced or observers are unavailable.
+  if (reduceMotion || typeof IntersectionObserver === 'undefined') return <div className={className}>{children}</div>;
   return (
     <motion.div className={className} initial={{ opacity: 0, y }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '0px 0px -12% 0px' }}
       transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}>
