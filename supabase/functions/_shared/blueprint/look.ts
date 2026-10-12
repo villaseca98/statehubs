@@ -30,6 +30,13 @@ export const LOOK: Look = {
   },
 };
 
+// The same look at night: deep ink background (BRAND.ink), raised surfaces,
+// soft borders and text that reads without glare. The red stays the red.
+export const LOOK_DARK: LookColors = {
+  bg: '#0b1020', surface: '#131a2e', border: '#252e48', text: '#e7e9f1', muted: '#98a1b9',
+  primary: '#ef3d56', primaryText: '#ffffff', navBg: '#070a15', navText: '#a3abc2', navActive: '#ffffff',
+};
+
 // The brand colours of the logo («Capas de estado»): a red-to-pink gradient.
 // `red` is the solid version used for buttons; `light` reads well on dark.
 export const BRAND = { from: '#ff5a36', to: '#ff2d87', red: '#e5304a', light: '#ff7a8c', ink: '#0b1020' } as const;
