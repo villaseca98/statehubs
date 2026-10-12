@@ -78,7 +78,7 @@ function mapLead(payload: Record<string, unknown>) {
   const budget = asNumber(pick(f, ["presupuesto_max", "presupuesto maximo", "presupuesto", "budget"]));
   const zone = pick(f, ["zona", "zona de interes", "localidad", "city", "ciudad"]);
   const timeline = enumValue(pick(f, ["plazo", "cuando quieres", "timeline", "cuando"]), {
-    "este mes": "mes", "inmediato": "mes", "proximo mes": "mes", "1 mes": "mes",
+    "mes": "mes", "este mes": "mes", "inmediato": "mes", "proximo mes": "mes", "1 mes": "mes",
     "trimestre": "trimestre", "3 meses": "trimestre", "este trimestre": "trimestre",
     "semestre": "semestre", "6 meses": "semestre", "sin prisa": "sin_prisa",
   });
@@ -171,7 +171,7 @@ Deno.serve(async (req) => {
       const leadgenId = String(change.value?.leadgen_id ?? "");
       if (!leadgenId) continue;
 
-      const leadResponse = await fetch(`https://graph.facebook.com/${graphVersion}/${encodeURIComponent(leadgenId}?fields=id,created_time,field_data,form_id,ad_id,campaign_id`, {
+      const leadResponse = await fetch(`https://graph.facebook.com/${graphVersion}/${encodeURIComponent(leadgenId)}?fields=id,created_time,field_data,form_id,ad_id,campaign_id`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (!leadResponse.ok) return json({ error: "Meta no ha permitido recuperar el lead; se puede reintentar el webhook." }, 502);
