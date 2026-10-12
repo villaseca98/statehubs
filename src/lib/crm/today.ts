@@ -29,7 +29,7 @@ export interface Today {
 }
 
 // Dates that record when something started, not when something is due.
-const PAST_MARKERS = /^(abierta|abierto|alta|fecha_alta|creado|creada|creacion|desde|inicio|ultimo_envio|registro)$/;
+const PAST_MARKERS = /^(abierta|abierto|alta|fecha_alta|creado|creada|creacion|desde|inicio|ultimo_envio|ultima_actividad|registro)$/;
 // States that mean «nothing left to do».
 const CLOSED = /(ganad|perdid|cobrad|pagad|entregad|hech|resuelt|cerrad|descartad|firmad|rechazad|aceptad|completad|cancelad|finalizad|archivad|inactiv|^alta$)/i;
 // Dates that are about expiry: they warn a month ahead.
