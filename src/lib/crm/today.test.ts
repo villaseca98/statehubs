@@ -61,7 +61,7 @@ describe('Hoy: what needs doing', () => {
   it('adds follow-up fields and realistic next steps to the real-estate template', () => {
     const inmobiliaria = composeApp('crm', 'Inmobiliaria Sol', ['panel', 'analisis', 'leads', 'inmuebles', 'visitas', 'embudo', 'clientes', 'documentos'], 'inmobiliaria');
     const lead = inmobiliaria.entities.find((e) => e.key === 'lead')!;
-    expect(lead.fields.map((f) => f.key)).toEqual(expect.arrayContaining(['siguiente_paso', 'proximo_contacto', 'prioridad_comercial']));
+    expect(lead.fields.map((f) => f.key)).toEqual(expect.arrayContaining(['siguiente_paso', 'proximo_contacto', 'prioridad_comercial', 'fuente_lead', 'instagram_usuario', 'campana_instagram', 'estado_cualificacion', 'puntuacion_lead', 'contacto_autorizado']));
 
     const records = sampleRecordsFor(inmobiliaria);
     const overdueFollowUp = records.find((r) => r.id === 'm-l1');
