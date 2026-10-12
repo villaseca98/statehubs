@@ -704,6 +704,10 @@ export const PACKS: { key: PackKey; name: string; pitch: string; modules: string
   { key: 'turistico', name: 'Alquiler turístico', pitch: 'Reservas de Airbnb y Booking, calendario, limpiezas e ingresos.', modules: ['centro', 'turistico', 'cartera', 'contactos_inmo', 'equipo', 'analisis'] },
   { key: 'ambos', name: 'Las dos cosas', pitch: 'Vendes, alquilas y gestionas pisos turísticos.', modules: ['centro', 'contactos_inmo', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'turistico', 'equipo', 'analisis', 'documentos'] },
 ];
+// The pieces an agency picks from; the older generic ones stay available under «Más piezas».
+const AGENCY = ['centro', 'contactos_inmo', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'turistico', 'equipo', 'analisis', 'documentos', 'automatizaciones', 'gastos'];
+export const agencyModules = () => AGENCY.map((k) => MODULES.find((m) => m.key === k)!);
+export const extraModules = () => MODULES.filter((m) => !AGENCY.includes(m.key));
 export const composePack = (pack: PackKey, name: string) => composeApp('crm', name, PACKS.find((p) => p.key === pack)?.modules ?? PACKS[2].modules);
 
 const PANEL: Record<string, DashboardWidget[]> = {

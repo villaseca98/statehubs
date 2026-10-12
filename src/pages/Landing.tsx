@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Briefcase, Handshake, Loader2, Sparkles, Sun, Trash2, Undo2, Zap } from 'lucide-react';
+import { ArrowRight, Building2, CalendarRange, Layers, Loader2, Search, Sparkles, Sun, Trash2, Undo2 } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 import { hasServer } from '@/lib/supabase';
 import { crmApi } from '@/lib/crm/api';
@@ -8,24 +8,20 @@ import type { CrmApp } from '@/lib/crm/api';
 import { isLocalApp, localCrmApi } from '@/lib/crm/localApi';
 import { ScrollHero } from '@/components/crm/ScrollHero';
 import { ModuleIcon } from '@/components/crm/ModuleCards';
-import { composeApp, getModule, STARTER } from '@shared/blueprint/modules.ts';
-import type { AppKind } from '@shared/blueprint/modules.ts';
-import { SECTORS } from '@shared/blueprint/sectors.ts';
-import type { SectorDef } from '@shared/blueprint/sectors.ts';
+import { composePack, getModule, PACKS } from '@shared/blueprint/modules.ts';
+import type { PackKey } from '@shared/blueprint/modules.ts';
 
-// Landing: the 3D story, then two doors (CRM or ERP) that open a working app
-// straight away, or a sentence to the AI. Nothing else to configure first.
+// Landing: the 3D story, then one question (what does your agency do?) that
+// opens a working app straight away, or a sentence to the AI.
 
-const KINDS: { kind: AppKind; icon: typeof Handshake; title: string; tagline: string }[] = [
-  { kind: 'crm', icon: Handshake, title: 'CRM', tagline: 'Para vender y atender: leads con su siguiente paso, embudo, agenda y clientes.' },
-  { kind: 'erp', icon: Briefcase, title: 'ERP', tagline: 'Para llevar la empresa: facturas y cobros, pedidos, almacén y clientes.' },
-];
+const PACK_ICON: Record<PackKey, typeof Building2> = { compraventa: Building2, turistico: CalendarRange, ambos: Layers };
+const PACK_NAME: Record<PackKey, string> = { compraventa: 'Mi inmobiliaria', turistico: 'Mis alojamientos', ambos: 'Mi inmobiliaria' };
 
 const POINTS = [
-  { icon: Sun, title: 'Abres y sabes qué toca', text: '«Hoy» junta las citas, lo atrasado y lo que viene. Sin buscar en tablas.' },
-  { icon: Sparkles, title: 'Lo cambias hablando', text: 'Pide un campo, una pantalla o una pieza. Ves la propuesta antes de aplicarla.' },
-  { icon: Undo2, title: 'Siempre hay vuelta atrás', text: 'Cada cambio es una versión. Quitar una pieza no borra tus datos.' },
-  { icon: Zap, title: 'Conectado a lo tuyo', text: 'Cuando entra un lead o se cobra una factura, avisa a tu n8n, Make o Zapier.' },
+  { icon: Sun, title: 'Abres y sabes qué toca', text: 'Llegadas, salidas, limpiezas, visitas y seguimientos de hoy, con avisos de lo que se cruza.' },
+  { icon: Search, title: 'Encuentras cualquier caso', text: 'Filtros como en Notion y búsqueda en todo: operaciones cerradas, perdidas, de un agente o de una zona.' },
+  { icon: CalendarRange, title: 'Airbnb y Booking en tu calendario', text: 'Las reservas llegan por el calendario iCal de cada anuncio. Sin prometer lo que las plataformas no dejan.' },
+  { icon: Undo2, title: 'Lo cambias hablando', text: 'Pide un campo o una pantalla a la IA. Ves la propuesta antes y siempre hay vuelta atrás.' },
 ];
 
 export default function Landing() {
@@ -37,7 +33,7 @@ export default function Landing() {
   const [error, setError] = useState('');
   const start = useRef<HTMLElement>(null);
 
-  useEffect(() => { document.title = 'StateHubs · Tu CRM o tu ERP, montado a piezas'; }, []);
+  useEffect(() => { document.title = 'StateHubs · El CRM para inmobiliarias y alquiler turístico'; }, []);
   useEffect(() => {
     if (loading) return;
     Promise.all([localCrmApi.listApps(), user ? crmApi.listApps().catch(() => []) : Promise.resolve([])]).then(([mine, remote]) => setApps([...remote, ...mine]));
@@ -47,13 +43,12 @@ export default function Landing() {
   const newApp = async () => (user ? await crmApi.createApp(user.id).then((a) => ({ api: crmApi, app: a })).catch(() => null) : null)
     ?? { api: localCrmApi, app: await localCrmApi.createApp('') };
 
-  // A sector opens with its own pieces and the extra fields that sector asks for.
-  const open = async (kind: AppKind, sector?: SectorDef) => {
-    setBusy(sector?.key ?? kind); setError('');
+  // Each answer opens the same unified app with the pieces that business uses.
+  const open = async (pack: PackKey) => {
+    setBusy(pack); setError('');
     try {
       const { api, app } = await newApp();
-      const name = sector ? sector.name : kind === 'crm' ? 'Mi CRM' : 'Mi ERP';
-      const { proposal } = await api.propose(app.id, composeApp(kind, name, sector?.modules ?? STARTER[kind], sector?.key));
+      const { proposal } = await api.propose(app.id, composePack(pack, PACK_NAME[pack]));
       await api.apply(proposal.id);
       navigate(`/app/${app.id}`);
     } catch (e) { setError((e as Error).message); setBusy(null); }
@@ -81,47 +76,33 @@ export default function Landing() {
           : hasServer && <Link to="/entrar" className="rounded-md border border-white/25 px-3 py-1.5 text-white hover:border-white/60">Entrar</Link>)} />
 
       <section ref={start} aria-label="Empezar" className="mx-auto max-w-4xl scroll-mt-6 px-4 pb-10 pt-14 md:pt-20">
-        <h2 className="text-center font-display text-3xl font-bold tracking-tight md:text-4xl">Empieza en un clic</h2>
-        <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">Se abre funcionando, con datos de ejemplo. Luego le pones o quitas piezas, o se lo pides a la IA.</p>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          {KINDS.map(({ kind, icon: Icon, title, tagline }) => (
-            <button key={kind} onClick={() => open(kind)} disabled={!!busy}
-              className="group rounded-2xl border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md disabled:opacity-60">
-              <span className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink text-white"><Icon className="h-5 w-5" /></span>
-                <span className="font-display text-2xl font-bold">{title}</span>
-                {busy === kind ? <Loader2 className="ml-auto h-5 w-5 animate-spin text-primary" /> : <ArrowRight className="ml-auto h-5 w-5 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />}
-              </span>
-              <span className="mt-3 block text-sm text-muted-foreground">{tagline}</span>
-              <span className="mt-3 flex flex-wrap gap-1.5">
-                {STARTER[kind].filter((k) => k !== 'panel').map((k) => <span key={k} className="rounded-full bg-muted px-2 py-0.5 text-xs">{getModule(k)?.name}</span>)}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        <div role="group" aria-label="Sectores" className="mt-6">
-          <h3 className="text-sm font-medium">O empieza por tu sector, con sus campos ya puestos</h3>
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
-            {SECTORS.map((s) => (
-              <button key={s.key} onClick={() => open(s.kind, s)} disabled={!!busy}
-                className="group flex items-start gap-3 rounded-xl border bg-card p-3 text-left transition hover:border-primary/60 disabled:opacity-60">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted"><ModuleIcon name={s.icon} className="h-4 w-4" /></span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2 font-semibold">{s.name}<span className="rounded bg-muted px-1.5 text-[10px] font-medium uppercase text-muted-foreground">{s.kind}</span></span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">{s.pitch}</span>
+        <h2 className="text-center font-display text-3xl font-bold tracking-tight md:text-4xl">¿A qué se dedica tu agencia?</h2>
+        <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">Se abre funcionando, con datos de ejemplo marcados como ejemplo. Luego lo ajustas tú o se lo pides a la IA.</p>
+        <div role="group" aria-label="Tipo de agencia" className="mt-8 grid gap-4 md:grid-cols-3">
+          {PACKS.map((p) => {
+            const Icon = PACK_ICON[p.key];
+            return (
+              <button key={p.key} onClick={() => open(p.key)} disabled={!!busy}
+                className={`group flex flex-col rounded-2xl border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md disabled:opacity-60 ${p.key === 'ambos' ? 'border-primary/40 ring-1 ring-primary/20' : ''}`}>
+                <span className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink text-white"><Icon className="h-5 w-5" /></span>
+                  <span className="font-display text-xl font-bold">{p.name}</span>
+                  {busy === p.key ? <Loader2 className="ml-auto h-5 w-5 animate-spin text-primary" /> : <ArrowRight className="ml-auto h-5 w-5 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />}
                 </span>
-                {busy === s.key ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" /> : <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />}
+                <span className="mt-3 block text-sm text-muted-foreground">{p.pitch}</span>
+                <span className="mt-3 flex flex-wrap gap-1.5">
+                  {p.modules.filter((k) => k !== 'centro').map((k) => <span key={k} className="rounded-full bg-muted px-2 py-0.5 text-xs">{getModule(k)?.name}</span>)}
+                </span>
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
         <form className="mt-5 rounded-2xl border bg-card p-2 shadow-sm" onSubmit={(e) => { e.preventDefault(); void ask(); }}>
-          <label htmlFor="pedir" className="flex items-center gap-2 px-2 pt-1 text-sm font-medium"><Sparkles className="h-4 w-4 text-primary" /> O cuéntale tu negocio a la IA</label>
+          <label htmlFor="pedir" className="flex items-center gap-2 px-2 pt-1 text-sm font-medium"><Sparkles className="h-4 w-4 text-primary" /> O cuéntale tu agencia a la IA</label>
           <textarea id="pedir" value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={2} maxLength={4000}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void ask(); } }}
-            placeholder="Tengo una clínica de fisio. Quiero pacientes por WhatsApp, citas y bonos de sesiones."
+            placeholder="Somos tres agentes en Valencia, vendemos pisos y gestionamos 12 apartamentos turísticos en Airbnb y Booking."
             className="w-full resize-none bg-transparent p-2 text-sm outline-none" />
           <div className="flex items-center justify-between gap-2 px-2 pb-1">
             <span className="text-xs text-muted-foreground">{user ? 'Se guarda en tu cuenta.' : 'Sin cuenta: se guarda en este navegador.'}</span>

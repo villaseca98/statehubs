@@ -1,15 +1,16 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { localCrmApi as api, isLocalApp } from './localApi';
-import { pickTemplate, findModule } from './localAgent';
+import { pickPack, findModule } from './localAgent';
 import { addModule, composeApp, removeModule } from '@shared/blueprint/modules.ts';
 
 describe('guest mode', () => {
   beforeEach(() => localStorage.clear());
 
   it('picks a template by sector and a piece by name', () => {
-    expect(pickTemplate('Tengo una clínica dental').key).toBe('clinica');
-    expect(pickTemplate('control de pedidos y almacén').key).toBe('distribucion');
-    expect(pickTemplate('algo raro').key).toBe('inmobiliaria');
+    expect(pickPack('Gestiono 12 apartamentos turísticos en Airbnb')).toBe('turistico');
+    expect(pickPack('Somos una agencia que vende y capta pisos')).toBe('compraventa');
+    expect(pickPack('Vendemos pisos y llevamos alquileres turísticos')).toBe('ambos');
+    expect(pickPack('algo raro')).toBe('ambos');
     expect(findModule('añade facturas')?.key).toBe('facturas');
     expect(findModule('quita el soporte')?.key).toBe('soporte');
     expect(findModule('hola')).toBeUndefined();
@@ -24,8 +25,9 @@ describe('guest mode', () => {
     expect(await api.apply(first.proposal!.id)).toBe(1);
     const records = await api.records(app.id);
     expect(records.length).toBeGreaterThan(10);
-    // Template ids are kept so relations between sample records still work.
-    expect(records.some((r) => r.id === 'c1')).toBe(true);
+    // Sample records get fresh ids and their links follow them.
+    const deal = records.find((r) => r.entity === 'operacion' && r.data.contacto)!;
+    expect(records.some((r) => r.id === deal.data.contacto)).toBe(true);
 
     const piece = await api.ask(app.id, 'añade facturas');
     expect(piece.proposal?.blueprint.modules).toContain('facturas');
@@ -44,16 +46,16 @@ describe('guest mode', () => {
 
   it('refuses a stale proposal and edits records', async () => {
     const app = await api.createApp('');
-    const p = (await api.ask(app.id, 'clínica')).proposal!;
+    const p = (await api.ask(app.id, 'apartamentos turísticos')).proposal!;
     await api.apply(p.id);
     const stale = (await api.ask(app.id, 'añade facturas')).proposal!;
     const newer = (await api.ask(app.id, 'añade pedidos')).proposal!;
     await expect(api.apply(stale.id)).rejects.toThrow(/ya no está pendiente/);
     await api.apply(newer.id);
 
-    const r = await api.createRecord(app.id, 'paciente', { nombre: 'Prueba' });
-    await api.updateRecord(r.id, { nombre: 'Cambiado' });
-    expect((await api.records(app.id)).find((x) => x.id === r.id)?.data).toEqual({ nombre: 'Cambiado' });
+    const r = await api.createRecord(app.id, 'reserva', { huesped: 'Prueba' });
+    await api.updateRecord(r.id, { huesped: 'Cambiado' });
+    expect((await api.records(app.id)).find((x) => x.id === r.id)?.data).toEqual({ huesped: 'Cambiado' });
     expect(await api.clearSamples(app.id)).toBeGreaterThan(0);
     expect(await api.records(app.id)).toHaveLength(1);
     await api.deleteApp(app.id);

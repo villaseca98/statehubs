@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { motion, useMotionValue, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import type { MotionValue } from 'framer-motion';
 import { ArrowRight, ChevronDown, Plus, Search } from 'lucide-react';
-import type { AppKind } from '@shared/blueprint/modules.ts';
+import type { PackKey } from '@shared/blueprint/modules.ts';
 import { BRAND } from '@shared/blueprint/look.ts';
 import { Logo } from '@/components/brand/Logo';
 
@@ -56,9 +56,8 @@ function Base() {
     <div className="absolute inset-0 overflow-hidden" style={{ background: C.bg, borderRadius: 14, boxShadow: '0 30px 80px rgba(0,0,0,.45)' }}>
       <div className="flex h-9 items-center gap-2 px-3 text-[10px]" style={{ background: C.nav, color: C.navText }}>
         <span className="flex h-5 w-5 items-center justify-center rounded-md text-[10px] font-bold text-white" style={{ background: C.primary }}>M</span>
-        <span className="text-[11px] font-semibold text-white">Mi CRM</span>
-        <span className="rounded border px-1 text-[8px] font-bold uppercase tracking-wider opacity-70">crm</span>
-        <span className="ml-2 hidden gap-2.5 sm:flex">{['Leads', 'Embudo', 'Agenda', 'Clientes'].map((l) => <span key={l}>{l}</span>)}</span>
+        <span className="text-[11px] font-semibold text-white">Inmobiliaria Mediterráneo</span>
+        <span className="ml-2 hidden gap-2.5 sm:flex">{['Centro', 'Contactos', 'Operaciones', 'Inmuebles', 'Calendario'].map((l) => <span key={l}>{l}</span>)}</span>
         <span className="ml-auto flex items-center gap-1 rounded-full px-2 py-0.5" style={{ background: 'rgba(189,183,171,.14)' }}><Search className="h-2.5 w-2.5" />Buscar en todo</span>
         <span className="flex items-center gap-0.5 rounded-full px-2 py-0.5 font-medium text-white" style={{ background: C.primary }}><Plus className="h-2.5 w-2.5" />Nuevo</span>
       </div>
@@ -67,7 +66,7 @@ function Base() {
 }
 
 function Figures() {
-  const items = [['Leads nuevos', '12'], ['Citas hoy', '4'], ['En el embudo', '18.400 €'], ['Cobrado este mes', '6.250 €']];
+  const items = [['Ocupación hoy', '75 %'], ['Neto del mes', '6.840 €'], ['En operaciones', '1,2 M€'], ['Contactos calientes', '7']];
   return (
     <div className="absolute grid grid-cols-4 gap-2" style={{ left: 12, right: 12, top: 46, height: 52 }}>
       {items.map(([label, value]) => (
@@ -83,14 +82,14 @@ function Figures() {
 
 function Leads() {
   const rows: [string, string, string, string, string][] = [
-    ['Lucía Romero', 'WhatsApp', 'green', 'Llamar hoy', 'amber'],
-    ['Taller Hnos. Gil', 'Web', 'teal', 'Enviar presupuesto', 'blue'],
-    ['Marta Ruiz', 'Instagram', 'pink', 'Confirmar cita', 'purple'],
-    ['Clínica Sol', 'Recomendación', 'purple', 'Llamar hoy', 'amber'],
-    ['Pedro Lara', 'Llamada', 'blue', 'Cerrar venta', 'green'],
+    ['Clara Vidal', 'Caliente', 'red', 'Visita V-1043', 'purple'],
+    ['Pilar Navarro', 'Vendedora', 'pink', 'Tasación', 'amber'],
+    ['Tomás Ribes', 'Inversor', 'green', 'Enviar 3 pisos', 'blue'],
+    ['Hugo Ferrer', 'Templado', 'amber', 'Firmar alquiler', 'green'],
+    ['Sofía Llorens', 'Propietaria', 'purple', 'Gestión turística', 'teal'],
   ];
   return (
-    <Card title="Leads" count="12" style={{ left: 12, top: 108, width: 304, height: 194 }}>
+    <Card title="Contactos" count="128" style={{ left: 12, top: 108, width: 304, height: 194 }}>
       <div className="flex flex-col">
         {rows.map(([name, origin, oc, next, nc]) => (
           <div key={name} className="flex items-center gap-1.5 py-[5px] text-[10px]" style={{ borderTop: `1px solid ${C.border}`, color: C.text }}>
@@ -107,13 +106,13 @@ function Leads() {
 
 function Pipeline() {
   const cols: [string, string, [string, string][]][] = [
-    ['Nuevo', 'gray', [['Reforma baño', '2.400 €'], ['Web tienda', '1.200 €']]],
-    ['Propuesta', 'blue', [['Mantenimiento', '890 €'], ['Instalación', '3.100 €']]],
-    ['Negociación', 'amber', [['Contrato anual', '7.800 €']]],
-    ['Ganado', 'green', [['Cocina López', '3.010 €']]],
+    ['Visita', 'purple', [['Piso Ruzafa', '215.000 €'], ['Ático Centro', '330.000 €']]],
+    ['Negociación', 'amber', [['Casa Godella', '435.000 €']]],
+    ['Oferta', 'pink', [['Alquiler A-0388', '1.050 €']]],
+    ['Cerrada', 'green', [['Plaza Redonda', '330.000 €']]],
   ];
   return (
-    <Card title="Embudo" count="18.400 €" style={{ left: 324, top: 108, width: 304, height: 194 }}>
+    <Card title="Operaciones" count="1,2 M€" style={{ left: 324, top: 108, width: 304, height: 194 }}>
       <div className="grid grid-cols-4 gap-1.5">
         {cols.map(([name, color, deals]) => (
           <div key={name} className="flex flex-col gap-1 rounded-lg p-1" style={{ background: C.bg }}>
@@ -134,9 +133,9 @@ function Pipeline() {
 const LOWER = { left: 12, top: 312, width: 304, height: 96 } as const;
 
 function Agenda() {
-  const items: [string, string, string][] = [['10:00', 'Visita · Cocina López', 'teal'], ['12:30', 'Llamada · Lucía Romero', 'blue'], ['17:00', 'Reunión · Clínica Sol', 'purple']];
+  const items: [string, string, string][] = [['11:00', 'Limpieza · Malvarrosa Sol', 'teal'], ['18:00', 'Visita · Clara Vidal', 'purple'], ['19:30', 'Llegada · Paolo (Booking)', 'blue']];
   return (
-    <Card title="Agenda · Hoy" style={LOWER}>
+    <Card title="Hoy" style={LOWER}>
       <div className="flex flex-col gap-1">
         {items.map(([h, t, c]) => (
           <div key={h} className="flex items-center gap-2 rounded-md px-1.5 py-[3px] text-[10px]" style={{ border: `1px solid ${C.border}`, color: C.text }}>
@@ -150,17 +149,23 @@ function Agenda() {
   );
 }
 
-function Invoices() {
-  const items: [string, string, string, string, string][] = [['F-0142', 'Cocina López', '3.010 €', 'Cobrada', 'green'], ['F-0143', 'Clínica Sol', '1.452 €', 'Pendiente', 'amber'], ['F-0139', 'Hnos. Gil', '726 €', 'Vencida', 'red']];
+function Bookings() {
+  const rows: [string, [number, number, string, string][]][] = [
+    ['Malvarrosa Sol', [[0, 3, 'Emma', 'red'], [3, 4, 'Paolo', 'blue']]],
+    ['Loft Carmen', [[0, 2, 'Liam', 'red'], [2, 3, 'Ana', 'blue']]],
+    ['Ático Ruzafa', [[1, 3, 'Grupo Martínez', 'blue']]],
+  ];
   return (
-    <Card title="Facturas" count="ERP" style={LOWER}>
-      <div className="flex flex-col">
-        {items.map(([n, c, t, s, col]) => (
-          <div key={n} className="flex items-center gap-2 py-[3px] text-[10px]" style={{ borderTop: `1px solid ${C.border}`, color: C.text }}>
-            <span className="w-11 font-medium" style={NUM}>{n}</span>
-            <span className="min-w-0 flex-1 truncate">{c}</span>
-            <span className="font-semibold" style={NUM}>{t}</span>
-            <Chip color={col}>{s}</Chip>
+    <Card title="Calendario de reservas" count="Airbnb · Booking" style={LOWER}>
+      <div className="flex flex-col gap-1">
+        {rows.map(([name, bars]) => (
+          <div key={name} className="flex items-center gap-1.5 text-[9px]" style={{ color: C.text }}>
+            <span className="w-16 shrink-0 truncate font-medium">{name}</span>
+            <span className="relative h-3.5 flex-1 rounded" style={{ background: C.bg }}>
+              {bars.map(([from, nights, guest, color]) => (
+                <span key={guest} className="absolute inset-y-0 truncate rounded px-1 text-[8px] font-semibold leading-[14px] text-white" style={{ left: `${(from / 7) * 100}%`, width: `${(nights / 7) * 100}%`, background: CHIP[color][1] }}>{guest}</span>
+              ))}
+            </span>
           </div>
         ))}
       </div>
@@ -178,11 +183,11 @@ function Automations() {
   return (
     <Card title="Automatizaciones" count="activa" style={{ ...LOWER, left: 324 }}>
       <div className="flex items-center gap-1 pt-2">
-        {node('Lead ganado', 'cuando pasa')}
+        {node('Reserva nueva', 'de Airbnb')}
         <span className="mew-wire relative h-px flex-1" style={{ background: C.border }}><span className="mew-dot" /></span>
-        {node('Webhook', 'https://…', true)}
+        {node('Limpieza', 'asignada', true)}
         <span className="mew-wire relative h-px flex-1" style={{ background: C.border }}><span className="mew-dot" style={{ animationDelay: '.7s' }} /></span>
-        {node('n8n · Make', 'o Zapier')}
+        {node('WhatsApp', 'al huésped')}
       </div>
     </Card>
   );
@@ -193,9 +198,9 @@ function Automations() {
 const PIECES = [
   { key: 'base', label: 'Tu página', Comp: Base },
   { key: 'cifras', label: 'Cifras del día', Comp: Figures },
-  { key: 'leads', label: 'Leads con su siguiente paso', Comp: Leads },
-  { key: 'embudo', label: 'Embudo de ventas', Comp: Pipeline },
-  { key: 'agenda', label: 'Agenda', Comp: Agenda },
+  { key: 'leads', label: 'Contactos con su próxima acción', Comp: Leads },
+  { key: 'embudo', label: 'Operaciones por etapas', Comp: Pipeline },
+  { key: 'agenda', label: 'Lo de hoy', Comp: Agenda },
   { key: 'auto', label: 'Automatizaciones', Comp: Automations },
 ] as const;
 const GAP = 70; // px between pieces when apart
@@ -250,7 +255,7 @@ function useStageScale() {
   return Math.max(0.42, scale);
 }
 
-export function ScrollHero({ onChoose, nav }: { onChoose: (kind: AppKind) => void; nav?: ReactNode }) {
+export function ScrollHero({ onChoose, nav }: { onChoose: (pack: PackKey) => void; nav?: ReactNode }) {
   const ref = useRef<HTMLElement>(null);
   const reduced = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
@@ -267,7 +272,7 @@ export function ScrollHero({ onChoose, nav }: { onChoose: (kind: AppKind) => voi
   const glow = useTransform(p, (v) => 0.55 + 0.45 * explodeAt(v));
 
   return (
-    <section ref={ref} aria-label="Así se monta tu CRM" className="relative" style={{ height: reduced ? 'auto' : '420vh', background: '#14120f' }}>
+    <section ref={ref} aria-label="Así es StateHubs" className="relative" style={{ height: reduced ? 'auto' : '420vh', background: '#14120f' }}>
       <style>{`
         .mew-dot{position:absolute;top:-2px;left:0;width:5px;height:5px;border-radius:9999px;background:${C.primary};box-shadow:0 0 8px ${C.primary};animation:mew-run 1.4s linear infinite}
         @keyframes mew-run{from{left:0}to{left:calc(100% - 5px)}}
@@ -285,26 +290,26 @@ export function ScrollHero({ onChoose, nav }: { onChoose: (kind: AppKind) => voi
         {/* Story lines */}
         <div className="relative z-20 mx-auto h-36 w-full max-w-3xl px-4 text-center md:h-40">
           <Line p={p} from={[-1, 0]} to={[0.12, 0.17]}>
-            <h1 className="text-4xl font-bold tracking-tight md:text-6xl">Esto es tu CRM.</h1>
-            <p className="mt-3 text-white/65 md:text-lg">Ventas, agenda, facturas y automatizaciones. Y te dice qué toca hoy.</p>
+            <h1 className="text-4xl font-bold tracking-tight md:text-6xl">Tu inmobiliaria, en un solo sitio.</h1>
+            <p className="mt-3 text-white/65 md:text-lg">Contactos, operaciones, inmuebles y pisos turísticos. Y te dice qué toca hoy.</p>
           </Line>
           <Line p={p} from={[0.17, 0.22]} to={[0.42, 0.47]}>
             <p className="text-4xl font-bold tracking-tight md:text-6xl">Hecho de <span style={{ color: BRAND.light }}>piezas</span>.</p>
-            <p className="mt-3 text-white/65 md:text-lg">Cada función es una pieza. Solo pones las que usas.</p>
+            <p className="mt-3 text-white/65 md:text-lg">Compraventa, alquiler y turístico comparten los mismos contactos, inmuebles y equipo.</p>
           </Line>
           <Line p={p} from={[0.47, 0.52]} to={[0.62, 0.67]}>
             <p className="text-4xl font-bold tracking-tight md:text-6xl">Pon y quita.</p>
-            <p className="mt-3 text-white/65 md:text-lg">¿Ahora también facturas? Entra la pieza. Lo que tenías apuntado no se pierde.</p>
+            <p className="mt-3 text-white/65 md:text-lg">¿Empiezas a gestionar pisos turísticos? Entra el calendario de reservas. Lo que tenías no se pierde.</p>
           </Line>
           <Line p={p} from={[0.67, 0.72]} to={[0.82, 0.86]}>
             <p className="text-4xl font-bold tracking-tight md:text-6xl">Y se monta en vivo.</p>
             <p className="mt-3 text-white/65 md:text-lg">Lo ves funcionando antes de crear nada. Y cada cambio tiene vuelta atrás.</p>
           </Line>
           <Line p={p} from={[0.86, 0.92]}>
-            <p className="text-3xl font-bold tracking-tight md:text-5xl">Tu CRM o tu ERP, <span style={{ color: BRAND.light }}>montado a piezas</span>.</p>
+            <p className="text-3xl font-bold tracking-tight md:text-5xl">Ventas y alquiler turístico, <span style={{ color: BRAND.light }}>en un solo CRM</span>.</p>
             <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-              <button onClick={() => onChoose('crm')} className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-semibold text-white" style={{ background: C.primary }}>Montar un CRM <ArrowRight className="h-4 w-4" /></button>
-              <button onClick={() => onChoose('erp')} className="inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-2.5 font-semibold text-white hover:border-white/60">Montar un ERP <ArrowRight className="h-4 w-4" /></button>
+              <button onClick={() => onChoose('ambos')} className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-semibold text-white" style={{ background: C.primary }}>Empezar gratis <ArrowRight className="h-4 w-4" /></button>
+              <Link to="/demo" className="inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-2.5 font-semibold text-white hover:border-white/60">Ver la demo <ArrowRight className="h-4 w-4" /></Link>
             </div>
           </Line>
         </div>
@@ -322,7 +327,7 @@ export function ScrollHero({ onChoose, nav }: { onChoose: (kind: AppKind) => voi
               {PIECES.map(({ key, Comp }, i) => (
                 <Layer key={key} p={p} index={i} swap={key === 'agenda' ? 'out' : undefined}><Comp /></Layer>
               ))}
-              <Layer p={p} index={4} swap="in"><Invoices /></Layer>
+              <Layer p={p} index={4} swap="in"><Bookings /></Layer>
             </motion.div>
           </div>
           </div>
@@ -331,7 +336,7 @@ export function ScrollHero({ onChoose, nav }: { onChoose: (kind: AppKind) => voi
         {/* Names of the pieces while they are apart */}
         <ul className="relative z-20 mx-auto mb-6 flex max-w-xl flex-wrap justify-center gap-2 px-4 lg:absolute lg:right-8 lg:top-1/2 lg:mb-0 lg:-translate-y-1/2 lg:flex-col lg:items-start" aria-label="Piezas">
           {PIECES.map(({ key, label }, i) => <LegendItem key={key} p={p} i={i} label={label} out={key === 'agenda'} />)}
-          <LegendItem p={p} i={6} label="Facturas (pieza de ERP)" isNew />
+          <LegendItem p={p} i={6} label="Alquiler turístico" isNew />
         </ul>
 
         {!reduced && (

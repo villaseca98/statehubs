@@ -14,7 +14,7 @@ import { ModuleCards } from '@/components/crm/ModuleCards';
 import { AnalysisSetup } from '@/components/crm/AnalysisSetup';
 import { LogoSetup } from '@/components/brand/LogoSetup';
 import { makeTitleLookup } from '@/components/crm/theme';
-import { addModule, modulesFor, otherModules, removeModule } from '@shared/blueprint/modules.ts';
+import { addModule, agencyModules, extraModules, removeModule } from '@shared/blueprint/modules.ts';
 import { AUTOMATION_ENTITY } from '@shared/blueprint/automations.ts';
 import type { HookEvent } from '@shared/blueprint/automations.ts';
 import { DEFAULT_ANALYSIS, withAnalysis } from '@shared/blueprint/analysis.ts';
@@ -112,7 +112,6 @@ export default function AppPage() {
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, thinking, panel]);
 
   const current = versions.find((v) => v.version === app?.current_version) ?? null;
-  const kind = current?.blueprint.kind ?? proposal?.blueprint.kind ?? 'crm';
   const previewRecords = useMemo<AppRecord[]>(() => {
     if (!proposal) return records;
     return [...records, ...proposal.samples.map((s, i) => ({ id: s.id ?? `muestra-${i}`, entity: s.entity, data: s.data, is_sample: true }))];
@@ -288,13 +287,11 @@ export default function AppPage() {
           footer={hasSamples && <div className="border-t p-3"><button onClick={clearSamples} className="w-full rounded-lg border px-3 py-2 text-sm">Quitar los datos de ejemplo</button></div>}>
           <p className="mb-3 text-sm text-muted-foreground">Toca una pieza para ponerla o quitarla. Primero ves cómo queda; quitarla no borra lo que habías apuntado.</p>
           {thinking && <p className="mb-2 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Preparando la propuesta…</p>}
-          <ModuleCards compact disabled={thinking} modules={modulesFor(kind)} selected={(proposal?.blueprint ?? current.blueprint).modules ?? []} onToggle={toggleModule} />
-          {otherModules(kind).length > 0 && (
-            <details className="mt-4">
-              <summary className="cursor-pointer text-sm font-medium">Más piezas, de {kind === 'crm' ? 'ERP' : 'CRM'}</summary>
-              <div className="mt-3"><ModuleCards compact disabled={thinking} modules={otherModules(kind)} selected={(proposal?.blueprint ?? current.blueprint).modules ?? []} onToggle={toggleModule} /></div>
-            </details>
-          )}
+          <ModuleCards compact disabled={thinking} modules={agencyModules()} selected={(proposal?.blueprint ?? current.blueprint).modules ?? []} onToggle={toggleModule} />
+          <details className="mt-4">
+            <summary className="cursor-pointer text-sm font-medium">Más piezas</summary>
+            <div className="mt-3"><ModuleCards compact disabled={thinking} modules={extraModules()} selected={(proposal?.blueprint ?? current.blueprint).modules ?? []} onToggle={toggleModule} /></div>
+          </details>
           <div className="mt-5">
             <LogoSetup name={(proposal?.blueprint ?? current.blueprint).name} logo={(proposal?.blueprint ?? current.blueprint).logo} disabled={thinking} onChange={setLogo} />
           </div>

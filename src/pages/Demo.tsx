@@ -1,24 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Home } from 'lucide-react';
-import { DEMO_APPS } from '@shared/blueprint/samples.ts';
-import type { DemoApp } from '@shared/blueprint/samples.ts';
-import { composeApp, modulesFor, sampleRecordsFor } from '@shared/blueprint/modules.ts';
-import type { AppRecord, RecordData } from '@shared/blueprint/types.ts';
+import { composePack, PACKS, sampleRecordsFor } from '@shared/blueprint/modules.ts';
+import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import { Workspace } from '@/components/crm/Workspace';
 
-// Public demo: no account, everything in memory. Every piece on, plus the
-// sector templates, so people can feel it before making their own.
+// Public demo: no account, everything in memory. The same agency three ways
+// (sales, tourist rentals, both), every record marked as an example.
 
-const full = (kind: 'crm' | 'erp', sector: string, pitch: string): DemoApp => {
-  const blueprint = composeApp(kind, `StateHubs ${kind.toUpperCase()}`, modulesFor(kind).map((m) => m.key));
-  return { key: kind, sector, pitch, blueprint, records: sampleRecordsFor(blueprint) };
-};
-const APPS: DemoApp[] = [
-  full('crm', 'CRM completo', 'Leads, embudo, agenda, clientes, presupuestos, soporte y toda la operación.'),
-  full('erp', 'ERP completo', 'Facturas y cobros, pedidos, almacén, compras, gastos y toda la operación.'),
-  ...DEMO_APPS,
-];
+interface DemoApp { key: string; sector: string; pitch: string; blueprint: Blueprint; records: AppRecord[] }
+const APPS: DemoApp[] = [...PACKS].reverse().map((p) => {
+  const blueprint = composePack(p.key, 'Inmobiliaria Mediterráneo (demo)');
+  return { key: p.key, sector: p.name, pitch: p.pitch, blueprint, records: sampleRecordsFor(blueprint) };
+});
 
 export default function Demo() {
   const [key, setKey] = useState(APPS[0].key);
@@ -42,7 +36,7 @@ export default function Demo() {
       <select aria-label="Ejemplo" value={key} onChange={(e) => setKey(e.target.value)} className="rounded-md border border-white/20 bg-white/10 px-2 py-1 text-white">
         {APPS.map((a) => <option key={a.key} value={a.key} className="text-black">{a.sector}</option>)}
       </select>
-      <span className="hidden min-w-0 flex-1 truncate lg:inline">{app.pitch} Nada se guarda.</span>
+      <span className="hidden min-w-0 flex-1 truncate lg:inline">{app.pitch} Datos de ejemplo; nada se guarda.</span>
       <Link to="/" className="ml-auto inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 font-medium text-white">Crea el tuyo <ArrowRight className="h-4 w-4" /></Link>
     </div>
   );
