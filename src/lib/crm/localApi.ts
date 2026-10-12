@@ -40,6 +40,11 @@ const now = () => new Date().toISOString();
 export const isLocalApp = (id: string) => id.startsWith('local-');
 
 export const localCrmApi: typeof crmApi = {
+  organizations: async () => [],
+  members: async () => [],
+  updateOrganization: needsAccount,
+  setOrganizationMember: needsAccount,
+  removeOrganizationMember: needsAccount,
   listApps: async () => Object.values(load()).map((a) => a.app).sort((x, y) => y.updated_at.localeCompare(x.updated_at)),
   createApp: async () => {
     const app: CrmApp = { id: `local-${uid()}`, name: 'Nueva aplicación', current_version: null, updated_at: now() };
