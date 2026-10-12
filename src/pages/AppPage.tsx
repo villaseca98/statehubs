@@ -269,7 +269,7 @@ export default function AppPage() {
   return (
     <div className="h-[100dvh]">
       {showing ? (
-        <Workspace key={showing.name} blueprint={showing} records={previewing ? previewRecords : records} tools={tools} banner={proposalBar} className="h-full"
+        <Workspace key={showing.name} appId={appId} blueprint={showing} records={previewing ? previewRecords : records} tools={tools} banner={proposalBar} className="h-full"
           onCreate={previewing ? () => undefined : createRecord}
           onUpdate={previewing ? () => undefined : updateRecord}
           onDelete={previewing ? () => undefined : deleteRecord}
