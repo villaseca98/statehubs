@@ -33,7 +33,7 @@ const opts = (...list: [string, string, SelectOption['color']][]): SelectOption[
 const SECTOR_CLIENTE = opts(['industria', 'Industria', 'blue'], ['servicios', 'Servicios', 'purple'], ['comercio', 'Comercio', 'teal'], ['hosteleria', 'Hostelería', 'amber'], ['construccion', 'Construcción', 'gray'], ['salud', 'Salud', 'green'], ['tecnologia', 'Tecnología', 'pink']);
 const TAMANO = opts(['micro', 'Micro (1–9)', 'gray'], ['pequena', 'Pequeña (10–49)', 'blue'], ['mediana', 'Mediana (50–249)', 'purple'], ['grande', 'Grande (250+)', 'green']);
 const PLAZO = opts(['mes', 'Este mes', 'red'], ['trimestre', 'Este trimestre', 'amber'], ['semestre', 'Este semestre', 'blue'], ['sin_prisa', 'Sin prisa', 'gray']);
-const ORIGEN = opts(['web', 'Web', 'teal'], ['whatsapp', 'WhatsApp', 'green'], ['instagram', 'Instagram', 'pink'], ['recomendacion', 'Recomendación', 'purple'], ['llamada', 'Llamada', 'blue']);
+const ORIGEN = opts(['web', 'Web', 'teal'], ['whatsapp', 'WhatsApp', 'green'], ['instagram', 'Instagram', 'pink'], ['meta_ads', 'Meta Ads (Instagram/Facebook)', 'blue'], ['recomendacion', 'Recomendación', 'purple'], ['llamada', 'Llamada', 'blue']);
 const comercial: Field = { key: 'comercial', label: 'Comercial', type: 'relation', relation: 'persona' };
 
 export const SECTORS: SectorDef[] = [
