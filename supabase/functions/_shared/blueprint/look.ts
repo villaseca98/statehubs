@@ -42,6 +42,6 @@ export const LOOK_DARK: LookColors = {
   soft: '#1b2c23', accent: '#d5df63',
 };
 
-// The brand colours of the logo («Capas de estado»): a red-to-pink gradient.
+// StateHubs evergreen brand colours (legacy 'red' property kept for compatibility).
 // `red` is the solid version used for buttons; `light` reads well on dark.
-export const BRAND = { from: '#ff5a36', to: '#ff2d87', red: '#e5304a', light: '#ff7a8c', ink: '#0b1020' } as const;
+export const BRAND = { from: '#1e3a2b', to: '#3f8060', red: '#1f5c45', light: '#a8d6b2', ink: '#17231b' } as const;
