@@ -95,4 +95,12 @@ describe('guest mode: functions as cards', () => {
     const app = await api.createApp('');
     await expect(api.propose(app.id, composeApp('crm', 'X', ['panel']))).rejects.toThrow(/no es válida/);
   });
+
+  it('says that syncing Airbnb and Booking needs an account, without inventing bookings', async () => {
+    const app = await api.createApp('');
+    const res = await api.syncIcal(app.id);
+    expect(res).toMatchObject({ nuevas: 0, actualizadas: 0, canceladas: 0, errores: [] });
+    expect(res.mensaje).toMatch(/necesita una cuenta/);
+    expect(await api.records(app.id)).toEqual([]);
+  });
 });

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { BrainCircuit, CalendarDays, Columns3, ListChecks, Menu, Plus, Sun, Table2, X } from 'lucide-react';
+import { BrainCircuit, CalendarDays, CalendarRange, Columns3, ListChecks, Menu, Plus, Sun, Table2, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { AppRecord, Blueprint, RecordData, View } from '@shared/blueprint/types.ts';
 import { computeToday } from '@/lib/crm/today';
@@ -8,6 +8,7 @@ import { makeTitleLookup, themeVars } from './theme';
 import { ViewBody } from './views';
 import { WorklistView } from './WorklistView';
 import { AnalysisView } from './AnalysisView';
+import { TimelineView } from './TimelineView';
 import { RecordPanel } from './RecordPanel';
 import { TodayView } from './TodayView';
 import { RuntimeContext } from './runtimeContext';
@@ -28,16 +29,17 @@ export interface WorkspaceProps {
   onUpdate: (id: string, data: RecordData) => void;
   onDelete: (id: string) => void;
   onWebhook?: (record: AppRecord) => Promise<string> | string | void;
+  onSyncIcal?: () => Promise<string> | string;
   tools?: Tool[];
   banner?: ReactNode;
   now?: Date;
   className?: string;
 }
 
-const ICON: Record<string, LucideIcon> = { table: Table2, kanban: Columns3, calendar: CalendarDays, worklist: ListChecks, analysis: BrainCircuit };
+const ICON: Record<string, LucideIcon> = { table: Table2, kanban: Columns3, calendar: CalendarDays, worklist: ListChecks, analysis: BrainCircuit, timeline: CalendarRange };
 const HOY = 'hoy';
 
-export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, onWebhook, tools = [], banner, now, className = '' }: WorkspaceProps) {
+export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, onWebhook, onSyncIcal, tools = [], banner, now, className = '' }: WorkspaceProps) {
   const sections = useMemo(() => blueprint.views.filter((v) => v.type !== 'dashboard'), [blueprint.views]);
   const [section, setSection] = useState<string>(HOY);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -121,7 +123,11 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
               <AnalysisView blueprint={blueprint} view={view} records={records} dark={false} titleOf={titleOf} selectedId={openId}
                 onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
             )}
-            {view && view.type !== 'worklist' && view.type !== 'analysis' && (
+            {view && view.type === 'timeline' && (
+              <TimelineView blueprint={blueprint} view={view} records={records} dark={false} titleOf={titleOf} selectedId={openId} now={now} onSync={onSyncIcal}
+                onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
+            )}
+            {view && view.type !== 'worklist' && view.type !== 'analysis' && view.type !== 'timeline' && (
               <ViewBody blueprint={blueprint} view={view} records={records} dark={false} titleOf={titleOf} selectedId={openId}
                 onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
             )}

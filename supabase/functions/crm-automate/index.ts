@@ -3,7 +3,8 @@
 // POST { app_id, record_id, event: "alta" | "cambio" | "prueba", before? } with the user's JWT.
 // "prueba" sends the automation record itself to its own URL, to test it.
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { AUTOMATION_ENTITY, hookPayload, isAllowedHookUrl, isPrivateAddress, matchAutomations } from "../_shared/blueprint/automations.ts";
+import { AUTOMATION_ENTITY, hookPayload, matchAutomations } from "../_shared/blueprint/automations.ts";
+import { isPublicHost } from "../_shared/publicUrl.ts";
 import type { AppRecord, Blueprint, RecordData } from "../_shared/blueprint/types.ts";
 
 const corsHeaders = {
@@ -17,21 +18,9 @@ const TIMEOUT_MS = 8000;
 // Datetime fields hold local time ("YYYY-MM-DDTHH:MM"); the apps are Spanish.
 const nowMadrid = () => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date()).replace(" ", "T");
 
-// [SECURITY] Resolve the host and refuse private, loopback or metadata addresses,
-// so a webhook can't be pointed at our own network.
-async function publicHost(url: string): Promise<boolean> {
-  if (!isAllowedHookUrl(url)) return false;
-  const host = new URL(url).hostname.replace(/^\[|\]$/g, "");
-  if (/^[\d.]+$/.test(host) || host.includes(":")) return !isPrivateAddress(host);
-  const addrs: string[] = [];
-  for (const type of ["A", "AAAA"] as const) {
-    try { addrs.push(...await Deno.resolveDns(host, type)); } catch { /* no records of this type */ }
-  }
-  return addrs.length > 0 && addrs.every((a) => !isPrivateAddress(a));
-}
-
 async function send(url: string, payload: unknown): Promise<string> {
-  if (!await publicHost(url)) return "URL no permitida: tiene que ser https y pública.";
+  // [SECURITY] Only public https hosts (resolved addresses checked too).
+  if (!await isPublicHost(url)) return "URL no permitida: tiene que ser https y pública.";
   try {
     const res = await fetch(url, {
       method: "POST",

@@ -20,6 +20,7 @@ import type { HookEvent } from '@shared/blueprint/automations.ts';
 import { DEFAULT_ANALYSIS, withAnalysis } from '@shared/blueprint/analysis.ts';
 import type { AnalysisConfig, AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import type { Change } from '@shared/blueprint/diff.ts';
+import { syncSummaryText } from '@shared/blueprint/ical.ts';
 
 // One app, open: the workspace for daily work, and three side panels to
 // change it (pieces, the AI, history). Every change arrives as a proposal you
@@ -238,6 +239,12 @@ export default function AppPage() {
     setRecords((rs) => rs.filter((r) => r.id !== id));
     api.deleteRecord(id).catch((e) => { fail(e); setRecords(prev); });
   };
+  // Airbnb/Booking calendars (iCal), read on the server; guest mode says it needs an account.
+  const syncIcal = async () => {
+    const res = await api.syncIcal(appId);
+    if (res.nuevas + res.actualizadas + res.canceladas > 0) setRecords(await api.records(appId));
+    return syncSummaryText(res);
+  };
   const testWebhook = async (r: AppRecord) => (await automate(r, 'prueba', null)).join(' · ') || 'No hay nada que probar.';
   const clearSamples = async () => {
     if (!window.confirm('¿Quitar todos los datos de ejemplo? Tus datos reales no se tocan.')) return;
@@ -274,7 +281,8 @@ export default function AppPage() {
           onCreate={previewing ? () => undefined : createRecord}
           onUpdate={previewing ? () => undefined : updateRecord}
           onDelete={previewing ? () => undefined : deleteRecord}
-          onWebhook={previewing ? undefined : testWebhook} />
+          onWebhook={previewing ? undefined : testWebhook}
+          onSyncIcal={previewing ? undefined : syncIcal} />
       ) : (
         <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
           <Sparkles className="h-8 w-8 text-primary" />
