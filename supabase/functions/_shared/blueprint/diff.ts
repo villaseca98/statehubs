@@ -13,7 +13,7 @@ const TYPE_LABEL: Record<string, string> = {
   date: 'fecha', datetime: 'fecha y hora', boolean: 'sí/no', email: 'email', phone: 'teléfono', url: 'enlace', select: 'lista de opciones',
   relation: 'relación', nif: 'NIF/CIF',
 };
-const VIEW_LABEL: Record<string, string> = { table: 'tabla', kanban: 'tablero', calendar: 'calendario', dashboard: 'panel', worklist: 'lista de trabajo', analysis: 'análisis' };
+const VIEW_LABEL: Record<string, string> = { table: 'tabla', kanban: 'tablero', calendar: 'calendario', dashboard: 'panel', worklist: 'lista de trabajo', analysis: 'análisis', ops: 'centro de operaciones', timeline: 'calendario de reservas', cards: 'fichas' };
 
 const byKey = <T extends { key: string }>(list: T[] = []) => new Map(list.map((x) => [x.key, x]));
 

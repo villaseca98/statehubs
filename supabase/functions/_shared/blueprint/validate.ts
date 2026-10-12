@@ -86,6 +86,7 @@ export function validateBlueprint(bp: unknown): string[] {
       for (const k of Array.isArray(a.entities) ? a.entities : []) if (!entities.has(k)) err(`Vista ${v.key}: analysis.entities incluye "${k}", que no existe.`);
       continue;
     }
+    if (v.type === 'ops') continue;
     if (!entities.has(v.entity ?? '')) { err(`Vista ${v.key}: la entidad "${v.entity}" no existe.`); continue; }
     const ent = v.entity as string;
     if (v.type === 'table') {
@@ -97,6 +98,16 @@ export function validateBlueprint(bp: unknown): string[] {
     }
     if (v.type === 'calendar' && !DATE_TYPES.has(fieldOf(ent, v.dateField)?.type ?? '')) err(`Vista ${v.key}: dateField debe ser un campo date o datetime de ${ent}.`);
     if (v.type === 'worklist') checkWorklist(v, entities.get(ent)!, entities, err);
+    if (v.type === 'timeline') {
+      if (!DATE_TYPES.has(fieldOf(ent, v.startField)?.type ?? '')) err(`Vista ${v.key}: startField debe ser un campo date o datetime de ${ent}.`);
+      if (!DATE_TYPES.has(fieldOf(ent, v.endField)?.type ?? '')) err(`Vista ${v.key}: endField debe ser un campo date o datetime de ${ent}.`);
+      if (fieldOf(ent, v.rowField)?.type !== 'relation') err(`Vista ${v.key}: rowField debe ser un campo relation de ${ent}.`);
+    }
+    if (v.type === 'cards') {
+      for (const c of v.columns ?? []) if (!fieldOf(ent, c)) err(`Vista ${v.key}: la columna "${c}" no es un campo de ${ent}.`);
+      if (v.imageField && fieldOf(ent, v.imageField)?.type !== 'url') err(`Vista ${v.key}: imageField debe ser un campo url de ${ent}.`);
+    }
+    if ((v.type === 'timeline' || v.type === 'cards') && v.groupBy && fieldOf(ent, v.groupBy)?.type !== 'select') err(`Vista ${v.key}: groupBy debe ser un campo select de ${ent}.`);
   }
   return errors;
 }

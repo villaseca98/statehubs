@@ -50,8 +50,13 @@ export interface Entity {
   fields: Field[];
 }
 
-export type ViewType = 'table' | 'kanban' | 'calendar' | 'dashboard' | 'worklist' | 'analysis';
-export const VIEW_TYPES: ViewType[] = ['table', 'kanban', 'calendar', 'dashboard', 'worklist', 'analysis'];
+// ops: the operations centre (no entity): today's arrivals, departures,
+// cleanings, visits, deals and alerts, all read from the records.
+// timeline: one row per record of rowField's entity (a property) with a bar
+// per record from startField to endField (a reservation), overlaps flagged.
+// cards: a gallery of records with a photo (imageField) and their key fields.
+export type ViewType = 'table' | 'kanban' | 'calendar' | 'dashboard' | 'worklist' | 'analysis' | 'ops' | 'timeline' | 'cards';
+export const VIEW_TYPES: ViewType[] = ['table', 'kanban', 'calendar', 'dashboard', 'worklist', 'analysis', 'ops', 'timeline', 'cards'];
 
 // Worklist actions. Each is a button on a row, shown only in the stages
 // listed in `when` (all stages if empty), so what you can do depends on
@@ -111,15 +116,19 @@ export interface View {
   key: string;
   label: string;
   type: ViewType;
-  entity?: string;      // all but dashboard
-  columns?: string[];   // table: field keys, in order
-  groupBy?: string;     // kanban: select field
+  entity?: string;      // all but dashboard, analysis and ops
+  columns?: string[];   // table: field keys, in order; cards: fields shown under the title
+  groupBy?: string;     // kanban: select field; timeline/cards: select that colours bars or badges
   dateField?: string;   // calendar: date or datetime field
   sumField?: string;    // kanban: money/number field summed per column
   widgets?: DashboardWidget[]; // dashboard
   actions?: ViewAction[];       // worklist (groupBy = stage select, optional)
   availability?: Availability;  // worklist with schedule actions
   analysis?: AnalysisConfig;    // analysis
+  startField?: string;  // timeline: date or datetime where the bar starts
+  endField?: string;    // timeline: date or datetime where it ends
+  rowField?: string;    // timeline: relation whose target records are the rows
+  imageField?: string;  // cards: url field with the photo
 }
 
 export interface Blueprint {
