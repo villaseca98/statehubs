@@ -33,7 +33,7 @@ const opts = (...list: [string, string, SelectOption['color']][]): SelectOption[
 const SECTOR_CLIENTE = opts(['industria', 'Industria', 'blue'], ['servicios', 'Servicios', 'purple'], ['comercio', 'Comercio', 'teal'], ['hosteleria', 'Hostelería', 'amber'], ['construccion', 'Construcción', 'gray'], ['salud', 'Salud', 'green'], ['tecnologia', 'Tecnología', 'pink']);
 const TAMANO = opts(['micro', 'Micro (1–9)', 'gray'], ['pequena', 'Pequeña (10–49)', 'blue'], ['mediana', 'Mediana (50–249)', 'purple'], ['grande', 'Grande (250+)', 'green']);
 const PLAZO = opts(['mes', 'Este mes', 'red'], ['trimestre', 'Este trimestre', 'amber'], ['semestre', 'Este semestre', 'blue'], ['sin_prisa', 'Sin prisa', 'gray']);
-const ORIGEN = opts(['web', 'Web', 'teal'], ['whatsapp', 'WhatsApp', 'green'], ['instagram', 'Instagram', 'pink'], ['recomendacion', 'Recomendación', 'purple'], ['llamada', 'Llamada', 'blue']);
+const ORIGEN = opts(['web', 'Web', 'teal'], ['whatsapp', 'WhatsApp', 'green'], ['instagram', 'Instagram', 'pink'], ['meta_ads', 'Meta Ads (Instagram/Facebook)', 'blue'], ['recomendacion', 'Recomendación', 'purple'], ['llamada', 'Llamada', 'blue']);
 const comercial: Field = { key: 'comercial', label: 'Comercial', type: 'relation', relation: 'persona' };
 
 export const SECTORS: SectorDef[] = [
@@ -113,7 +113,7 @@ export const SECTORS: SectorDef[] = [
   },
   {
     key: 'inmobiliaria', kind: 'crm', name: 'Inmobiliaria', icon: 'Building2',
-    pitch: 'Cartera de inmuebles con referencia, m², certificado y exclusiva; demandantes con zona, presupuesto y financiación; visitas con su resultado.',
+    pitch: 'CRM para equipos inmobiliarios: recibe leads de Instagram, cualifica intención y presupuesto, asigna al agente adecuado y controla cada siguiente paso.',
     modules: ['panel', 'analisis', 'leads', 'inmuebles', 'visitas', 'embudo', 'clientes', 'documentos'],
     fields: {
       lead: [
@@ -124,25 +124,41 @@ export const SECTORS: SectorDef[] = [
         { key: 'habitaciones_min', label: 'Habitaciones mínimas', type: 'number' },
         { key: 'financiacion', label: 'Financiación', type: 'select', options: opts(['no_necesita', 'No la necesita', 'green'], ['preaprobada', 'Hipoteca preaprobada', 'blue'], ['en_tramite', 'En trámite', 'amber'], ['sin_mirar', 'Sin mirar', 'gray']) },
         { key: 'plazo', label: 'Plazo', type: 'select', options: PLAZO },
+        { key: 'siguiente_paso', label: 'Siguiente paso comercial', type: 'text', help: 'La acción concreta que debe ocurrir para avanzar este lead.' },
+        { key: 'proximo_contacto', label: 'Próximo seguimiento', type: 'date', help: 'La vista Hoy lo señalará cuando toque o se retrase.' },
+        { key: 'prioridad_comercial', label: 'Prioridad comercial', type: 'select', options: opts(['alta', 'Alta', 'red'], ['media', 'Media', 'amber'], ['baja', 'Baja', 'gray']) },
+        { key: 'fuente_lead', label: 'Origen del lead', type: 'select', options: opts(['instagram', 'Instagram', 'pink'], ['meta_ads', 'Meta Ads (Instagram/Facebook)', 'blue'], ['web', 'Web', 'teal'], ['portal', 'Portal inmobiliario', 'blue'], ['recomendacion', 'Recomendación', 'purple'], ['llamada', 'Llamada', 'gray'], ['otro', 'Otro', 'gray']) },
+        { key: 'instagram_usuario', label: 'Usuario de Instagram', type: 'text', help: 'Nombre de usuario público, si el lead llega desde Instagram.' },
+        { key: 'campana_instagram', label: 'Campaña de Instagram', type: 'text' },
+        { key: 'estado_cualificacion', label: 'Cualificación', type: 'select', options: opts(['nuevo', 'Nuevo sin revisar', 'gray'], ['pendiente_datos', 'Faltan datos', 'amber'], ['cualificado', 'Cualificado', 'green'], ['no_cualificado', 'No cualificado', 'red']) },
+        { key: 'puntuacion_lead', label: 'Puntuación del lead', type: 'number', help: 'Puntuación orientativa basada en los datos disponibles; no sustituye la revisión del agente.' },
+        { key: 'contacto_autorizado', label: 'Permiso para contacto comercial', type: 'select', options: opts(['confirmado', 'Confirmado', 'green'], ['pendiente', 'Pendiente de confirmar', 'amber'], ['no', 'No autorizado', 'red']) },
       ],
       oportunidad: [
         { key: 'inmueble', label: 'Inmueble', type: 'relation', relation: 'inmueble' },
         { key: 'tipo_operacion', label: 'Operación', type: 'select', options: opts(['venta', 'Venta', 'blue'], ['alquiler', 'Alquiler', 'teal']) },
         { key: 'comision', label: 'Comisión', type: 'percent' },
+        { key: 'siguiente_paso', label: 'Siguiente paso comercial', type: 'text', help: 'La acción concreta pendiente para avanzar hacia el cierre.' },
+        { key: 'proximo_contacto', label: 'Próximo seguimiento', type: 'date' },
+        { key: 'motivo_perdida', label: 'Motivo de pérdida', type: 'select', options: opts(['precio', 'Precio', 'amber'], ['financiacion', 'Financiación', 'red'], ['eligio_otro', 'Eligió otra propiedad/agencia', 'purple'], ['sin_respuesta', 'Dejó de responder', 'gray'], ['otro', 'Otro', 'blue']) },
+      ],
+      visita: [
+        { key: 'siguiente_paso', label: 'Siguiente paso tras la visita', type: 'text', help: 'Ej.: enviar documentación, llamar al propietario o preparar oferta.' },
+        { key: 'proximo_contacto', label: 'Seguimiento tras la visita', type: 'date' },
       ],
       cliente: [
         { key: 'rol', label: 'Es', type: 'select', options: opts(['comprador', 'Comprador', 'blue'], ['propietario', 'Propietario', 'pink'], ['inquilino', 'Inquilino', 'teal'], ['arrendador', 'Arrendador', 'purple']) },
       ],
     },
     columns: {
-      leads: ['operacion_busca', 'zona', 'presupuesto_max', 'financiacion', 'cita'],
+      leads: ['operacion_busca', 'fuente_lead', 'estado_cualificacion', 'puntuacion_lead', 'zona', 'presupuesto_max', 'financiacion', 'proximo_contacto', 'prioridad_comercial'],
       clientes: ['nombre', 'telefono', 'email', 'rol'],
     },
     samples: {
-      'm-l1': { operacion_busca: 'comprar', tipo_busca: 'piso', zona: 'Ruzafa, Ensanche', presupuesto_max: 220000, habitaciones_min: 2, financiacion: 'preaprobada', plazo: 'trimestre' },
-      'm-l2': { operacion_busca: 'alquilar', tipo_busca: 'piso', zona: 'Benimaclet', presupuesto_max: 1100, habitaciones_min: 3, financiacion: 'no_necesita', plazo: 'mes' },
-      'm-l3': { operacion_busca: 'vender', tipo_busca: 'atico', zona: 'Centro', plazo: 'semestre' },
-      'm-l4': { operacion_busca: 'comprar', tipo_busca: 'casa', zona: 'Godella, Rocafort', presupuesto_max: 450000, habitaciones_min: 4, financiacion: 'en_tramite', plazo: 'mes' },
+      'm-l1': { operacion_busca: 'comprar', tipo_busca: 'piso', zona: 'Ruzafa, Ensanche', presupuesto_max: 220000, habitaciones_min: 2, financiacion: 'preaprobada', plazo: 'trimestre', siguiente_paso: 'Confirmar disponibilidad y proponer segunda visita', proximo_contacto: rel(-1), prioridad_comercial: 'alta', fuente_lead: 'instagram', instagram_usuario: '@lucia.vlc', campana_instagram: 'Compradores Valencia · Octubre', estado_cualificacion: 'cualificado', puntuacion_lead: 85, contacto_autorizado: 'confirmado' },
+      'm-l2': { operacion_busca: 'alquilar', tipo_busca: 'piso', zona: 'Benimaclet', presupuesto_max: 1100, habitaciones_min: 3, financiacion: 'no_necesita', plazo: 'mes', siguiente_paso: 'Enviar dos opciones que encajen', proximo_contacto: rel(0), prioridad_comercial: 'media', fuente_lead: 'instagram', instagram_usuario: '@hugo.busca.piso', campana_instagram: 'Alquiler Valencia', estado_cualificacion: 'pendiente_datos', puntuacion_lead: 45, contacto_autorizado: 'pendiente' },
+      'm-l3': { operacion_busca: 'vender', tipo_busca: 'atico', zona: 'Centro', plazo: 'semestre', siguiente_paso: 'Concertar valoración del inmueble', proximo_contacto: rel(2), prioridad_comercial: 'media' },
+      'm-l4': { operacion_busca: 'comprar', tipo_busca: 'casa', zona: 'Godella, Rocafort', presupuesto_max: 450000, habitaciones_min: 4, financiacion: 'en_tramite', plazo: 'mes', siguiente_paso: 'Confirmar estado de la financiación', proximo_contacto: rel(1), prioridad_comercial: 'alta' },
       'm-l6': { operacion_busca: 'comprar', financiacion: 'preaprobada' },
       'm-l7': { operacion_busca: 'comprar', financiacion: 'no_necesita' },
       'm-l8': { operacion_busca: 'comprar', financiacion: 'sin_mirar' },

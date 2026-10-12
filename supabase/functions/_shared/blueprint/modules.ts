@@ -47,7 +47,7 @@ export const LIBRARY: Record<string, Entity> = {
       { key: 'nombre', label: 'Nombre', type: 'text', required: true },
       { key: 'telefono', label: 'Teléfono', type: 'phone' },
       { key: 'email', label: 'Email', type: 'email' },
-      { key: 'origen', label: 'Origen', type: 'select', options: opts(['web', 'Web', 'teal'], ['whatsapp', 'WhatsApp', 'green'], ['instagram', 'Instagram', 'pink'], ['recomendacion', 'Recomendación', 'purple'], ['llamada', 'Llamada', 'blue']) },
+      { key: 'origen', label: 'Origen', type: 'select', options: opts(['web', 'Web', 'teal'], ['whatsapp', 'WhatsApp', 'green'], ['instagram', 'Instagram', 'pink'], ['meta_ads', 'Meta Ads (Instagram/Facebook)', 'blue'], ['recomendacion', 'Recomendación', 'purple'], ['llamada', 'Llamada', 'blue']) },
       { key: 'entrada', label: 'Entró el', type: 'date' },
       { key: 'interes', label: 'Interés', type: 'text' },
       { key: 'valor', label: 'Valor estimado', type: 'money' },
