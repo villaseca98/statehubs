@@ -12,7 +12,7 @@ export const HOY = 'hoy';
 
 const KNOWN: Record<string, HubKey> = {
   centro: 'hoy',
-  contactos_inmo: 'clientes', pipeline: 'clientes', agenda_inmo: 'clientes',
+  contactos_inmo: 'clientes', instagram: 'clientes', pipeline: 'clientes', agenda_inmo: 'clientes',
   leads: 'clientes', embudo: 'clientes', agenda: 'clientes', clientes: 'clientes', contactos: 'clientes', presupuestos: 'clientes', soporte: 'clientes',
   cartera: 'inmuebles', inmuebles: 'inmuebles', visitas: 'inmuebles',
   calendario: 'turistico', reservas: 'turistico', limpiezas: 'turistico', incidencias: 'turistico',
