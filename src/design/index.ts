@@ -4,3 +4,5 @@ export { SHSurface } from './SHSurface';
 export type { SHSurfaceProps } from './SHSurface';
 export { SHStatus } from './SHStatus';
 export { tokens } from './tokens';
+export { SHSkeleton } from './SHSkeleton';
+export type { SHSkeletonProps } from './SHSkeleton';
