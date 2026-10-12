@@ -1,0 +1,244 @@
+import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Building2, CalendarCheck, CalendarRange, Check, KeyRound, Layers, Link2, MessageCircle, UserCheck, X } from 'lucide-react';
+import type { PackKey } from '@shared/blueprint/modules.ts';
+import { Logo } from '@/components/brand/Logo';
+import { Mesh, Reveal, SectionHead } from './Backdrop';
+import { InstagramMock } from './Mockups';
+import { CHANNEL, E } from './palette';
+
+// The other sections of the public web: the ribbon of words, the Instagram
+// leads, the big numbers, the honest part about Airbnb and Booking, who it
+// is for, the closing call and the footer.
+
+const WORDS = ['Captación', 'Visitas', 'Arras', 'Leads de Instagram', 'Propietarios', 'Llegadas', 'Limpiezas', 'Licencia turística', 'Neto por reserva', 'Comisiones', 'Calendario iCal', 'Embudo de ventas'];
+
+export function Marquee() {
+  const row = (hidden: boolean) => (
+    <ul aria-hidden={hidden || undefined} className={`flex shrink-0 items-center gap-8 pr-8 ${hidden ? 'motion-reduce:hidden' : ''}`}>
+      {WORDS.map((w) => (
+        <li key={w} className="flex items-center gap-8 whitespace-nowrap font-serif text-xl italic text-estate-forest/80 sm:text-3xl">
+          {w}<span aria-hidden className="h-1.5 w-1.5 rounded-full bg-estate-sage" />
+        </li>
+      ))}
+    </ul>
+  );
+  return (
+    <section aria-label="Lo que lleva StateHubs" className="relative overflow-hidden border-y border-estate-line bg-white/50 py-6"
+      style={{ maskImage: 'linear-gradient(90deg, transparent, black 12%, black 88%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, black 12%, black 88%, transparent)' }}>
+      <div className="sh-marquee">{row(false)}{row(true)}</div>
+    </section>
+  );
+}
+
+// ---- Leads de Instagram ----------------------------------------------------------
+
+const STEPS: [typeof MessageCircle, string, string][] = [
+  [MessageCircle, 'Contesta al momento', 'A las dos de la mañana o en pleno puente. Nadie se queda esperando.'],
+  [UserCheck, 'Pregunta lo que importa', 'Para vivir o invertir, zona, presupuesto y financiación. Lo apunta en la ficha del contacto.'],
+  [CalendarCheck, 'Agenda la visita', 'Ofrece huecos de tu agenda y la cita aparece en Hoy, con el inmueble y el agente.'],
+];
+
+export function Leads() {
+  return (
+    <section id="leads" aria-labelledby="leads-title" className="relative scroll-mt-24 overflow-hidden bg-estate-forest px-4 py-24 text-estate-cream sm:py-32">
+      <Mesh dark intensity={0.9} />
+      <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-16 lg:grid-cols-[1.05fr_1fr]">
+        <div>
+          <SectionHead dark center={false} id="leads-title" eyebrow="Automatización de leads" title={<>Cualifica y agenda <span className="sh-accent">mientras duermes</span>.</>}
+            text="Un bot en el Instagram de tu agencia responde a quien pregunta por un piso, le hace las preguntas de siempre y le da cita. Por la mañana tienes el lead en el CRM, puntuado y con la visita puesta." />
+          <ol className="mt-10 space-y-5">
+            {STEPS.map(([Icon, title, text], i) => (
+              <Reveal key={title} delay={i * 0.08}>
+                <li className="flex gap-4">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-estate-lime text-estate-forest"><Icon className="h-5 w-5" /></span>
+                  <span><b className="block font-semibold text-white">{title}</b><span className="text-sm text-estate-cream/75">{text}</span></span>
+                </li>
+              </Reveal>
+            ))}
+          </ol>
+        </div>
+        <Reveal delay={0.1} className="pb-24">
+          <figure>
+            <InstagramMock />
+            <figcaption className="sr-only">Conversación de Instagram en la que el bot pregunta y agenda una visita; el contacto entra en el CRM como lead caliente.</figcaption>
+          </figure>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+const FIGURES: [string, string, string][] = [
+  ['1', 'sola app', 'Compraventa, alquiler y turístico comparten contactos, inmuebles y equipo.'],
+  ['24 h', 'atendiendo Instagram', 'El bot contesta y agenda a cualquier hora, también en festivos.'],
+  ['2', 'calendarios por anuncio', 'El de Airbnb y el de Booking, en la misma fila del alojamiento.'],
+  ['0 €', 'para probarlo', 'Sin tarjeta y sin cuenta: se abre en tu navegador con datos de ejemplo.'],
+];
+
+export function Numbers() {
+  return (
+    <section aria-label="StateHubs en cifras" className="px-4 py-20 sm:py-28">
+      <div className="mx-auto grid max-w-6xl gap-px overflow-hidden rounded-[28px] border border-estate-line bg-estate-line sm:grid-cols-2 lg:grid-cols-4">
+        {FIGURES.map(([n, label, text], i) => (
+          <Reveal key={label} delay={i * 0.07} className="h-full">
+            <div className="h-full bg-white p-6 sm:p-8">
+              <div className="font-serif text-6xl font-normal leading-none tracking-tight text-estate-forest sm:text-7xl">{n}</div>
+              <div className="mt-4 font-semibold text-estate-ink">{label}</div>
+              <p className="mt-1.5 text-sm text-estate-muted">{text}</p>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ---- Airbnb y Booking, sin humo --------------------------------------------------
+
+function Source({ name, color, sub }: { name: string; color: string; sub: string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-estate-line bg-white p-3 shadow-sm">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white" style={{ background: color }}><CalendarRange className="h-5 w-5" /></span>
+      <span className="min-w-0"><span className="block font-semibold text-estate-ink">{name}</span><span className="block truncate text-xs text-estate-muted">{sub}</span></span>
+    </div>
+  );
+}
+
+function Wire({ delay = '0s' }: { delay?: string }) {
+  return (
+    <span aria-hidden className="relative mx-auto block h-10 w-px bg-estate-sage/60 sm:mx-0 sm:h-px sm:w-full">
+      <span className="sh-dot-run hidden sm:block" style={{ animationDelay: delay }} />
+    </span>
+  );
+}
+
+const YES = ['Las reservas entran solas por el enlace iCal de cada anuncio', 'Se crean, se mueven o se cancelan cuando cambian en la plataforma', 'Los solapes entre canales se marcan en rojo', 'Limpiezas y llegadas salen en Hoy, con su hora'];
+const NO = ['Precios y tarifas', 'Mensajes con huéspedes', 'Pagos y cobros de la plataforma'];
+
+export function Channels() {
+  return (
+    <section id="turistico" aria-labelledby="turistico-title" className="relative scroll-mt-24 overflow-hidden px-4 py-24 sm:py-32">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
+        <div>
+          <SectionHead center={false} id="turistico-title" eyebrow="Airbnb y Booking" title={<>Sincronizado, <span className="sh-accent">sin humo</span>.</>}
+            text="Pegas el enlace del calendario iCal de cada anuncio y las reservas aparecen en su fila. Solo fechas. Te contamos qué hace y qué no, sin letra pequeña." />
+          <Reveal delay={0.1} className="mt-8 grid gap-6 sm:grid-cols-2">
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-estate-ink">Qué hace</h3>
+              <ul className="mt-3 space-y-2.5 text-sm text-estate-muted">
+                {YES.map((t) => <li key={t} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-estate-moss" />{t}</li>)}
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-estate-ink">Qué no hace</h3>
+              <ul className="mt-3 space-y-2.5 text-sm text-estate-muted">
+                {NO.map((t) => <li key={t} className="flex gap-2"><X className="mt-0.5 h-4 w-4 shrink-0 text-estate-muted" />{t}</li>)}
+              </ul>
+              <p className="mt-3 text-xs leading-relaxed text-estate-muted">Las API de las plataformas piden ser partner o pasar por un channel manager. Eso se queda en cada plataforma.</p>
+            </div>
+          </Reveal>
+        </div>
+
+        <Reveal delay={0.15}>
+          <figure className="relative rounded-[28px] border border-estate-line bg-estate-sand/60 p-5 sm:p-8">
+            <div className="relative grid items-center gap-3 sm:grid-cols-[minmax(0,.8fr)_56px_minmax(0,1.4fr)] sm:gap-0">
+              <div className="flex flex-col gap-3">
+                <Source name="Airbnb" color={CHANNEL.airbnb} sub="iCal del anuncio" />
+                <Source name="Booking" color={CHANNEL.booking} sub="iCal del anuncio" />
+              </div>
+              <div className="flex flex-col gap-10 sm:gap-16"><Wire /><span className="hidden sm:block"><Wire delay="1.1s" /></span></div>
+              <div className="rounded-2xl border border-estate-line bg-white p-3 text-estate-ink shadow-[0_24px_60px_-28px_rgba(19,42,30,.45)]">
+                <div className="flex items-center gap-2 text-sm font-semibold"><Link2 className="h-4 w-4 text-estate-moss" />Malvarrosa Sol</div>
+                <div className="mt-2 space-y-1.5">
+                  {([['Emma Larsen', CHANNEL.airbnb, '12–15 oct', 2, 46], ['Familia Dubois', CHANNEL.booking, '16–20 oct', 30, 58], ['Iker · directa', CHANNEL.directa, '22–25 oct', 52, 46]] as const).map(([g, c, d, l, w]) => (
+                    <div key={g} className="relative h-7 rounded-md bg-estate-cream">
+                      <span className="absolute inset-y-0.5 flex items-center justify-between gap-1 overflow-hidden whitespace-nowrap rounded px-1.5 text-[10px] font-semibold text-white" style={{ left: `${l}%`, width: `${w}%`, background: c }}><span className="truncate">{g}</span><span className="font-normal opacity-80">{d}</span></span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-2 flex items-center justify-between text-[10px] text-estate-muted"><span>Última lectura: hace 12 min</span><span className="font-semibold text-estate-moss">3 reservas</span></div>
+              </div>
+            </div>
+            <figcaption className="sr-only">Los calendarios iCal de Airbnb y de Booking llenan la fila del alojamiento en StateHubs.</figcaption>
+          </figure>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+// ---- Para quién ------------------------------------------------------------------
+
+const WHO: { key: PackKey; icon: typeof Building2; title: string; lead: string; points: string[] }[] = [
+  { key: 'compraventa', icon: Building2, title: 'Compraventa', lead: 'Captas, enseñas y cierras.', points: ['Compradores y vendedores con su próxima acción', 'Leads de Instagram cualificados y con visita', 'Embudos de captación, venta y alquiler', 'Cartera con fotos, precio y estado'] },
+  { key: 'turistico', icon: KeyRound, title: 'Alquiler turístico', lead: 'Gestionas pisos de propietarios.', points: ['Reservas de Airbnb y Booking por alojamiento', 'Limpiezas y check-in del día', 'Neto de cada reserva: importe − comisión − gastos', 'Licencia e incidencias en la ficha'] },
+  { key: 'ambos', icon: Layers, title: 'Las dos cosas', lead: 'Vendes, alquilas y gestionas turísticos.', points: ['Un propietario puede vender un piso y alquilar otro', 'Mismos contactos, inmuebles y equipo', 'Un solo «Hoy» con todo lo del día', 'Sin pagar ni aprender dos programas'] },
+];
+
+export function Audience({ onPick, busy }: { onPick: (k: PackKey) => void; busy: boolean }) {
+  return (
+    <section id="para-quien" aria-labelledby="para-quien-title" className="scroll-mt-24 px-4 py-24 sm:py-32">
+      <SectionHead id="para-quien-title" eyebrow="Para quién" title={<>Hecho para agencias <span className="sh-accent">de verdad</span>.</>}
+        text="De una persona a un equipo entero. Elige cómo trabajas y se abre con lo que usas." />
+      <div className="mx-auto mt-14 grid max-w-6xl gap-4 sm:gap-5 md:grid-cols-3">
+        {WHO.map(({ key, icon: Icon, title, lead, points }, i) => {
+          const dark = key === 'ambos';
+          return (
+            <Reveal key={key} delay={i * 0.08} className="h-full">
+              <article className={`relative flex h-full flex-col rounded-[28px] border p-6 ${dark ? 'border-estate-forest bg-estate-forest text-estate-cream' : 'border-estate-line bg-white'}`}>
+                {dark && <span className="absolute right-5 top-5 rounded-full bg-estate-lime px-2.5 py-0.5 text-[11px] font-semibold text-estate-forest">Todo en uno</span>}
+                <span className={`grid h-11 w-11 place-items-center rounded-full ${dark ? 'bg-estate-lime text-estate-forest' : 'bg-estate-forest text-estate-lime'}`}><Icon className="h-5 w-5" /></span>
+                <h3 className={`mt-5 font-serif text-3xl font-normal ${dark ? 'text-white' : 'text-estate-ink'}`}>{title}</h3>
+                <p className={`mt-1 ${dark ? 'text-estate-cream/75' : 'text-estate-muted'}`}>{lead}</p>
+                <ul className={`mt-5 flex-1 space-y-2.5 text-sm ${dark ? 'text-estate-cream/85' : 'text-estate-muted'}`}>
+                  {points.map((t) => <li key={t} className="flex gap-2"><Check className={`mt-0.5 h-4 w-4 shrink-0 ${dark ? 'text-estate-lime' : 'text-estate-moss'}`} />{t}</li>)}
+                </ul>
+                <button type="button" disabled={busy} onClick={() => onPick(key)} className={`group mt-6 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50 ${dark ? 'bg-estate-lime text-estate-forest hover:bg-white' : 'border border-estate-forest/25 text-estate-forest hover:border-estate-forest'}`}>
+                  Empezar con {title.toLowerCase()} <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                </button>
+              </article>
+            </Reveal>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// ---- Cierre y pie ----------------------------------------------------------------
+
+export function Closing({ children }: { children: ReactNode }) {
+  return (
+    <div className="relative overflow-hidden bg-estate-forest px-4 pb-24 pt-24 text-estate-cream sm:pb-32 sm:pt-32">
+      <Mesh dark intensity={0.8} />
+      <div className="relative z-10 mx-auto max-w-4xl">{children}</div>
+    </div>
+  );
+}
+
+export function Footer() {
+  const col = (title: string, links: [string, string][]) => (
+    <div>
+      <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-estate-lime">{title}</h2>
+      <ul className="mt-3 space-y-2 text-sm">
+        {links.map(([to, label]) => (
+          <li key={label}>{to.startsWith('#') ? <a href={to} className="text-estate-cream/80 hover:text-white">{label}</a> : <Link to={to} className="text-estate-cream/80 hover:text-white">{label}</Link>}</li>
+        ))}
+      </ul>
+    </div>
+  );
+  return (
+    <footer className="bg-estate-deep px-4 py-14 text-estate-cream" style={{ borderTop: `1px solid ${E.forest}` }}>
+      <div className="mx-auto grid max-w-6xl gap-10 sm:grid-cols-[1.4fr_1fr_1fr]">
+        <div>
+          <Link to="/" className="text-xl" aria-label="StateHubs, inicio"><Logo dark size={32} /></Link>
+          <p className="mt-3 max-w-xs text-sm text-estate-cream/75">El CRM para inmobiliarias y alquiler turístico. Hecho en España.</p>
+        </div>
+        {col('Producto', [['#funciones', 'Funciones'], ['#leads', 'Leads de Instagram'], ['#turistico', 'Airbnb y Booking'], ['#para-quien', 'Para quién'], ['/demo', 'Demo']])}
+        {col('Cuenta', [['#empezar', 'Empezar gratis'], ['/entrar', 'Entrar'], ['/reels', 'Reels']])}
+      </div>
+      <p className="mx-auto mt-12 max-w-6xl text-xs text-estate-cream/60">© {new Date().getFullYear()} StateHubs</p>
+    </footer>
+  );
+}

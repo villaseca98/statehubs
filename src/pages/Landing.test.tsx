@@ -20,6 +20,13 @@ describe('Landing: one question, one unified agency app', () => {
     const group = screen.getByRole('group', { name: 'Tipo de agencia' });
     expect(within(group).getAllByRole('button')).toHaveLength(3);
     expect(screen.queryByText(/ERP/)).toBeNull();
+    // The rest of the web: the Instagram leads, the honest Airbnb/Booking part, the
+    // discreet free description and the way to the demo. No "made with AI" pitch.
+    expect(screen.getByRole('heading', { name: /mientras duermes/ })).toBeTruthy();
+    expect(screen.getByLabelText('Descríbenos tu agencia')).toBeTruthy();
+    expect(screen.queryByText(/\bIA\b/)).toBeNull();
+    expect(screen.getByRole('heading', { name: /sin humo/ })).toBeTruthy();
+    expect(screen.getAllByRole('link', { name: /demo/i }).some((a) => a.getAttribute('href') === '/demo')).toBe(true);
     fireEvent.click(within(group).getByRole('button', { name: /^Alquiler turístico/ }));
     await waitFor(() => expect(screen.getByText(/Abierta local-/)).toBeTruthy());
     const [app] = await localCrmApi.listApps();
