@@ -209,7 +209,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
         {open && (
           <div className="absolute inset-0 z-40 flex justify-end p-0 md:p-3" style={{ background: dark ? 'rgba(0,0,0,.5)' : 'rgba(11,16,32,.24)', backdropFilter: 'blur(2px)' }} onClick={() => setOpenId(null)}>
             <div className="h-full w-full max-w-[500px] overflow-hidden shadow-2xl md:rounded-[20px]" onClick={(e) => e.stopPropagation()} style={{ border: '1px solid var(--crm-border)' }}>
-              <RecordPanel blueprint={blueprint} record={open} records={records} titleOf={titleOf} dark={dark}
+              <RecordPanel blueprint={blueprint} appId={appId} record={open} records={records} titleOf={titleOf} dark={dark}
                 groupBy={blueprint.views.find((v) => v.entity === open.entity && v.groupBy)?.groupBy}
                 onUpdate={onUpdate} onDelete={(id) => { onDelete(id); setOpenId(null); }} onClose={() => setOpenId(null)} />
             </div>

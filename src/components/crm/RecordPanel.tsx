@@ -3,9 +3,12 @@ import type { AppRecord, Blueprint, Field, RecordData } from '@shared/blueprint/
 import { chipStyle, titleOfRecord, stageField, isNumeric } from './theme';
 import { Cell } from './views';
 import { RecordCalendar } from './RecordCalendar';
+import { PropertyMedia } from './PropertyMedia';
+import { PropertyOverview } from './PropertyOverview';
 
 interface Props {
   blueprint: Blueprint;
+  appId?: string;
   record: AppRecord;
   records: AppRecord[];
   groupBy?: string;
@@ -80,7 +83,7 @@ export function StagePath({ field, value, dark, onPick }: { field: Field; value:
   );
 }
 
-export function RecordPanel({ blueprint, record, records, groupBy, dark = false, titleOf, onUpdate, onDelete, onClose }: Props) {
+export function RecordPanel({ blueprint, appId, record, records, groupBy, dark = false, titleOf, onUpdate, onDelete, onClose }: Props) {
   const entity = blueprint.entities.find((e) => e.key === record.entity)!;
   const stage = stageField(entity, groupBy);
   const highlights = entity.fields.filter((f) => f.key !== entity.titleField && f.key !== stage?.key && (isNumeric(f) || f.type === 'select' || f.type === 'date' || f.type === 'datetime' || f.type === 'relation')).slice(0, 4);
@@ -121,6 +124,8 @@ export function RecordPanel({ blueprint, record, records, groupBy, dark = false,
           </div>
         )}
         {stage && <div className="mb-5"><StagePath field={stage} value={record.data[stage.key]} dark={dark} onPick={set(stage.key)} /></div>}
+        {(record.entity === 'inmueble' || record.entity === 'alojamiento') && <PropertyOverview record={record} entity={entity} records={records} titleOf={titleOf} />}
+        {(record.entity === 'inmueble' || record.entity === 'alojamiento') && <PropertyMedia appId={appId} record={record} onUpdate={onUpdate} />}
         <RecordCalendar key={record.id} blueprint={blueprint} record={record} records={records} />
 
         <div className={`grid gap-x-4 gap-y-3 ${page ? 'md:grid-cols-2' : ''}`} key={record.id}>
