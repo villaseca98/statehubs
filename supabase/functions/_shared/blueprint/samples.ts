@@ -30,7 +30,7 @@ const inmobiliaria: DemoApp = {
   pitch: 'Pisos, compradores y visitas, con el embudo de cada operación.',
   blueprint: {
     version: 1,
-    name: 'Inmobiliaria Sol',
+    name: 'Aurora Inmobiliaria',
     entities: [
       {
         key: 'lead', label: 'Lead', labelPlural: 'Leads', titleField: 'nombre',
@@ -38,7 +38,7 @@ const inmobiliaria: DemoApp = {
           { key: 'nombre', label: 'Nombre', type: 'text', required: true },
           { key: 'telefono', label: 'Teléfono', type: 'phone' },
           { key: 'email', label: 'Email', type: 'email' },
-          { key: 'origen', label: 'Origen', type: 'select', options: opts(['portal', 'Portal inmobiliario', 'blue'], ['web', 'Web', 'teal'], ['whatsapp', 'WhatsApp', 'green'], ['recomendacion', 'Recomendación', 'purple']) },
+          { key: 'origen', label: 'Origen', type: 'select', options: opts(['portal', 'Portal inmobiliario', 'blue'], ['web', 'Web', 'teal'], ['whatsapp', 'WhatsApp', 'green'], ['recomendacion', 'Recomendación', 'purple'], ['instagram', 'Instagram', 'pink'], ['meta_ads', 'Meta Ads', 'teal']) },
           { key: 'busca', label: 'Busca', type: 'text' },
           { key: 'presupuesto', label: 'Presupuesto', type: 'money' },
           { key: 'estado', label: 'Estado', type: 'select', options: opts(['nuevo', 'Nuevo', 'blue'], ['contactado', 'Contactado', 'amber'], ['visita', 'Visita agendada', 'purple'], ['cualificado', 'Cualificado', 'green'], ['descartado', 'Descartado', 'gray']) },
