@@ -3,7 +3,10 @@ import type { Availability } from './types.ts';
 // Bookable slots for a worklist's `schedule` action. Datetimes are stored as
 // local "YYYY-MM-DDTHH:MM" strings (what a datetime-local input produces).
 
-export interface DaySlots { date: string; slots: { time: string; value: string; taken: boolean }[] }
+// `google`: the slot overlaps something in the person's Google Calendar.
+export interface DaySlots { date: string; slots: { time: string; value: string; taken: boolean; google?: boolean }[] }
+// A busy stretch from Google Calendar, as local "YYYY-MM-DDTHH:MM" (Europe/Madrid). `to` is exclusive.
+export interface BusyInterval { from: string; to: string }
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
@@ -12,8 +15,9 @@ export const isoDay = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-
 
 // The next `count` working days from `from` (today included), each with its slots.
 // Slots already past on today, and slots inside the break, are left out.
-export function buildSlots(a: Availability, taken: Iterable<string>, from: Date, count = 5): DaySlots[] {
-  const busy = new Set([...taken].map((t) => String(t).slice(0, 16)));
+// A slot that overlaps any `busy` interval is marked taken (and `google`).
+export function buildSlots(a: Availability, taken: Iterable<string>, from: Date, count = 5, busy: BusyInterval[] = []): DaySlots[] {
+  const used = new Set([...taken].map((t) => String(t).slice(0, 16)));
   const out: DaySlots[] = [];
   const day = new Date(from.getFullYear(), from.getMonth(), from.getDate());
   const nowMin = from.getHours() * 60 + from.getMinutes();
@@ -28,7 +32,9 @@ export function buildSlots(a: Availability, taken: Iterable<string>, from: Date,
       if (isToday && m <= nowMin) continue;
       const time = toHHMM(m);
       const value = `${date}T${time}`;
-      slots.push({ time, value, taken: busy.has(value) });
+      const end = `${date}T${toHHMM(m + a.slotMinutes)}`;
+      const google = busy.some((b) => b.from < end && b.to > value);
+      slots.push({ time, value, taken: used.has(value) || google, ...(google ? { google } : {}) });
     }
     if (slots.length) out.push({ date, slots });
   }

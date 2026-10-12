@@ -2,6 +2,7 @@ import { Check, Trash2, X, ArrowLeft } from 'lucide-react';
 import type { AppRecord, Blueprint, Field, RecordData } from '@shared/blueprint/types.ts';
 import { chipStyle, titleOfRecord, stageField, isNumeric } from './theme';
 import { Cell } from './views';
+import { RecordCalendar } from './RecordCalendar';
 
 interface Props {
   blueprint: Blueprint;
@@ -120,6 +121,7 @@ export function RecordPanel({ blueprint, record, records, groupBy, dark = false,
           </div>
         )}
         {stage && <div className="mb-5"><StagePath field={stage} value={record.data[stage.key]} dark={dark} onPick={set(stage.key)} /></div>}
+        <RecordCalendar key={record.id} blueprint={blueprint} record={record} records={records} />
 
         <div className={`grid gap-x-4 gap-y-3 ${page ? 'md:grid-cols-2' : ''}`} key={record.id}>
           {entity.fields.map((f) => (

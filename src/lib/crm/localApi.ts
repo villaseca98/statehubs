@@ -1,6 +1,6 @@
 import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import { cardProposal } from '@shared/blueprint/modules.ts';
-import type { CrmApp, CrmMessage, CrmProposal, CrmVersion, IcalSyncResult, crmApi } from './api';
+import type { CrmApp, CrmMessage, CrmProposal, CrmVersion, GoogleStatus, IcalSyncResult, crmApi } from './api';
 import { localAgent } from './localAgent';
 
 // Guest mode: the same API as crmApi, kept in this browser (localStorage).
@@ -29,6 +29,11 @@ function update<T>(appId: string, fn: (a: LocalApp) => T): T {
   save(s);
   return out;
 }
+
+// Connecting a Google Calendar needs the OAuth dance on our server and
+// somewhere safe to keep the permission; a browser-only app has neither.
+export const GOOGLE_NEEDS_ACCOUNT = 'Conectar tu Google Calendar necesita una cuenta. En modo prueba, cada cita tiene «Añadir a Google Calendar» y la descarga .ics.';
+const needsAccount = async (): Promise<never> => { throw new Error(GOOGLE_NEEDS_ACCOUNT); };
 
 const uid = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
 const now = () => new Date().toISOString();
@@ -139,4 +144,10 @@ export const localCrmApi: typeof crmApi = {
     nuevas: 0, actualizadas: 0, canceladas: 0, errores: [],
     mensaje: 'Sincronizar con Airbnb y Booking necesita una cuenta: los calendarios se leen desde nuestro servidor. En modo prueba puedes apuntar las reservas a mano.',
   }),
+  googleStatus: async (): Promise<GoogleStatus> => ({ available: false, configured: false, connected: false, mensaje: GOOGLE_NEEDS_ACCOUNT }),
+  googleConnect: needsAccount,
+  googleFinish: needsAccount,
+  googleDisconnect: needsAccount,
+  googleBusy: async () => [],
+  googlePush: needsAccount,
 };
