@@ -70,7 +70,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
   );
   const brand = (
     <div className="flex items-center gap-2.5 px-2">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold" style={{ background: 'var(--crm-primary)', color: '#fff' }}>{blueprint.name.slice(0, 1).toUpperCase()}</span>
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold" style={{ background: '#c7d8ad', color: '#173b2b' }}>{blueprint.name.slice(0, 1).toUpperCase()}</span>
       <span className="min-w-0">
         <span className="block truncate font-semibold text-white">{blueprint.name}</span>
         <span className="block text-[11px] uppercase tracking-wider" style={{ color: 'var(--crm-nav-text)' }}>{blueprint.kind === 'erp' ? 'ERP' : 'CRM'}</span>
@@ -145,9 +145,9 @@ function NavButton({ icon: Icon, label, active, badge, onClick, quiet }: { icon:
     <button onClick={onClick} aria-current={active ? 'page' : undefined}
       className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[0.95em] transition hover:bg-white/5"
       style={active ? { background: 'rgba(255,255,255,.09)', color: '#fff' } : { color: quiet ? 'rgba(189,183,171,.85)' : 'var(--crm-nav-text)' }}>
-      <Icon className="h-4 w-4 shrink-0" style={active ? { color: '#5fd3dd' } : undefined} />
+      <Icon className="h-4 w-4 shrink-0" style={active ? { color: '#c7d8ad' } : undefined} />
       <span className="min-w-0 flex-1 truncate">{label}</span>
-      {badge !== undefined && <span className="rounded-full px-1.5 text-[0.78em] font-semibold" style={{ background: active ? '#0f9fae' : 'rgba(255,255,255,.1)', color: '#fff' }}>{badge}</span>}
+      {badge !== undefined && <span className="rounded-full px-1.5 text-[0.78em] font-semibold" style={{ background: active ? '#557b5d' : 'rgba(255,255,255,.1)', color: '#fff' }}>{badge}</span>}
     </button>
   );
 }
