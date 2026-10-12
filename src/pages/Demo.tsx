@@ -22,7 +22,7 @@ const APPS: DemoApp[] = [
 ];
 
 export default function Demo() {
-  const [key, setKey] = useState(APPS[0].key);
+  const [key, setKey] = useState(APPS.find((a) => a.key === 'inmobiliaria')?.key ?? APPS[0].key);
   const app = APPS.find((a) => a.key === key)!;
   const [records, setRecords] = useState<AppRecord[]>(app.records);
   const [show3d, setShow3d] = useState(false);
