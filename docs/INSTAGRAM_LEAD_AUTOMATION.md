@@ -51,9 +51,9 @@ Los secretos del proyecto no deben guardarse en archivos .env versionados. La ve
 
 1. Crear una aplicación Meta y conectar la página/cuenta profesional correcta.
 2. Solicitar los permisos de webhook y recuperación de leads que Meta exija para la configuración y pasar la revisión de aplicación si aplica.
-3. Ejecutar la migración 20261012161000_meta_lead_ingestion.sql en una base de staging.
-4. Configurar los secretos anteriores.
-5. Desplegar la función instagram-lead-webhook con la verificación JWT de plataforma desactivada para que Meta pueda llamarla; la función valida la firma HMAC antes de procesar cualquier POST.
+3. Ejecutar la migración 20261012161000_meta_lead_ingestion.sql en una base de staging (por ejemplo, con supabase db push desde el entorno correcto).
+4. Configurar los secretos anteriores con supabase secrets set.
+5. Desplegar la función con supabase functions deploy instagram-lead-webhook --no-verify-jwt para que Meta pueda llamarla; la función valida la firma HMAC antes de procesar cualquier POST.
 6. Configurar en Meta el callback https://<PROJECT_REF>.supabase.co/functions/v1/instagram-lead-webhook, el mismo META_VERIFY_TOKEN y la suscripción a leadgen.
 7. Enviar un lead de prueba desde el formulario de Meta y confirmar que aparece una única vez en el CRM.
 8. Para DMs, suscribir también la cuenta profesional a los eventos de mensajes requeridos por Instagram Messaging API y configurar INSTAGRAM_ACCOUNT_ID.
