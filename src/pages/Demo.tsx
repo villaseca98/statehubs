@@ -11,7 +11,7 @@ import { InstagramSetup } from '@/components/crm/InstagramSetup';
 
 interface DemoApp { key: string; sector: string; pitch: string; blueprint: Blueprint; records: AppRecord[] }
 const APPS: DemoApp[] = [...PACKS].reverse().map((p) => {
-  const blueprint = composePack(p.key, 'Aurora Inmobiliaria (demo)');
+  const blueprint = composePack(p.key, 'StateHubs Inmobiliaria (demo)');
   return { key: p.key, sector: p.name, pitch: p.pitch, blueprint, records: sampleRecordsFor(blueprint) };
 });
 
