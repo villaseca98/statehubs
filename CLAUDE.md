@@ -20,6 +20,16 @@ Constructor de CRM y ERP para pymes y autónomos en España. Español de España
 - Cambios visibles: míralos en móvil (390 px) y escritorio.
 - Los estilos de texto y colores van por variables CSS (`--crm-*` en la app, tokens de Tailwind en el resto).
 
+## Inmobiliarias y alquiler turístico
+
+StateHubs es solo para inmobiliarias y alquiler turístico, y es **una sola app**: compraventa, alquiler y pisos turísticos comparten contactos, inmuebles y equipo.
+
+- **Entrada:** la portada pregunta compraventa, alquiler turístico o las dos (`PACKS` y `composePack` en `modules.ts`). No vuelvas a ofrecer «CRM o ERP» ni sectores genéricos en la portada; las piezas genéricas siguen en Piezas → «Más piezas».
+- **Modelo:** `contacto_inmo` (temperatura y próxima acción), `operacion` (embudos de compradores, vendedores, captación y alquileres), `inmueble` (venta, alquiler y turístico, con licencia y calendarios iCal), `cita_inmo`, `reserva`, `servicio` (limpiezas y check-in) e `incidencia`. El neto de una reserva (importe − comisión − gastos) se calcula, no se guarda.
+- **Vistas propias:** `ops` (centro de operaciones), `timeline` (reservas por alojamiento, marca solapes) y `cards` (fichas con foto).
+- **Airbnb y Booking:** las reservas entran por el iCal de cada anuncio. No prometas sincronizar precios, mensajes ni pagos: las API de las plataformas piden ser partner o pasar por un channel manager.
+- **Datos de ejemplo:** siempre marcados (`is_sample`) y se quitan con un botón.
+
 ## Análisis y sectores
 
 - **Análisis de datos** (pieza `analisis`, vista `analysis`, motor en `_shared/blueprint/analysis.ts`, sin IA): embudo y previsión, leads puntuados con su porqué y los que se enfrían, casuísticas y base de datos con huecos, duplicados y CSV. Qué enfoques, qué secciones y los días para darlo por frío se eligen en Piezas y llegan como propuesta.
