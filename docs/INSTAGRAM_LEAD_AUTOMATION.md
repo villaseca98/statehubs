@@ -17,7 +17,7 @@
 
 Los formularios instantáneos de Meta pueden aparecer en Instagram o Facebook. El evento leadgen no basta por sí solo para demostrar la ubicación publicitaria. Por eso el origen predeterminado es **Meta Ads (Instagram/Facebook)**. Configura META_LEAD_SOURCE=instagram únicamente cuando el formulario/campaña conectado esté limitado a Instagram y lo hayas verificado.
 
-**Los mensajes directos (DM) de Instagram todavía no se importan con esta función.** Requieren activar por separado Instagram Messaging API, sus permisos y suscripciones de webhook, además de diseñar la extracción de intención y el tratamiento del contexto del mensaje. No se debe hacer scraping de la bandeja ni automatizar mensajes masivos no solicitados.
+Los mensajes directos (DM) de Instagram también tienen una primera ruta de captura: el webhook acepta eventos de Instagram Messaging, filtra mensajes de texto entrantes con señales de intención inmobiliaria, evita ecos enviados por la propia cuenta y guarda el mensaje como lead pendiente de revisión/cualificación. No responde automáticamente al usuario ni extrae un nombre real del identificador del remitente. Requiere activar por separado Instagram Messaging API, permisos y suscripciones de webhook. No se debe hacer scraping de la bandeja ni automatizar mensajes masivos no solicitados.
 
 ## Secretos requeridos
 
@@ -30,6 +30,7 @@ En el proyecto Supabase de pruebas, configura:
 - META_GRAPH_VERSION: versión Graph API habilitada en tu app Meta.
 - META_LEAD_SOURCE: meta_ads por defecto; usa instagram solo para una campaña/formulario verificados como exclusivos de Instagram.
 - INSTAGRAM_CRM_APP_ID: UUID de la aplicación StateHubs inmobiliaria que recibirá los leads.
+- INSTAGRAM_ACCOUNT_ID: ID de la cuenta profesional de Instagram, necesario para recibir DMs.
 - SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY: secretos del servidor de Supabase. La service-role key nunca debe ir al navegador, al repositorio ni a una variable VITE_*.
 
 Ejemplo (usa tus propios valores y no los compartas en el repositorio):
@@ -54,9 +55,11 @@ Los secretos del proyecto no deben guardarse en archivos .env versionados. La ve
 4. Configurar los secretos anteriores.
 5. Desplegar la función instagram-lead-webhook con la verificación JWT de plataforma desactivada para que Meta pueda llamarla; la función valida la firma HMAC antes de procesar cualquier POST.
 6. Configurar en Meta el callback https://<PROJECT_REF>.supabase.co/functions/v1/instagram-lead-webhook, el mismo META_VERIFY_TOKEN y la suscripción a leadgen.
-7. Enviar un lead de prueba desde el formulario de prueba de Meta y confirmar que aparece una única vez en el CRM.
-8. Repetir el evento y confirmar que no crea duplicados; enviar una firma inválida y comprobar que devuelve 401.
-9. Confirmar que no se produce contacto automático si el permiso está pendiente o es negativo.
+7. Enviar un lead de prueba desde el formulario de Meta y confirmar que aparece una única vez en el CRM.
+8. Para DMs, suscribir también la cuenta profesional a los eventos de mensajes requeridos por Instagram Messaging API y configurar INSTAGRAM_ACCOUNT_ID.
+9. Enviar desde una cuenta de prueba un mensaje con intención inmobiliaria (por ejemplo, que busca comprar un piso) y confirmar que aparece en la cola con la puntuación y los datos extraídos; un mensaje sin intención debe ignorarse.
+10. Repetir ambos eventos y confirmar que no crean duplicados; enviar una firma inválida y comprobar que devuelve 401.
+11. Confirmar que no se produce contacto comercial automático si el permiso está pendiente o es negativo.
 
 ## Campos recomendados en el formulario
 
@@ -86,11 +89,9 @@ La puntuación es una ayuda de priorización, no una predicción de venta. Si fa
 
 El webhook actual usa un único INSTAGRAM_CRM_APP_ID y un token de Meta configurado en secretos del servidor: sirve para validar el flujo con una agencia piloto, pero **no es todavía una integración multiagencia comercializable**. Antes de incorporar varias inmobiliarias hay que construir una configuración de conexión por organización, proteger tokens por agencia, gestionar revocación/rotación y validar el aislamiento con RLS. La configuración de tokens por agencia debe hacerse en servidor y no mediante formularios que los guarden en texto plano.
 
-## Siguiente fase: DMs de Instagram
+## Siguiente fase: cualificación conversacional
 
-- Añadir soporte específico de Instagram Messaging API para cuentas profesionales elegibles.
-- Procesar únicamente eventos autorizados recibidos por webhook y verificar su firma.
-- Mantener el identificador del hilo/mensaje para idempotencia y auditoría.
-- Extraer intención y datos solo del mensaje y del flujo de preguntas permitido; marcar los campos desconocidos como pendientes, sin inventarlos.
-- Mostrar al agente un borrador de cualificación para revisión humana antes de marcarlo como cualificado.
-- Respetar las ventanas y políticas de mensajería de Meta; no automatizar spam ni scraping.
+- Añadir un flujo opcional de preguntas y respuestas mediante Instagram Messaging API, limitado a mensajes iniciados por el usuario y a las ventanas/políticas de Meta.
+- Pedir solo los datos que falten (operación, zona, presupuesto y plazo) y permitir que el agente intervenga.
+- Mantener la puntuación explicable y no marcar una oportunidad como cualificada si no hay datos suficientes.
+- No enviar promociones masivas ni iniciar DMs no solicitados.
