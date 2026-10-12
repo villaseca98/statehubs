@@ -75,7 +75,7 @@ export function TodayView({ blueprint, records, onOpen, now, dark = false }: { b
     : `${today.hoy.length ? `${today.hoy.length} ${today.hoy.length === 1 ? 'cosa' : 'cosas'} para hoy` : 'Hoy está despejado'}${today.atrasado.length ? ` y ${today.atrasado.length} ${today.atrasado.length === 1 ? 'atrasada' : 'atrasadas'}` : ''}.`;
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-5">
+    <div className="flex flex-col gap-5">
       <header>
         <p className="text-[0.92em]" style={{ color: 'var(--crm-muted)' }}>{date}</p>
         <h1 className="mt-1 text-[1.9em] font-semibold leading-tight tracking-tight" style={{ fontFamily: 'var(--crm-heading-font)' }}>{line}</h1>

@@ -28,6 +28,7 @@ describe('AppPage: change the app with pieces, preview first, undo later', () =>
     fireEvent.click(within(panel).getByRole('button', { name: /^Presupuestos/ }));
     await screen.findByText(/Vista previa/);
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
+    fireEvent.click(within(screen.getAllByRole('navigation', { name: 'Hubs' })[0]).getByRole('button', { name: /Clientes/ }));
     expect(within(screen.getAllByRole('navigation', { name: 'Secciones' })[0]).getByRole('button', { name: /Presupuestos/ })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /^Aplicar/ }));

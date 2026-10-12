@@ -5,6 +5,7 @@ import { composeApp, composePack, modulesFor, sampleRecordsFor } from '@shared/b
 import { DEMO_APPS } from '@shared/blueprint/samples.ts';
 import type { AppRecord, Blueprint } from '@shared/blueprint/types.ts';
 import { Workspace } from './Workspace';
+import { openSection, visitAllSections } from './testNav';
 
 function Harness({ blueprint, records: initial }: { blueprint: Blueprint; records: AppRecord[] }) {
   const [records, setRecords] = useState(initial);
@@ -25,8 +26,7 @@ describe('Workspace', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Hoy' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Para hoy' })).toBeTruthy();
 
-    const nav = screen.getAllByRole('navigation', { name: 'Secciones' })[0];
-    fireEvent.click(within(nav).getByRole('button', { name: /Embudo/ }));
+    openSection(/Embudo/);
     expect(screen.getByRole('heading', { level: 1, name: 'Embudo' })).toBeTruthy();
     expect(screen.queryByRole('region', { name: 'Para hoy' })).toBeNull();
   });
@@ -34,8 +34,7 @@ describe('Workspace', () => {
   it('reads the data in the analysis section: funnel, priorities, patterns and database', () => {
     const bp = composeApp('crm', 'Mi CRM', ['panel', 'analisis', 'leads', 'embudo', 'clientes']);
     render(<Harness blueprint={bp} records={sampleRecordsFor(bp)} />);
-    const nav = screen.getAllByRole('navigation', { name: 'Secciones' })[0];
-    fireEvent.click(within(nav).getByRole('button', { name: /Análisis/ }));
+    openSection(/Análisis/);
     const lenses = screen.getByRole('tablist', { name: 'Enfoques' });
     expect(screen.getByText('Previsión de cierre')).toBeTruthy();
     fireEvent.click(within(lenses).getByRole('tab', { name: 'A quién atacar hoy' }));
@@ -60,8 +59,7 @@ describe('Workspace', () => {
     const bp = composePack('ambos', 'Inmobiliaria');
     render(<Harness blueprint={bp} records={sampleRecordsFor(bp)} />);
     expect(screen.getByRole('heading', { level: 1, name: 'Centro de operaciones' })).toBeTruthy();
-    const nav = screen.getAllByRole('navigation', { name: 'Secciones' })[0];
-    expect(within(nav).queryByRole('button', { name: /^Hoy/ })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Para hoy' })).toBeNull();
     expect(screen.queryByRole('button', { name: /Nuevo/ })).toBeNull();
     expect(screen.getByRole('region', { name: 'Cifras del día' })).toBeTruthy();
     expect(screen.getByText('Ocupación hoy')).toBeTruthy();
@@ -77,8 +75,7 @@ describe('Workspace', () => {
   it('shows the property cards with price, badge and quick filters', () => {
     const bp = composePack('ambos', 'Inmobiliaria');
     render(<Harness blueprint={bp} records={sampleRecordsFor(bp)} />);
-    const nav = screen.getAllByRole('navigation', { name: 'Secciones' })[0];
-    fireEvent.click(within(nav).getByRole('button', { name: /Inmuebles/ }));
+    openSection(/^Inmuebles$/);
     const list = screen.getByRole('list', { name: 'Inmuebles' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(8);
     expect(within(list).getByText(/118\s€ \/ noche/)).toBeTruthy();
@@ -98,8 +95,7 @@ describe('Workspace', () => {
     ];
     for (const app of apps) {
       const { unmount } = render(<Harness blueprint={app.blueprint} records={app.records} />);
-      const nav = screen.getAllByRole('navigation', { name: 'Secciones' })[0];
-      for (const b of within(nav).getAllByRole('button')) fireEvent.click(b);
+      visitAllSections();
       unmount();
     }
   });
@@ -107,8 +103,7 @@ describe('Workspace', () => {
   describe('filters, search and dark mode', () => {
     beforeEach(() => window.localStorage.clear());
     const bp = composePack('ambos', 'Inmobiliaria');
-    const sections = () => screen.getAllByRole('navigation', { name: 'Secciones' })[0];
-    const goTo = (label: RegExp) => fireEvent.click(within(sections()).getByRole('button', { name: label }));
+    const goTo = (label: RegExp) => openSection(label);
     const firstView = () => bp.views.find((v) => v.entity === 'operacion' && v.groupBy)!;
 
     it('filters a section with presets, rules and the search box, and saves the view', () => {

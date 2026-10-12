@@ -118,10 +118,10 @@ export function OpsView({ blueprint, records, onOpen, now }: { blueprint: Bluepr
   const stageOpt = (r: AppRecord) => operacion?.fields.find((f) => f.key === 'etapa')?.options?.find((o) => o.value === r.data.etapa);
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <header>
         <p className="text-[0.92em]" style={{ color: 'var(--crm-muted)' }}>{date}</p>
-        <h2 className="mt-1 text-[1.7em] font-semibold leading-tight tracking-tight md:text-[1.9em]" style={{ fontFamily: 'var(--crm-heading-font)' }}>{headline}</h2>
+        <h2 className="mt-0.5 text-[1.2em] font-medium leading-snug md:text-[1.3em]" style={{ fontFamily: 'var(--crm-heading-font)' }}>{headline}</h2>
         {ops.alerts.length > 0 && <p className="mt-1 text-[0.95em]" style={{ color: '#b91c1c' }}>{plural(ops.alerts.length, 'aviso necesita', 'avisos necesitan')} que lo mires.</p>}
       </header>
 
