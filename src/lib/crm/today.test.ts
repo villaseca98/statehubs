@@ -57,4 +57,16 @@ describe('Hoy: what needs doing', () => {
     }
     for (const d of DEMO_APPS) expect(() => computeToday(d.blueprint, d.records)).not.toThrow();
   });
+
+  it('adds follow-up fields and realistic next steps to the real-estate template', () => {
+    const inmobiliaria = composeApp('crm', 'Inmobiliaria Sol', ['panel', 'analisis', 'leads', 'inmuebles', 'visitas', 'embudo', 'clientes', 'documentos'], 'inmobiliaria');
+    const lead = inmobiliaria.entities.find((e) => e.key === 'lead')!;
+    expect(lead.fields.map((f) => f.key)).toEqual(expect.arrayContaining(['siguiente_paso', 'proximo_contacto', 'prioridad_comercial']));
+
+    const records = sampleRecordsFor(inmobiliaria);
+    const overdueFollowUp = records.find((r) => r.id === 'm-l1');
+    expect(overdueFollowUp?.data.siguiente_paso).toBe('Confirmar disponibilidad y proponer segunda visita');
+    expect(overdueFollowUp?.data.proximo_contacto).toBeDefined();
+    expect(overdueFollowUp?.data.prioridad_comercial).toBe('alta');
+  });
 });
