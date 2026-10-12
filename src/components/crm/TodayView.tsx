@@ -77,8 +77,8 @@ function RealEstateOverview({ blueprint, records, today, onOpen, date }: {
   const entity = (key: string) => blueprint.entities.find((e) => e.key === key);
   const leads = records.filter((r) => r.entity === 'lead');
   const homes = records.filter((r) => r.entity === 'inmueble');
-  const visits = records.filter((r) => r.entity === 'visita');
-  const deals = records.filter((r) => r.entity === 'oportunidad');
+  const visits = records.filter((r) => r.entity === 'visita' || (r.entity === 'lead' && !!r.data.visita));
+  const deals = records.filter((r) => r.entity === 'oportunidad' || r.entity === 'operacion');
   const overdue = today.atrasado.length;
   const followUps = today.hoy.length + overdue;
   const leadEntity = entity('lead');
@@ -183,7 +183,7 @@ function RealEstateOverview({ blueprint, records, today, onOpen, date }: {
           <div className="mb-4 flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: '#e8e3f6', color: '#65538c' }}><Users className="h-5 w-5" /></span><div><h3 className="font-semibold">Compradores y propietarios</h3><p className="mt-1 text-xs" style={{ color: 'var(--crm-muted)' }}>Prioriza el contacto, no solo el registro</p></div></div>
           {leads.slice(0, 4).map((r) => {
             const next = r.data.siguiente_paso;
-            const budget = r.data.presupuesto_max;
+            const budget = r.data.presupuesto_max ?? r.data.presupuesto;
             return <button key={r.id} onClick={() => onOpen(r)} className="flex w-full items-center gap-3 rounded-xl px-2 py-3 text-left hover:bg-black/[0.025]">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold" style={{ background: '#e8e3f6', color: '#65538c' }}>{recordTitle(r, leadEntity).split(/\s+/).map((v) => v[0]).slice(0, 2).join('').toUpperCase()}</span>
               <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{recordTitle(r, leadEntity)}</span><span className="mt-1 block truncate text-xs" style={{ color: 'var(--crm-muted)' }}>{String(next || 'Definir siguiente paso')}</span></span>
@@ -197,7 +197,7 @@ function RealEstateOverview({ blueprint, records, today, onOpen, date }: {
           <div className="mb-4 flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: '#f5e8d6', color: '#986b35' }}><CalendarClock className="h-5 w-5" /></span><div><h3 className="font-semibold">Actividad y visitas</h3><p className="mt-1 text-xs" style={{ color: 'var(--crm-muted)' }}>Cada visita debe terminar con un siguiente paso</p></div></div>
           {visits.slice(0, 4).map((r) => <button key={r.id} onClick={() => onOpen(r)} className="flex w-full items-center gap-3 rounded-xl px-2 py-3 text-left hover:bg-black/[0.025]">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: '#f5e8d6', color: '#986b35' }}><CalendarClock className="h-4 w-4" /></span>
-            <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{recordTitle(r, visitEntity)}</span><span className="mt-1 block truncate text-xs" style={{ color: 'var(--crm-muted)' }}>{String(r.data.siguiente_paso || 'Registrar resultado y seguimiento')}</span></span>
+            <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{recordTitle(r, visitEntity ?? entity(String(r.entity)))}</span><span className="mt-1 block truncate text-xs" style={{ color: 'var(--crm-muted)' }}>{String(r.data.siguiente_paso || (r.data.visita ? `Visita: ${String(r.data.visita).replace('T', ' ')}` : 'Registrar resultado y seguimiento'))}</span></span>
             <ArrowRight className="h-4 w-4 shrink-0" style={{ color: 'var(--crm-muted)' }} />
           </button>)}
           {!visits.length && <p className="text-sm" style={{ color: 'var(--crm-muted)' }}>Registra las visitas y su resultado para no dejar oportunidades sin seguimiento.</p>}
