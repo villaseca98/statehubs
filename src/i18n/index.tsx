@@ -46,7 +46,8 @@ export function I18nProvider({ children }: {children:ReactNode}) {
  const value = useMemo<I18nContextValue>(()=>({language,setLanguage,t:(key)=>messages[language][key] ?? messages.en[key]}),[language]);
  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
-export function useI18n() { const value=useContext(I18nContext); if(!value) throw new Error('I18nProvider missing'); return value; }
+const fallbackI18n: I18nContextValue = {language:'en',setLanguage:()=>{},t:(key)=>messages.en[key]};
+export function useI18n() { return useContext(I18nContext) ?? fallbackI18n; }
 export function formatCurrency(value:number,currency:string,locale='en') {
  return new Intl.NumberFormat(locale,{style:'currency',currency}).format(value);
 }
