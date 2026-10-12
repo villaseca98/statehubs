@@ -5,18 +5,9 @@ import type { CSSProperties } from 'react';
 // keeps its own colours. Same values as `estate` in tailwind.config.ts.
 
 export const E = {
-  cream: '#f4f2ec',
-  sand: '#e9e5da',
-  white: '#ffffff',
-  line: '#e2ded2',
-  ink: '#17231b',
-  muted: '#5f6a61',
-  forest: '#1e3a2b',
-  deep: '#132a1e',
-  moss: '#2f5a41',
-  sage: '#8fae8b',
-  lime: '#d4ec7a',
-  sun: '#f2cf63',
+ cream:'#ffffff',sand:'#f7f7f7',white:'#ffffff',line:'#e6e6e6',
+ ink:'#161616',muted:'#666666',forest:'#b41636',deep:'#810d25',
+ moss:'#a51633',sage:'#e9a5b4',lime:'#ffffff',sun:'#f5f5f5'
 } as const;
 
 /** Colours of the app as the mockups draw it (light and dark). */
