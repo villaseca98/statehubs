@@ -125,7 +125,7 @@ Este documento es una estrategia inicial. Las decisiones de producto, precio y d
 
 ## 8. Captación automática desde Instagram / Meta
 
-La captación automática debe ser una ventaja central del producto, no un simple campo de origen. Se ha añadido un primer conector de piloto para formularios instantáneos de Meta Lead Ads:
+La captación automática debe ser una ventaja central del producto, no un simple campo de origen. Se ha añadido un primer conector de piloto para formularios instantáneos de Meta Lead Ads y una ruta inicial de captura de mensajes directos de Instagram:
 
 - Webhook con verificación HMAC de Meta y recuperación de los datos por Graph API.
 - Normalización de datos de compra/alquiler/venta, presupuesto, zona, plazo y financiación.
@@ -134,6 +134,6 @@ La captación automática debe ser una ventaja central del producto, no un simpl
 - Sin contacto automático: el permiso para contactar se guarda aparte de la puntuación y nunca se deduce de un score alto.
 - Guía de instalación y límites en `docs/INSTAGRAM_LEAD_AUTOMATION.md`.
 
-**Alcance actual:** solo formularios instantáneos de Meta que generen eventos `leadgen`. Esos formularios pueden estar colocados en Instagram o Facebook; el origen se marca como Meta Ads salvo que la campaña conectada esté verificada como exclusiva de Instagram. Los mensajes directos de Instagram aún requieren una integración específica con Instagram Messaging API.
+**Alcance actual:** formularios instantáneos de Meta que generen eventos `leadgen` y mensajes entrantes de Instagram con señales de intención inmobiliaria. Los DMs se guardan para revisión/cualificación, sin respuesta automática; requieren permisos y suscripción de Instagram Messaging API. Los formularios pueden aparecer en Instagram o Facebook; el origen se marca como Meta Ads salvo que la campaña conectada esté verificada como exclusiva de Instagram.
 
 **Límite para piloto:** el conector usa un único ID de aplicación y un token de Meta en secretos de servidor. No usar con varias agencias hasta añadir credenciales por organización protegidas en servidor, revocación/rotación de tokens y pruebas de aislamiento multi-tenant.
