@@ -31,6 +31,19 @@ describe('Workspace', () => {
     expect(screen.queryByRole('region', { name: 'Para hoy' })).toBeNull();
   });
 
+  it('reads the data in the analysis section: funnel, priorities, patterns and database', () => {
+    const bp = composeApp('crm', 'Mi CRM', ['panel', 'analisis', 'leads', 'embudo', 'clientes']);
+    render(<Harness blueprint={bp} records={sampleRecordsFor(bp)} />);
+    const nav = screen.getAllByRole('navigation', { name: 'Secciones' })[0];
+    fireEvent.click(within(nav).getByRole('button', { name: /Análisis/ }));
+    const lenses = screen.getByRole('tablist', { name: 'Enfoques' });
+    expect(screen.getByText('Previsión de cierre')).toBeTruthy();
+    fireEvent.click(within(lenses).getByRole('tab', { name: 'A quién atacar hoy' }));
+    expect(screen.getByRole('region', { name: 'Prioridad de hoy' })).toBeTruthy();
+    fireEvent.click(within(lenses).getByRole('tab', { name: 'Base de datos' }));
+    expect(screen.getAllByRole('button', { name: /en CSV/ }).length).toBeGreaterThan(0);
+  });
+
   it('opens a record from «Hoy» in the side drawer and edits it', () => {
     const bp = composeApp('crm', 'Mi CRM', ['panel', 'leads']);
     const records: AppRecord[] = [{ id: 'l1', entity: 'lead', data: { nombre: 'Clara Vidal', estado: 'nuevo' } }];

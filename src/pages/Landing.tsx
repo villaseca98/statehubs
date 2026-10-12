@@ -7,8 +7,11 @@ import { crmApi } from '@/lib/crm/api';
 import type { CrmApp } from '@/lib/crm/api';
 import { isLocalApp, localCrmApi } from '@/lib/crm/localApi';
 import { ScrollHero } from '@/components/crm/ScrollHero';
+import { ModuleIcon } from '@/components/crm/ModuleCards';
 import { composeApp, getModule, STARTER } from '@shared/blueprint/modules.ts';
 import type { AppKind } from '@shared/blueprint/modules.ts';
+import { SECTORS } from '@shared/blueprint/sectors.ts';
+import type { SectorDef } from '@shared/blueprint/sectors.ts';
 
 // Landing: the 3D story, then two doors (CRM or ERP) that open a working app
 // straight away, or a sentence to the AI. Nothing else to configure first.
@@ -44,11 +47,13 @@ export default function Landing() {
   const newApp = async () => (user ? await crmApi.createApp(user.id).then((a) => ({ api: crmApi, app: a })).catch(() => null) : null)
     ?? { api: localCrmApi, app: await localCrmApi.createApp('') };
 
-  const open = async (kind: AppKind) => {
-    setBusy(kind); setError('');
+  // A sector opens with its own pieces and the extra fields that sector asks for.
+  const open = async (kind: AppKind, sector?: SectorDef) => {
+    setBusy(sector?.key ?? kind); setError('');
     try {
       const { api, app } = await newApp();
-      const { proposal } = await api.propose(app.id, composeApp(kind, kind === 'crm' ? 'Mi CRM' : 'Mi ERP', STARTER[kind]));
+      const name = sector ? sector.name : kind === 'crm' ? 'Mi CRM' : 'Mi ERP';
+      const { proposal } = await api.propose(app.id, composeApp(kind, name, sector?.modules ?? STARTER[kind], sector?.key));
       await api.apply(proposal.id);
       navigate(`/app/${app.id}`);
     } catch (e) { setError((e as Error).message); setBusy(null); }
@@ -93,6 +98,23 @@ export default function Landing() {
               </span>
             </button>
           ))}
+        </div>
+
+        <div role="group" aria-label="Sectores" className="mt-6">
+          <h3 className="text-sm font-medium">O empieza por tu sector, con sus campos ya puestos</h3>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {SECTORS.map((s) => (
+              <button key={s.key} onClick={() => open(s.kind, s)} disabled={!!busy}
+                className="group flex items-start gap-3 rounded-xl border bg-card p-3 text-left transition hover:border-primary/60 disabled:opacity-60">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted"><ModuleIcon name={s.icon} className="h-4 w-4" /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2 font-semibold">{s.name}<span className="rounded bg-muted px-1.5 text-[10px] font-medium uppercase text-muted-foreground">{s.kind}</span></span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">{s.pitch}</span>
+                </span>
+                {busy === s.key ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" /> : <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />}
+              </button>
+            ))}
+          </div>
         </div>
 
         <form className="mt-5 rounded-2xl border bg-card p-2 shadow-sm" onSubmit={(e) => { e.preventDefault(); void ask(); }}>

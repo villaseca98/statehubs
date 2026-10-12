@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { CalendarDays, Columns3, ListChecks, Menu, Plus, Sun, Table2, X } from 'lucide-react';
+import { BrainCircuit, CalendarDays, Columns3, ListChecks, Menu, Plus, Sun, Table2, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { AppRecord, Blueprint, RecordData, View } from '@shared/blueprint/types.ts';
 import { computeToday } from '@/lib/crm/today';
 import { makeTitleLookup, themeVars } from './theme';
 import { ViewBody } from './views';
 import { WorklistView } from './WorklistView';
+import { AnalysisView } from './AnalysisView';
 import { RecordPanel } from './RecordPanel';
 import { TodayView } from './TodayView';
 import { RuntimeContext } from './runtimeContext';
@@ -31,7 +32,7 @@ export interface WorkspaceProps {
   className?: string;
 }
 
-const ICON: Record<string, LucideIcon> = { table: Table2, kanban: Columns3, calendar: CalendarDays, worklist: ListChecks };
+const ICON: Record<string, LucideIcon> = { table: Table2, kanban: Columns3, calendar: CalendarDays, worklist: ListChecks, analysis: BrainCircuit };
 const HOY = 'hoy';
 
 export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, onWebhook, tools = [], banner, now, className = '' }: WorkspaceProps) {
@@ -114,7 +115,11 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
               <WorklistView blueprint={blueprint} view={view} records={records} dark={false} titleOf={titleOf} selectedId={openId}
                 onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
             )}
-            {view && view.type !== 'worklist' && (
+            {view && view.type === 'analysis' && (
+              <AnalysisView blueprint={blueprint} view={view} records={records} dark={false} titleOf={titleOf} selectedId={openId}
+                onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
+            )}
+            {view && view.type !== 'worklist' && view.type !== 'analysis' && (
               <ViewBody blueprint={blueprint} view={view} records={records} dark={false} titleOf={titleOf} selectedId={openId}
                 onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
             )}

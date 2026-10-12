@@ -1,4 +1,4 @@
-import { ACTION_KINDS, FIELD_TYPES, OPTION_COLORS, VIEW_TYPES } from './types.ts';
+import { ACTION_KINDS, ANALYSIS_LENSES, FIELD_TYPES, OPTION_COLORS, VIEW_TYPES } from './types.ts';
 import type { Availability, Blueprint, Entity, Field, View } from './types.ts';
 
 const KEY = /^[a-z][a-z0-9_]{0,39}$/;
@@ -18,8 +18,9 @@ export function validateBlueprint(bp: unknown): string[] {
   if (typeof b.name !== 'string' || !b.name.trim() || b.name.length > 60) err('name es obligatorio (máx. 60 caracteres).');
   if (b.kind !== undefined && b.kind !== 'crm' && b.kind !== 'erp') err('kind debe ser crm o erp.');
   if (b.modules !== undefined && (!Array.isArray(b.modules) || b.modules.some((m) => typeof m !== 'string'))) err('modules debe ser una lista de claves.');
+  if (b.sector !== undefined && (typeof b.sector !== 'string' || !KEY.test(b.sector))) err('sector debe ser una clave.');
   if (!Array.isArray(b.entities) || b.entities.length === 0) return [...errors, 'Hace falta al menos una entidad.'];
-  if (b.entities.length > 20) err('Máximo 20 entidades.');
+  if (b.entities.length > 30) err('Máximo 30 entidades.');
   if (!Array.isArray(b.views) || b.views.length === 0) err('Hace falta al menos una vista.');
 
   const entities = new Map<string, Entity>();
@@ -70,6 +71,15 @@ export function validateBlueprint(bp: unknown): string[] {
         if (w.agg !== 'count' && !NUMERIC.has(fieldOf(w.entity, w.field)?.type ?? '')) err(`Vista ${v.key}: widget "${w.label}" necesita un campo numérico en field.`);
         if (w.kind === 'bars' && fieldOf(w.entity, w.groupBy)?.type !== 'select') err(`Vista ${v.key}: widget "${w.label}" necesita groupBy de tipo select.`);
       }
+      continue;
+    }
+    if (v.type === 'analysis') {
+      const a = v.analysis;
+      if (!a || typeof a !== 'object') { err(`Vista ${v.key}: un análisis necesita analysis con lenses y staleDays.`); continue; }
+      if (!Array.isArray(a.lenses) || a.lenses.length === 0 || a.lenses.some((l) => !ANALYSIS_LENSES.includes(l))) err(`Vista ${v.key}: analysis.lenses es una lista con algunos de: ${ANALYSIS_LENSES.join(', ')}.`);
+      if (!Number.isInteger(a.staleDays) || a.staleDays < 1 || a.staleDays > 90) err(`Vista ${v.key}: analysis.staleDays es un número de días entre 1 y 90.`);
+      if (a.entities !== undefined && (!Array.isArray(a.entities) || a.entities.length > 8)) err(`Vista ${v.key}: analysis.entities es una lista de hasta 8 entidades.`);
+      for (const k of Array.isArray(a.entities) ? a.entities : []) if (!entities.has(k)) err(`Vista ${v.key}: analysis.entities incluye "${k}", que no existe.`);
       continue;
     }
     if (!entities.has(v.entity ?? '')) { err(`Vista ${v.key}: la entidad "${v.entity}" no existe.`); continue; }

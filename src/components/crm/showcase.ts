@@ -6,7 +6,7 @@ export interface ShowcaseLayer { key: string; label: string }
 
 /** Pieces of a blueprint in the order they stack: bar, figures, then panels. */
 export function showcaseLayers(bp: Blueprint, max = 6): ShowcaseLayer[] {
-  const panels = bp.views.filter((v) => v.type !== 'dashboard').slice(0, Math.max(0, max - 2));
+  const panels = bp.views.filter((v) => v.type !== 'dashboard' && v.type !== 'analysis').slice(0, Math.max(0, max - 2));
   const hasFigures = bp.views.some((v) => v.type === 'dashboard' && v.widgets?.some((w) => w.kind === 'metric'));
   return [
     { key: 'base', label: 'Tu página' },

@@ -13,7 +13,7 @@ const TYPE_LABEL: Record<string, string> = {
   date: 'fecha', datetime: 'fecha y hora', boolean: 'sí/no', email: 'email', phone: 'teléfono', url: 'enlace', select: 'lista de opciones',
   relation: 'relación', nif: 'NIF/CIF',
 };
-const VIEW_LABEL: Record<string, string> = { table: 'tabla', kanban: 'tablero', calendar: 'calendario', dashboard: 'panel', worklist: 'lista de trabajo' };
+const VIEW_LABEL: Record<string, string> = { table: 'tabla', kanban: 'tablero', calendar: 'calendario', dashboard: 'panel', worklist: 'lista de trabajo', analysis: 'análisis' };
 
 const byKey = <T extends { key: string }>(list: T[] = []) => new Map(list.map((x) => [x.key, x]));
 
@@ -102,6 +102,7 @@ function viewChangeText(o: View, n: View): string {
   if (o.label !== n.label) return `Renombrar la pantalla «${o.label}» a «${n.label}».`;
   if (JSON.stringify(o.columns) !== JSON.stringify(n.columns)) return `Cambiar las columnas de «${n.label}».`;
   if (n.type === 'dashboard') return `Cambiar los indicadores de «${n.label}».`;
+  if (n.type === 'analysis') return `Cambiar qué analiza «${n.label}».`;
   if (JSON.stringify(o.actions) !== JSON.stringify(n.actions)) return `Cambiar las acciones de «${n.label}».`;
   if (JSON.stringify(o.availability) !== JSON.stringify(n.availability)) return `Cambiar los horarios disponibles de «${n.label}».`;
   return `Ajustar la pantalla «${n.label}».`;

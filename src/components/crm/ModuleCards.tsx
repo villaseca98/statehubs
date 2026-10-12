@@ -1,10 +1,10 @@
-import { Boxes, CalendarDays, Check, FileText, Filter, FolderKanban, FolderOpen, Gauge, LifeBuoy, Magnet, Package, Plus, Receipt, Truck, Users, Wallet, Workflow, Zap } from 'lucide-react';
+import { ArrowLeftRight, Boxes, BrainCircuit, Building2, CalendarDays, Contact, DatabaseZap, DoorOpen, TrendingUp, Warehouse, Check, FileText, Filter, FolderKanban, FolderOpen, Gauge, LifeBuoy, Magnet, Package, Plus, Receipt, Truck, Users, Wallet, Workflow, Zap } from 'lucide-react';
 import { LIBRARY, MODULES } from '@shared/blueprint/modules.ts';
 import type { ModuleDef } from '@shared/blueprint/modules.ts';
 
 // The "Mr. Potato" pieces: one card per function. Tap to put it on or take it off.
 
-const ICONS = { Magnet, Filter, CalendarDays, Users, FileText, LifeBuoy, Receipt, Package, Boxes, Truck, FolderKanban, Wallet, Gauge, Workflow, FolderOpen, Zap };
+const ICONS = { Magnet, Filter, CalendarDays, Users, FileText, LifeBuoy, Receipt, Package, Boxes, Truck, FolderKanban, Wallet, Gauge, Workflow, FolderOpen, Zap, BrainCircuit, Building2, DoorOpen, ArrowLeftRight, Contact, TrendingUp, Warehouse, DatabaseZap };
 
 export function ModuleIcon({ name, className }: { name: string; className?: string }) {
   const Icon = ICONS[name as keyof typeof ICONS] ?? Boxes;

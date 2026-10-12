@@ -11,12 +11,14 @@ import { resultPatch, runAutomations } from '@/lib/crm/automations';
 import { Workspace } from '@/components/crm/Workspace';
 import type { Tool } from '@/components/crm/Workspace';
 import { ModuleCards } from '@/components/crm/ModuleCards';
+import { AnalysisSetup } from '@/components/crm/AnalysisSetup';
 import { Presentation3D } from '@/components/crm/Presentation3D';
 import { makeTitleLookup } from '@/components/crm/theme';
 import { addModule, modulesFor, otherModules, removeModule } from '@shared/blueprint/modules.ts';
 import { AUTOMATION_ENTITY } from '@shared/blueprint/automations.ts';
 import type { HookEvent } from '@shared/blueprint/automations.ts';
-import type { AppRecord, RecordData } from '@shared/blueprint/types.ts';
+import { DEFAULT_ANALYSIS, withAnalysis } from '@shared/blueprint/analysis.ts';
+import type { AnalysisConfig, AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import type { Change } from '@shared/blueprint/diff.ts';
 
 // One app, open: the workspace for daily work, and three side panels to
@@ -118,6 +120,7 @@ export default function AppPage() {
   }, [proposal, records]);
   const showing = preview && proposal ? proposal.blueprint : current?.blueprint ?? (proposal ? proposal.blueprint : null);
   const previewing = !!proposal && (preview || !current);
+  const analysisView = (proposal?.blueprint ?? current?.blueprint)?.views.find((v) => v.type === 'analysis');
 
   async function send(text: string) {
     const message = text.trim();
@@ -138,7 +141,16 @@ export default function AppPage() {
   async function toggleModule(key: string) {
     const base = proposal?.blueprint ?? current?.blueprint;
     if (!base || thinking) return;
-    const next = base.modules?.includes(key) ? removeModule(base, key) : addModule(base, key);
+    await proposeBlueprint(base.modules?.includes(key) ? removeModule(base, key) : addModule(base, key));
+  }
+
+  async function setAnalysis(config: AnalysisConfig) {
+    const base = proposal?.blueprint ?? current?.blueprint;
+    if (!base || thinking) return;
+    await proposeBlueprint(withAnalysis(base, config));
+  }
+
+  async function proposeBlueprint(next: Blueprint) {
     setThinking(true);
     try {
       const res = await api.propose(appId, next);
@@ -276,6 +288,11 @@ export default function AppPage() {
               <summary className="cursor-pointer text-sm font-medium">Más piezas, de {kind === 'crm' ? 'ERP' : 'CRM'}</summary>
               <div className="mt-3"><ModuleCards compact disabled={thinking} modules={otherModules(kind)} selected={(proposal?.blueprint ?? current.blueprint).modules ?? []} onToggle={toggleModule} /></div>
             </details>
+          )}
+          {analysisView && (
+            <div className="mt-5">
+              <AnalysisSetup blueprint={proposal?.blueprint ?? current.blueprint} value={analysisView.analysis ?? DEFAULT_ANALYSIS} onChange={setAnalysis} />
+            </div>
           )}
         </SidePanel>
       )}

@@ -7,9 +7,10 @@ const newId = () => `id-${++n}`;
 
 describe('modules (cards)', () => {
   it('every module alone, every kind fully loaded and the starters are valid', () => {
-    for (const m of MODULES.filter((x) => x.key !== 'panel')) expect(validateBlueprint(composeApp(m.kinds[0], 'X', [m.key])), m.key).toEqual([]);
-    // Figures alone have nothing to count: refused, and the UI doesn't offer to create it.
-    expect(validateBlueprint(composeApp('crm', 'X', ['panel']))).not.toEqual([]);
+    const READERS = ['panel', 'analisis'];
+    for (const m of MODULES.filter((x) => !READERS.includes(x.key))) expect(validateBlueprint(composeApp(m.kinds[0], 'X', [m.key])), m.key).toEqual([]);
+    // Figures or analysis alone have nothing to read: refused, and the UI doesn't offer to create it.
+    for (const k of READERS) expect(validateBlueprint(composeApp('crm', 'X', [k]))).not.toEqual([]);
     for (const kind of ['crm', 'erp'] as const) {
       expect(validateBlueprint(composeApp(kind, 'X', modulesFor(kind).map((m) => m.key)))).toEqual([]);
       expect(validateBlueprint(composeApp(kind, 'X', STARTER[kind]))).toEqual([]);
@@ -19,7 +20,7 @@ describe('modules (cards)', () => {
 
   it('every pair of modules is valid, added in either order', () => {
     for (const a of MODULES) for (const b of MODULES) {
-      if (a.key === 'panel' && b.key === 'panel') continue;
+      if (['panel', 'analisis'].includes(a.key) && ['panel', 'analisis'].includes(b.key)) continue;
       expect(validateBlueprint(composeApp('crm', 'X', [a.key, b.key])), `${a.key}+${b.key}`).toEqual([]);
     }
   });
