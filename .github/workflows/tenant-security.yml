@@ -1,0 +1,70 @@
+name: StateHubs Tenant Security
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/tests/phase10_**'
+      - '.github/workflows/tenant-security.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/tests/phase10_**'
+      - '.github/workflows/tenant-security.yml'
+permissions:
+  contents: read
+jobs:
+  postgres-rls:
+    name: PostgreSQL 16 negative isolation tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: statehubs_security
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d statehubs_security"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: test
+      PGDATABASE: statehubs_security
+      PGOPTIONS: "-c client_min_messages=warning"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install psql
+        run: |
+          if ! command -v psql >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y postgresql-client
+          fi
+      - name: Bootstrap isolated Supabase-compatible test schemas
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/phase10_bootstrap.sql
+      - name: Apply legacy database migrations
+        run: |
+          set -euo pipefail
+          for file in \
+            supabase/migrations/20261010120000_crm_builder.sql \
+            supabase/migrations/20261012120000_crm_google.sql \
+            supabase/migrations/20261012130000_crm_instagram.sql \
+            supabase/migrations/20261012161000_meta_lead_ingestion.sql \
+            supabase/migrations/20261012180000_property_media.sql
+          do
+            psql -v ON_ERROR_STOP=1 -f "$file"
+          done
+      - name: Seed legacy tenants and expand phase 09
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/phase10_legacy_fixtures.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261012193000_saas_organizations_expand.sql
+      - name: Harden tenant access and run negative checks
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261012200000_tenant_security_hardening.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/phase10_negative_rls.sql
