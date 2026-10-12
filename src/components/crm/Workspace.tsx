@@ -11,6 +11,7 @@ import { WorklistView } from './WorklistView';
 import { AnalysisView } from './AnalysisView';
 import { TimelineView } from './TimelineView';
 import { RecordPanel } from './RecordPanel';
+import { RecordDialog } from './RecordDialog';
 import { TodayView } from './TodayView';
 import { OpsView } from './OpsView';
 import { OperationsDashboard } from './OperationsDashboard';
@@ -135,13 +136,13 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
           <div className="hidden min-w-0 flex-1 justify-center md:flex">{hubNav}</div>
           <div className="ml-auto flex shrink-0 items-center gap-1 md:ml-0">
             <button onClick={() => setPalette(true)} aria-label="Buscar en toda la app" title="Buscar (Ctrl/⌘ K)"
-              className="inline-flex items-center gap-2 rounded-full p-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md active:scale-[.97] motion-reduce:transform-none lg:px-3 lg:py-1.5" style={{ border: '1px solid var(--crm-border)', color: 'var(--crm-muted)', background: 'var(--crm-surface)' }}>
+              className="sh-touch inline-flex items-center gap-2 rounded-full p-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md active:scale-[.97] motion-reduce:transform-none lg:px-3 lg:py-1.5" style={{ border: '1px solid var(--crm-border)', color: 'var(--crm-muted)', background: 'var(--crm-surface)' }}>
               <Search className="h-4 w-4" /><span className="hidden lg:inline">Buscar</span>
               <kbd className="hidden rounded px-1 text-[0.78em] xl:inline" style={{ border: '1px solid var(--crm-border)' }}>⌘K</kbd>
             </button>
             {tools.map((t) => <ToolButton key={t.key} tool={t} dark={dark} />)}
             <button onClick={toggleMode} aria-label={dark ? 'Modo claro' : 'Modo oscuro'} title={dark ? 'Modo claro' : 'Modo oscuro'}
-              className="rounded-full p-2 transition-all duration-300 hover:-translate-y-0.5 hover:rotate-12 hover:bg-black/5 active:scale-95 motion-reduce:transform-none" style={{ color: 'var(--crm-muted)' }}>
+              className="sh-touch rounded-full p-2 transition-all duration-300 hover:-translate-y-0.5 hover:rotate-12 hover:bg-black/5 active:scale-95 motion-reduce:transform-none" style={{ color: 'var(--crm-muted)' }}>
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
           </div>
@@ -158,7 +159,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
                 <h1 className="mt-1 truncate text-[1.9em] font-normal leading-tight tracking-[-0.02em] md:text-[2.6em]">{view ? view.label : 'Hoy'}</h1>
               </div>
               {entity && (
-                <button onClick={() => create(entity.key)} className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(31,92,69,.28)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(31,92,69,.32)] active:scale-[.98] motion-reduce:transform-none"
+                <button onClick={() => create(entity.key)} className="sh-touch inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(31,92,69,.28)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(31,92,69,.32)] active:scale-[.98] motion-reduce:transform-none"
                   style={{ background: GREEN }}>
                   <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Nuevo: {entity.label.toLowerCase()}</span><span className="sm:hidden">Nuevo</span>
                 </button>
@@ -172,7 +173,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
                   const active = key === section;
                   return (
                     <button key={key} onClick={() => go(key)} aria-current={active ? 'page' : undefined}
-                      className="relative flex shrink-0 items-center gap-1.5 px-3 pb-2.5 pt-1 text-[0.95em] font-medium transition"
+                      className="sh-touch relative flex shrink-0 items-center gap-1.5 px-3 pb-2.5 pt-1 text-[0.95em] font-medium transition"
                       style={{ color: active ? 'var(--crm-text)' : 'var(--crm-muted)' }}>
                       <Icon className="h-4 w-4" /> {labelOf(key)}
                       {active && <span className="absolute inset-x-2 -bottom-px h-[2px] rounded-full" style={{ background: GREEN }} />}
@@ -207,13 +208,11 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
         </main>
 
         {open && (
-          <div className="absolute inset-0 z-40 flex justify-end p-0 md:p-3" style={{ background: dark ? 'rgba(0,0,0,.5)' : 'rgba(11,16,32,.24)', backdropFilter: 'blur(2px)' }} onClick={() => setOpenId(null)}>
-            <div className="h-full w-full max-w-[500px] overflow-hidden shadow-2xl md:rounded-[20px]" onClick={(e) => e.stopPropagation()} style={{ border: '1px solid var(--crm-border)' }}>
-              <RecordPanel blueprint={blueprint} appId={appId} record={open} records={records} titleOf={titleOf} dark={dark}
-                groupBy={blueprint.views.find((v) => v.entity === open.entity && v.groupBy)?.groupBy}
-                onUpdate={onUpdate} onDelete={(id) => { onDelete(id); setOpenId(null); }} onClose={() => setOpenId(null)} />
-            </div>
-          </div>
+          <RecordDialog title={`Detalle de ${titleOf(open.id) ?? open.entity}`} onClose={() => setOpenId(null)}>
+            <RecordPanel blueprint={blueprint} appId={appId} record={open} records={records} titleOf={titleOf} dark={dark}
+              groupBy={blueprint.views.find((v) => v.entity === open.entity && v.groupBy)?.groupBy}
+              onUpdate={onUpdate} onDelete={(id) => { onDelete(id); setOpenId(null); }} onClose={() => setOpenId(null)} />
+          </RecordDialog>
         )}
 
         {palette && (
@@ -238,7 +237,7 @@ function ToolButton({ tool: t, dark }: { tool: Tool; dark: boolean }) {
   const ai = t.key === 'ia';
   return (
     <button onClick={t.onClick} aria-label={t.label} title={t.label} aria-pressed={t.active || undefined}
-      className={`relative inline-flex items-center gap-1.5 rounded-full p-2 text-[0.92em] font-medium transition hover:opacity-85 ${ai ? 'xl:px-3 xl:py-1.5' : ''}`}
+      className={`sh-touch relative inline-flex items-center gap-1.5 rounded-full p-2 text-[0.92em] font-medium transition hover:opacity-85 ${ai ? 'xl:px-3 xl:py-1.5' : ''}`}
       style={ai ? { background: GREEN, color: '#fff' } : t.active ? { background: dark ? 'rgba(255,255,255,.1)' : 'rgba(11,16,32,.07)', color: 'var(--crm-text)' } : { color: 'var(--crm-muted)' }}>
       <Icon className="h-4 w-4" />
       {ai && <span className="hidden xl:inline">IA</span>}

@@ -15,7 +15,7 @@ const PUSHED: Record<string, string> = {
   sin_fecha: 'No tiene fecha: no hay nada que guardar.',
 };
 
-const button = 'inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-[0.92em] font-medium disabled:opacity-50';
+const button = 'sh-touch inline-flex items-center gap-1.5 rounded px-3 py-2 text-[0.92em] font-medium disabled:opacity-50';
 const outline = { border: '1px solid var(--crm-border)', color: 'var(--crm-primary)', borderRadius: 'calc(var(--crm-radius) * 0.75)' };
 
 export function RecordCalendar({ blueprint, record, records }: { blueprint: Blueprint; record: AppRecord; records: AppRecord[] }) {
@@ -37,8 +37,8 @@ export function RecordCalendar({ blueprint, record, records }: { blueprint: Blue
   };
 
   return (
-    <section aria-label="Calendario" className="mb-4 flex flex-col gap-1.5">
-      <div className="flex flex-wrap gap-2">
+    <section aria-label="Calendario" className="mb-4 min-w-0 flex flex-col gap-1.5">
+      <div className="flex min-w-0 flex-wrap gap-2">
         <a href={googleCalendarUrl(event)} target="_blank" rel="noreferrer" className={button} style={outline}>
           <CalendarPlus className="h-4 w-4" /> Añadir a Google Calendar
         </a>
