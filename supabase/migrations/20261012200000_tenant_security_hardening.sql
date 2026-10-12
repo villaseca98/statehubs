@@ -97,7 +97,7 @@ create policy crm_records_delete on public.crm_records for delete to authenticat
 -- skips the branch: unknown organization IDs could bypass authorization.
 -- Fail closed explicitly for null/foreign organization IDs.
 create or replace function public.crm_set_org_member(p_org uuid,p_user uuid,p_role text)
-returns void language plpgsql security definer set search_path = '' as $
+returns void language plpgsql security definer set search_path = '' as $$
 begin
  if p_org is null or p_user is null or
     coalesce(public.crm_org_role(p_org),'') not in ('owner','admin')
@@ -108,15 +108,15 @@ begin
  insert into public.crm_org_members(org_id,user_id,role)
  values(p_org,p_user,p_role)
  on conflict(org_id,user_id) do update set role=excluded.role;
-end $;
+end $$;
 create or replace function public.crm_remove_org_member(p_org uuid,p_user uuid)
-returns void language plpgsql security definer set search_path = '' as $
+returns void language plpgsql security definer set search_path = '' as $$
 begin
  if p_org is null or p_user is null or
     coalesce(public.crm_org_role(p_org),'') not in ('owner','admin')
  then raise exception 'Forbidden'; end if;
  delete from public.crm_org_members where org_id=p_org and user_id=p_user and role<>'owner';
-end $;
+end $$;
 revoke all on function public.crm_set_org_member(uuid,uuid,text) from public,anon;
 revoke all on function public.crm_remove_org_member(uuid,uuid) from public,anon;
 grant execute on function public.crm_set_org_member(uuid,uuid,text) to authenticated;
