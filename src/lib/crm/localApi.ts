@@ -1,6 +1,6 @@
 import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import { cardProposal } from '@shared/blueprint/modules.ts';
-import type { CrmApp, CrmMessage, CrmProposal, CrmVersion, IcalSyncResult, crmApi } from './api';
+import type { CrmApp, CrmMessage, CrmProposal, CrmVersion, IcalSyncResult, InstagramStatus, crmApi } from './api';
 import { localAgent } from './localAgent';
 
 // Guest mode: the same API as crmApi, kept in this browser (localStorage).
@@ -138,5 +138,10 @@ export const localCrmApi: typeof crmApi = {
   syncIcal: async (): Promise<IcalSyncResult> => ({
     nuevas: 0, actualizadas: 0, canceladas: 0, errores: [],
     mensaje: 'Sincronizar con Airbnb y Booking necesita una cuenta: los calendarios se leen desde nuestro servidor. En modo prueba puedes apuntar las reservas a mano.',
+  }),
+  // Instagram talks to our server, never to a browser: in guest mode only the simulator works.
+  instagram: async (): Promise<InstagramStatus> => ({
+    connected: false,
+    mensaje: 'Conectar tu Instagram necesita una cuenta de StateHubs: los mensajes llegan a nuestro servidor. En modo prueba puedes probar el asistente en el simulador.',
   }),
 };

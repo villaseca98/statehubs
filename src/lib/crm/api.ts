@@ -12,6 +12,9 @@ export interface CrmVersion { version: number; summary: string; created_at: stri
 export interface CrmMessage { id: string; role: 'user' | 'assistant'; content: string; proposal_id: string | null; created_at: string }
 // What a calendar sync did; `mensaje` replaces the counts when there was nothing to do.
 export type IcalSyncResult = SyncSummary & { mensaje?: string };
+// The Instagram account behind the assistant (crm-instagram). The token never leaves the server.
+export interface InstagramStatus { connected: boolean; username?: string | null; expires_at?: string | null; configured?: boolean; url?: string; mensaje?: string }
+export type InstagramAction = 'status' | 'connect' | 'disconnect';
 export interface CrmProposal {
   id: string; base_version: number | null; blueprint: Blueprint; summary: string; changes: Change[];
   samples: { entity: string; data: RecordData; id?: string }[]; status: 'pending' | 'applied' | 'discarded'; created_at: string;
@@ -48,6 +51,8 @@ export const crmApi = {
   propose: (appId: string, blueprint: Blueprint) => invokeAgent({ app_id: appId, blueprint }) as Promise<{ message: CrmMessage; proposal: CrmProposal }>,
   // Reads the Airbnb/Booking iCal link of each property on the server (crm-ical).
   syncIcal: (appId: string) => invokeFunction<IcalSyncResult>('crm-ical', { app_id: appId }),
+  // Connects the Instagram account (OAuth on the server) or says how it is.
+  instagram: (appId: string, action: InstagramAction) => invokeFunction<InstagramStatus>('crm-instagram', { app_id: appId, action, origin: window.location.origin }),
 };
 
 function invokeAgent(body: Record<string, unknown>): Promise<{ message: CrmMessage; proposal: CrmProposal | null }> {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Check, Eye, History, Home, Loader2, Minus, Pencil, Plus, Puzzle, Send, Sparkles, X } from 'lucide-react';
+import { Check, Eye, History, Home, Loader2, MessagesSquare, Minus, Pencil, Plus, Puzzle, Send, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 import { useToast } from '@/lib/toast';
 import { crmApi } from '@/lib/crm/api';
@@ -12,6 +12,8 @@ import { Workspace } from '@/components/crm/Workspace';
 import type { Tool } from '@/components/crm/Workspace';
 import { ModuleCards } from '@/components/crm/ModuleCards';
 import { AnalysisSetup } from '@/components/crm/AnalysisSetup';
+import { InstagramSetup } from '@/components/crm/InstagramSetup';
+import type { InstagramAction } from '@/lib/crm/api';
 import { LogoSetup } from '@/components/brand/LogoSetup';
 import { makeTitleLookup } from '@/components/crm/theme';
 import { addModule, agencyModules, extraModules, removeModule } from '@shared/blueprint/modules.ts';
@@ -26,7 +28,7 @@ import { syncSummaryText } from '@shared/blueprint/ical.ts';
 // change it (pieces, the AI, history). Every change arrives as a proposal you
 // can preview over your own data, apply, discard or undo later.
 
-type Panel = 'piezas' | 'ia' | 'historial' | null;
+type Panel = 'piezas' | 'ia' | 'historial' | 'instagram' | null;
 const CHANGE_ICON = { add: Plus, remove: Minus, change: Pencil };
 const CHANGE_COLOR = { add: 'text-emerald-600', remove: 'text-red-600', change: 'text-amber-600' };
 
@@ -85,6 +87,7 @@ export default function AppPage() {
   const chatEnd = useRef<HTMLDivElement>(null);
 
   const fail = useCallback((e: unknown) => toast({ title: 'Algo ha fallado', description: (e as Error).message, error: true }), [toast]);
+  const instagramAccount = useCallback((action: InstagramAction) => api.instagram(appId, action), [api, appId]);
 
   const load = useCallback(async () => {
     const [a, v, m, p, r] = await Promise.all([api.getApp(appId), api.versions(appId), api.messages(appId), api.pendingProposal(appId), api.records(appId)]);
@@ -99,6 +102,13 @@ export default function AppPage() {
       setLoading(false);
       if (!a) return;
       document.title = `${a.name} · StateHubs`;
+      // Back from connecting Instagram (crm-instagram sends ?instagram=conectado|cancelado|error).
+      const ig = new URLSearchParams(location.search).get('instagram');
+      if (ig) {
+        navigate(location.pathname, { replace: true, state: location.state });
+        setPanel('instagram');
+        toast(ig === 'conectado' ? { title: 'Instagram conectado', description: 'El asistente ya contesta a tu cuenta.' } : { title: 'Instagram no se ha conectado', description: ig === 'cancelado' ? 'Has cancelado en Instagram.' : 'Prueba otra vez; si sigue fallando, revisa que la cuenta sea profesional.', error: ig !== 'cancelado' });
+      }
       const first = (location.state as { firstMessage?: string } | null)?.firstMessage;
       if (first && m.length === 0 && !sentFirst.current) {
         sentFirst.current = true;
@@ -256,6 +266,7 @@ export default function AppPage() {
   const hasSamples = records.some((r) => r.is_sample);
   const tools: Tool[] = [
     { key: 'piezas', label: 'Piezas', icon: Puzzle, onClick: () => setPanel('piezas'), active: panel === 'piezas' },
+    { key: 'instagram', label: 'Instagram', icon: MessagesSquare, onClick: () => setPanel('instagram'), active: panel === 'instagram' },
     { key: 'ia', label: 'Pedírselo a la IA', icon: Sparkles, onClick: () => setPanel('ia'), active: panel === 'ia' },
     { key: 'historial', label: 'Historial', icon: History, onClick: () => setPanel('historial'), badge: versions.length || undefined, active: panel === 'historial' },
     { key: 'inicio', label: 'Todas mis apps', icon: Home, onClick: () => navigate('/') },
@@ -354,6 +365,13 @@ export default function AppPage() {
             <div ref={chatEnd} />
           </div>
         </SidePanel>
+      )}
+
+      {panel === 'instagram' && current && (
+        <InstagramSetup blueprint={proposal?.blueprint ?? current.blueprint} live={current.blueprint} records={records}
+          onCreate={createRecord} onUpdate={updateRecord} onPropose={proposeBlueprint} onAddPiece={() => void toggleModule('instagram')}
+          onClose={() => setPanel(null)} account={local ? null : instagramAccount} guest={local} busy={thinking}
+          pending={proposal ? { summary: proposal.summary, changes: proposal.changes, applying, onApply: apply, onDiscard: discard } : null} />
       )}
 
       {panel === 'historial' && (

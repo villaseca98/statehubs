@@ -35,7 +35,22 @@ StateHubs es solo para inmobiliarias y alquiler turístico, y es **una sola app*
 - **Análisis de datos** (pieza `analisis`, vista `analysis`, motor en `_shared/blueprint/analysis.ts`, sin IA): embudo y previsión, leads puntuados con su porqué y los que se enfrían, casuísticas y base de datos con huecos, duplicados y CSV. Qué enfoques, qué secciones y los días para darlo por frío se eligen en Piezas y llegan como propuesta.
 - **Sectores** (`_shared/blueprint/sectors.ts`): ventas, inmobiliaria, almacén y control de BBDD. Cada uno trae sus piezas y campos extra, que se aplican también a las piezas que se pongan después. Se eligen al empezar, en la Landing.
 
+## Instagram (leads por la noche)
+
+- **Pieza `instagram`** («Leads de Instagram», en los tres packs): entidad `conversacion` (estado en_curso → cualificado → agendado/reservado, o humano/descartado; transcripción y resumen) y la vista «Bandeja de Instagram». La tarjeta «Esta noche por Instagram» del centro de operaciones sale de `nightInstagram()` en `lib/crm/ops.ts`.
+- **El asistente es el plano** (`bp.bot`, tipos en `types.ts`, validado en `validate.ts`, legible en `diff.ts`): palabras clave, preguntas que guardan en `conversacion` o `contacto_inmo`, reglas de puntuación, umbrales y final (cita en la Agenda, prerreserva «Por confirmar» o «te llamamos»). Se edita en la herramienta «Instagram» (`InstagramSetup.tsx`, `BotEditor.tsx`) y llega como propuesta. La IA no lo toca: `agent.ts` conserva el `bot` actual.
+- **Un solo motor** (`_shared/blueprint/bot.ts`, sin IA y puro): lo usan el simulador (`InstagramSimulator.tsx`, también en la demo) y el servidor. Su estado va en `conversacion.data._bot`. Nunca cobra ni confirma una reserva; si piden una persona o dicen que no, se calla y lo deja en la bandeja.
+- **Servidor:** `crm-instagram` (OAuth de Instagram, webhook firmado con `X-Hub-Signature-256`, respuesta privada a comentarios, Send API dentro de la ventana de 24 h, cada evento una sola vez). Tokens en `crm_instagram_accounts` y eventos en `crm_instagram_events` (RLS sin políticas: solo el servidor). Helpers en `_shared/instagram.ts`.
+- **Poner en marcha con Meta (una vez, para todos los clientes):**
+  1. developers.facebook.com → crear app de tipo «Empresa» → añadir el producto Instagram → «API con inicio de sesión de Instagram».
+  2. Permisos: `instagram_business_basic`, `instagram_business_manage_messages`, `instagram_business_manage_comments`.
+  3. Inicio de sesión: URI de redirección OAuth `https://<proyecto>.supabase.co/functions/v1/crm-instagram`.
+  4. Webhooks: URL de devolución la misma, token de verificación = `INSTAGRAM_VERIFY_TOKEN`; suscribirse a `comments` y `messages`.
+  5. Secretos de Supabase: `INSTAGRAM_APP_ID` y `INSTAGRAM_APP_SECRET` (los de Instagram, no los de Facebook), `INSTAGRAM_VERIFY_TOKEN` y `INSTAGRAM_STATE_SECRET` (aleatorios largos). Aplicar la migración y desplegar con `supabase functions deploy crm-instagram --no-verify-jwt`.
+  6. Hasta pasar la revisión de la app (y la verificación del negocio) solo funciona con cuentas con rol en la app (probadores). Cada cliente necesita cuenta de Instagram profesional (empresa o creador) y activar «Permitir acceso a mensajes» en Ajustes → Mensajes.
+
 ## Funciones del servidor (`supabase/functions`)
 
 - `crm-agent`: la IA y las piezas proponen cambios al plano. `crm-automate`: envía registros a los webhooks de «Automatizaciones».
 - `crm-ical`: lee el enlace iCal de Airbnb/Booking de cada inmueble (`ical_airbnb`, `ical_booking`; solo https públicas, sin redirecciones) y crea, mueve o cancela reservas por `ref_externa` = UID (`origen_sync` «ical»). Solo fechas: ni precios ni mensajes. Parser en `_shared/blueprint/ical.ts`; en modo prueba dice que necesita cuenta.
+- `crm-instagram`: el asistente de Instagram (ver «Instagram»). Se despliega con `--no-verify-jwt`.

@@ -1,4 +1,4 @@
-import type { Blueprint, Entity, Field, View } from './types.ts';
+import type { Blueprint, BotConfig, Entity, Field, View } from './types.ts';
 
 // One line of "what changes", in plain Spanish, shown before applying.
 // `data` notes what happens to existing records, so nobody loses work by surprise.
@@ -23,6 +23,7 @@ export function diffBlueprints(before: Blueprint | null, after: Blueprint): Chan
     out.push({ kind: 'add', text: `Crear la aplicación «${after.name}».` });
     for (const e of after.entities) out.push({ kind: 'add', text: `${e.labelPlural}: ${e.fields.map((f) => f.label).join(', ')}.` });
     for (const v of after.views) out.push({ kind: 'add', text: `Pantalla «${v.label}» (${VIEW_LABEL[v.type]}).` });
+    out.push(...diffBot(undefined, after.bot));
     return out;
   }
 
@@ -51,6 +52,49 @@ export function diffBlueprints(before: Blueprint | null, after: Blueprint): Chan
 
   const order = (b: Blueprint) => b.views.map((v) => v.key).filter((k) => oldV.has(k) && newV.has(k)).join();
   if (order(before) !== order(after)) out.push({ kind: 'change', text: 'Cambiar el orden del menú.' });
+  out.push(...diffBot(before.bot, after.bot));
+  return out;
+}
+
+const BOT = 'Asistente de Instagram';
+const quote = (list: string[]) => list.map((k) => `«${k}»`).join(', ').replace(/, ([^,]*)$/, ' y $1');
+const FINISH: Record<string, string> = {
+  agenda: 'al final ofrece huecos de la agenda y deja la cita apuntada',
+  reserva: 'al final mira qué alojamiento está libre y deja una reserva por confirmar (no cobra nada)',
+  humano: 'al final pasa el lead a una persona del equipo',
+};
+const finishText = (b: BotConfig) => FINISH[b.finish.mode] ?? '';
+
+// The assistant in plain words: what starts it, how many questions, how it ends.
+function diffBot(o: BotConfig | undefined, n: BotConfig | undefined): Change[] {
+  if (!o && !n) return [];
+  if (!n) return [{ kind: 'remove', text: `Quitar el ${BOT.toLowerCase()}.`, data: 'Las conversaciones y los contactos que trajo se quedan.' }];
+  const summary = `responde a ${quote(n.keywords) || 'mensajes directos'}${n.anyDm && n.keywords.length ? ' y a mensajes directos' : ''}, hace ${n.questions.length} ${n.questions.length === 1 ? 'pregunta' : 'preguntas'} y ${finishText(n)}`;
+  if (!o) return [{ kind: 'add', text: `${n.enabled ? 'Activar' : 'Preparar (apagado)'} el ${BOT.toLowerCase()}: ${summary}.` }];
+  const out: Change[] = [];
+  const add = (kind: Change['kind'], text: string) => out.push({ kind, text: `${BOT}: ${text}` });
+  if (o.enabled !== n.enabled) out.push({ kind: 'change', text: n.enabled ? `Encender el ${BOT.toLowerCase()}: ${summary}.` : `Apagar el ${BOT.toLowerCase()}. Las conversaciones se quedan.` });
+  if (o.template !== n.template && n.template) add('change', `empezar desde la plantilla «${n.template}».`);
+  if (JSON.stringify(o.keywords) !== JSON.stringify(n.keywords)) add('change', n.keywords.length ? `palabras clave ${quote(n.keywords)}.` : 'sin palabras clave (solo mensajes directos).');
+  if (o.anyDm !== n.anyDm) add('change', n.anyDm ? 'también contesta a cualquier mensaje directo nuevo.' : 'solo contesta a mensajes con palabra clave.');
+  if ((o.commentReply ?? '') !== (n.commentReply ?? '')) add('change', n.commentReply ? `responde bajo el comentario «${n.commentReply}».` : 'ya no responde bajo el comentario.');
+  if (o.welcome !== n.welcome) add('change', 'nuevo mensaje de bienvenida.');
+  const oq = new Map(o.questions.map((q) => [q.key, q]));
+  const nq = new Map(n.questions.map((q) => [q.key, q]));
+  for (const q of n.questions) {
+    const p = oq.get(q.key);
+    if (!p) add('add', `nueva pregunta «${q.text}».`);
+    else if (JSON.stringify(p) !== JSON.stringify(q)) add('change', `cambiar la pregunta «${q.text}».`);
+  }
+  for (const q of o.questions) if (!nq.has(q.key)) add('remove', `quitar la pregunta «${q.text}».`);
+  const qOrder = (b: BotConfig) => b.questions.map((q) => q.key).filter((k) => oq.has(k) && nq.has(k)).join();
+  if (qOrder(o) !== qOrder(n)) add('change', 'nuevo orden de las preguntas.');
+  if (JSON.stringify(o.rules) !== JSON.stringify(n.rules)) add('change', `nuevas reglas de puntuación (${n.rules.length}).`);
+  if (o.hot !== n.hot || o.warm !== n.warm || o.qualify !== n.qualify) add('change', `cualifica desde ${n.qualify} puntos; caliente desde ${n.hot}, templado desde ${n.warm}.`);
+  if (o.finish.mode !== n.finish.mode) add('change', `${finishText(n)}.`);
+  else if (JSON.stringify(o.finish) !== JSON.stringify(n.finish)) add('change', 'cambiar cómo termina la conversación.');
+  if (o.goodbye !== n.goodbye) add('change', 'nueva despedida.');
+  if (out.length === 0 && JSON.stringify({ ...o, auto: undefined }) !== JSON.stringify({ ...n, auto: undefined })) add('change', 'ajustes.');
   return out;
 }
 

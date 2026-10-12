@@ -12,7 +12,7 @@ import { useRuntime } from './runtimeContext';
 // actions that fit its current stage; the side panel shows the selected one
 // with its actions and, for booking actions, the free time slots.
 
-const ICONS = { call: Phone, whatsapp: MessageCircle, email: Mail, move: ArrowRight, schedule: CalendarClock, launch: ListPlus, webhook: Zap };
+const ICONS = { call: Phone, whatsapp: MessageCircle, email: Mail, move: ArrowRight, schedule: CalendarClock, launch: ListPlus, webhook: Zap, link: ExternalLink };
 const card = { background: 'var(--crm-surface)', border: '1px solid var(--crm-border)', borderRadius: 'var(--crm-radius)' } as const;
 
 function actionHref(a: ViewAction, r: AppRecord): string | null {
@@ -21,6 +21,8 @@ function actionHref(a: ViewAction, r: AppRecord): string | null {
   if (a.kind === 'call') return `tel:${String(v).replace(/\s/g, '')}`;
   if (a.kind === 'whatsapp') return whatsappUrl(String(v));
   if (a.kind === 'email') return `mailto:${v}`;
+  // [SECURITY] Only web addresses: a javascript: or data: URL in a record must never become a link.
+  if (a.kind === 'link') return /^https?:\/\//i.test(String(v)) ? String(v) : null;
   return null;
 }
 
@@ -76,14 +78,14 @@ export function WorklistView({ blueprint, view, records, dark, solid, titleOf, o
   const ActionButton = ({ a, r, big }: { a: ViewAction; r: AppRecord; big?: boolean }) => {
     const Icon = ICONS[a.kind];
     const href = actionHref(a, r);
-    const missing = ['call', 'whatsapp', 'email'].includes(a.kind) && !href;
+    const missing = ['call', 'whatsapp', 'email', 'link'].includes(a.kind) && !href;
     const style = big
       ? { ...card, padding: '8px 12px', color: 'var(--crm-text)' }
       : { border: '1px solid var(--crm-border)', borderRadius: 'calc(var(--crm-radius) * 0.75)', padding: '3px 8px', color: 'var(--crm-text)' };
     const active = booking === a && selected?.id === r.id;
     const content = <><Icon className="h-3.5 w-3.5 shrink-0" style={{ color: a.kind === 'whatsapp' ? '#25d366' : 'var(--crm-primary)' }} />{a.label}</>;
     const cls = `inline-flex items-center gap-1.5 whitespace-nowrap ${big ? 'w-full' : ''} ${missing ? 'pointer-events-none opacity-40' : ''}`;
-    if (href) return <a href={href} target={a.kind === 'whatsapp' ? '_blank' : undefined} rel="noreferrer" onClick={(e) => e.stopPropagation()} className={cls} style={style}>{content}</a>;
+    if (href) return <a href={href} target={a.kind === 'whatsapp' || a.kind === 'link' ? '_blank' : undefined} rel="noreferrer" onClick={(e) => e.stopPropagation()} className={cls} style={style}>{content}</a>;
     return (
       <button title={missing ? 'Falta el dato de contacto' : undefined} onClick={(e) => { e.stopPropagation(); run(a, r); }} className={cls}
         style={active ? { ...style, borderColor: 'var(--crm-primary)', background: 'color-mix(in srgb, var(--crm-primary) 10%, transparent)' } : style}>

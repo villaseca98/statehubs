@@ -2,6 +2,7 @@ import type { Blueprint, RecordData } from './types.ts';
 import { ACTION_KINDS, ANALYSIS_LENSES, FIELD_TYPES, OPTION_COLORS, VIEW_TYPES } from './types.ts';
 import { validateBlueprint } from './validate.ts';
 import { diffBlueprints } from './diff.ts';
+import { fitBot } from './bot.ts';
 import type { Change } from './diff.ts';
 
 // The builder agent. The model never touches the database: it can only call
@@ -54,6 +55,9 @@ Reglas del plano (versión 1):
 - cards es una galería de fichas (ideal para inmuebles): lleva entity, opcional imageField (un campo url con la foto), groupBy (select del estado) y columns (los datos que se ven en la ficha).
 - StateHubs es para inmobiliarias y alquiler turístico: piensa en contactos con temperatura y próxima acción, operaciones por etapas, inmuebles, visitas, reservas de Airbnb y Booking, limpiezas e incidencias. No prometas conexiones con Airbnb o Booking que no existen: las reservas llegan por el calendario iCal de cada anuncio.
 - No escribas logo: el logo lo pone la persona desde Piezas.
+- Asistente de Instagram (bot): si el plano actual tiene «bot», es el chatbot que contesta comentarios, historias y mensajes de Instagram, cualifica al lead y le da cita o le guarda una reserva pendiente. NO lo escribas ni lo copies en tu propuesta: se conserva solo y la persona lo cambia en la herramienta «Instagram». Lo que sí debes cuidar: el bot guarda respuestas en campos de contacto_inmo y conversacion; no quites ni cambies de tipo esos campos, ni la entidad conversacion, ni la Agenda o las Reservas si el bot termina en ellas. Si te piden cambiar el bot (palabras clave, preguntas, reglas), explica que se hace en «Instagram» y no propongas nada.
+- conversacion es la bandeja de Instagram (una por persona que habla con el bot). Los campos usuario, estado, puntuacion, contacto, ig_id y transcripcion los rellena el bot: no los quites.
+- Acción link: abre la dirección web de un campo url (field), por ejemplo el chat de Instagram.
 - Si el plano actual tiene kind, sector y modules (las piezas que la persona puso con tarjetas), no te preocupes por ellos: se conservan solos. Tú cambia entidades y vistas como siempre.
 - Todas las aplicaciones tienen el mismo diseño de StateHubs; no hay estilos que elegir. La app abre en «Hoy», que reúne solo lo que toca: citas y llamadas de hoy, lo atrasado y lo de los próximos días, a partir de los campos date y datetime y de los select de estado. Por eso pon siempre fechas útiles (cita, vence, límite, entrega) y estados con un final claro.
 - Usa datetime para citas, visitas y llamadas con hora; date para fechas sin hora.
@@ -204,6 +208,8 @@ export async function runAgent(opts: {
         continue;
       }
       const input = (call.input ?? {}) as { resumen?: string; plano?: unknown; ejemplos?: unknown };
+      // «bot» belongs to the app, not to the model: whatever it wrote there is dropped.
+      if (input.plano && typeof input.plano === 'object') delete (input.plano as { bot?: unknown }).bot;
       const errors = validateBlueprint(input.plano);
       if (errors.length) {
         results.push({ type: 'tool_result', tool_use_id: call.id, is_error: true, content: `El plano tiene errores. Corrígelos y vuelve a proponer:\n- ${errors.join('\n- ')}` });
@@ -215,6 +221,13 @@ export async function runAgent(opts: {
       if (opts.current?.modules) bp.modules = opts.current.modules;
       if (opts.current?.sector) bp.sector = opts.current.sector;
       if (opts.current?.logo) bp.logo = opts.current.logo; else delete bp.logo;
+      // The Instagram assistant is edited in its own tool; the model can't write it, only keep it working.
+      if (opts.current?.bot) { bp.bot = JSON.parse(JSON.stringify(opts.current.bot)); fitBot(bp); } else delete bp.bot;
+      const botErrors = validateBlueprint(bp).filter((e) => e.startsWith('Asistente de Instagram'));
+      if (botErrors.length) {
+        results.push({ type: 'tool_result', tool_use_id: call.id, is_error: true, content: `El plano rompe el asistente de Instagram. Deja como estaban los campos y secciones que usa:\n- ${botErrors.join('\n- ')}` });
+        continue;
+      }
       proposal = {
         summary: String(input.resumen ?? '').trim() || reply,
         blueprint: bp,

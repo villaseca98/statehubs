@@ -4,6 +4,7 @@ import { diffBlueprints } from './diff.ts';
 import type { Proposal, SampleRecord } from './agent.ts';
 import { DEFAULT_ANALYSIS, tidyAnalysis } from './analysis.ts';
 import { getSector } from './sectors.ts';
+import { botTemplate, fitBot } from './bot.ts';
 
 // "Mr. Potato" pieces: each module is a card the person adds or removes.
 // A module brings the entities it needs (from one shared library, so two
@@ -372,7 +373,7 @@ export const LIBRARY: Record<string, Entity> = {
       { key: 'canal', label: 'Canal', type: 'select', options: opts(['airbnb', 'Airbnb', 'red'], ['booking', 'Booking', 'blue'], ['directa', 'Directa', 'green'], ['otro', 'Otro', 'gray']) },
       { key: 'entrada', label: 'Entrada', type: 'date', required: true },
       { key: 'salida', label: 'Salida', type: 'date', required: true },
-      { key: 'estado', label: 'Estado', type: 'select', required: true, options: opts(['confirmada', 'Confirmada', 'blue'], ['en_casa', 'En la casa', 'purple'], ['finalizada', 'Finalizada', 'green'], ['cancelada', 'Cancelada', 'red'], ['bloqueo', 'Bloqueo', 'gray']) },
+      { key: 'estado', label: 'Estado', type: 'select', required: true, options: opts(['pendiente', 'Por confirmar', 'amber'], ['confirmada', 'Confirmada', 'blue'], ['en_casa', 'En la casa', 'purple'], ['finalizada', 'Finalizada', 'green'], ['cancelada', 'Cancelada', 'red'], ['bloqueo', 'Bloqueo', 'gray']) },
       { key: 'huespedes', label: 'Huéspedes', type: 'number' },
       { key: 'importe', label: 'Importe', type: 'money' },
       { key: 'comision', label: 'Comisión del canal', type: 'money' },
@@ -413,6 +414,34 @@ export const LIBRARY: Record<string, Entity> = {
       { key: 'abierta', label: 'Abierta el', type: 'date' },
       { key: 'coste', label: 'Coste', type: 'money' },
       { key: 'notas', label: 'Notas', type: 'longtext' },
+    ],
+  },
+  // One per person who talks to the Instagram assistant (bot.ts fills it).
+  conversacion: {
+    key: 'conversacion', label: 'Conversación', labelPlural: 'Conversaciones de Instagram', titleField: 'usuario',
+    fields: [
+      { key: 'usuario', label: 'Usuario', type: 'text', required: true, help: 'Su @ de Instagram.' },
+      { key: 'nombre', label: 'Nombre', type: 'text' },
+      { key: 'estado', label: 'Estado', type: 'select', required: true, options: opts(['en_curso', 'En curso', 'blue'], ['cualificado', 'Cualificado', 'teal'], ['agendado', 'Con cita', 'purple'], ['reservado', 'Reserva pedida', 'green'], ['humano', 'Para una persona', 'amber'], ['descartado', 'Descartado', 'gray']) },
+      { key: 'puntuacion', label: 'Puntuación', type: 'number', help: 'De 0 a 100, según las reglas del asistente.' },
+      { key: 'interes', label: 'Busca', type: 'select', options: opts(['comprar', 'Comprar', 'blue'], ['vender', 'Vender', 'pink'], ['alquilar', 'Alquilar', 'teal'], ['invertir', 'Invertir', 'green'], ['reservar', 'Reservar', 'purple'], ['informacion', 'Información', 'gray']) },
+      { key: 'presupuesto', label: 'Presupuesto', type: 'money' },
+      { key: 'zona', label: 'Zona', type: 'text' },
+      { key: 'plazo', label: 'Plazo', type: 'select', options: opts(['ya', 'Cuanto antes', 'red'], ['tres_meses', 'En 3–6 meses', 'amber'], ['mas_adelante', 'Más adelante', 'blue'], ['mirando', 'Solo mirando', 'gray']) },
+      { key: 'fechas', label: 'Fechas que pide', type: 'text' },
+      { key: 'huespedes', label: 'Personas', type: 'number' },
+      { key: 'disparador', label: 'Empezó por', type: 'select', options: opts(['comentario', 'Comentario', 'pink'], ['historia', 'Historia', 'purple'], ['dm', 'Mensaje directo', 'blue'], ['anuncio', 'Anuncio', 'amber']) },
+      { key: 'palabra_clave', label: 'Palabra clave', type: 'text' },
+      { key: 'canal', label: 'Canal', type: 'select', options: opts(['instagram', 'Instagram', 'pink']) },
+      { key: 'contacto', label: 'Contacto', type: 'relation', relation: 'contacto_inmo' },
+      { key: 'inmueble', label: 'Inmueble', type: 'relation', relation: 'inmueble' },
+      { key: 'cita', label: 'Cita', type: 'datetime' },
+      { key: 'inicio', label: 'Empezó', type: 'datetime' },
+      { key: 'ultima_actividad', label: 'Último mensaje', type: 'datetime' },
+      { key: 'enlace', label: 'Chat en Instagram', type: 'url' },
+      { key: 'ig_id', label: 'ID de Instagram', type: 'text', help: 'Lo pone Instagram; no lo cambies.' },
+      { key: 'resumen', label: 'Resumen', type: 'longtext' },
+      { key: 'transcripcion', label: 'Conversación', type: 'longtext' },
     ],
   },
 };
@@ -627,6 +656,22 @@ export const MODULES: ModuleDef[] = [
     }],
   },
   {
+    key: 'instagram', kinds: ['crm'], name: 'Leads de Instagram', icon: 'MessagesSquare',
+    pitch: 'Un asistente contesta comentarios, historias y mensajes, cualifica al lead y le da cita o le guarda la reserva. Por la mañana los tienes en la bandeja.',
+    entities: ['conversacion'],
+    views: [{
+      key: 'instagram', label: 'Bandeja de Instagram', type: 'worklist', entity: 'conversacion', groupBy: 'estado', columns: ['interes', 'presupuesto', 'zona', 'fechas', 'puntuacion', 'ultima_actividad'],
+      actions: [
+        { kind: 'link', label: 'Abrir en Instagram', field: 'enlace' },
+        { kind: 'move', label: 'Pasar a una persona', to: 'humano', when: ['en_curso', 'cualificado'] },
+        { kind: 'schedule', label: 'Agendar', field: 'cita', to: 'agendado', when: ['en_curso', 'cualificado', 'humano'] },
+        { kind: 'move', label: 'Descartar', to: 'descartado', when: ['en_curso', 'cualificado', 'humano'] },
+        { kind: 'move', label: 'Recuperar', to: 'humano', when: ['descartado'] },
+      ],
+      availability: HOURS,
+    }],
+  },
+  {
     key: 'operaciones_inmo', kinds: ['crm'], name: 'Operaciones', icon: 'Filter',
     pitch: 'Compradores, vendedores, captación y alquileres por etapas, con importe y comisión.',
     entities: ['operacion'],
@@ -700,12 +745,12 @@ export const STARTER: Record<AppKind, string[]> = {
 // app: the same contacts, properties and team serve sales and tourist rentals.
 export type PackKey = 'compraventa' | 'turistico' | 'ambos';
 export const PACKS: { key: PackKey; name: string; pitch: string; modules: string[] }[] = [
-  { key: 'compraventa', name: 'Compraventa', pitch: 'Captación, compradores, vendedores, visitas y cierres.', modules: ['centro', 'contactos_inmo', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'equipo', 'analisis', 'documentos'] },
-  { key: 'turistico', name: 'Alquiler turístico', pitch: 'Reservas de Airbnb y Booking, calendario, limpiezas e ingresos.', modules: ['centro', 'turistico', 'cartera', 'contactos_inmo', 'equipo', 'analisis'] },
-  { key: 'ambos', name: 'Las dos cosas', pitch: 'Vendes, alquilas y gestionas pisos turísticos.', modules: ['centro', 'contactos_inmo', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'turistico', 'equipo', 'analisis', 'documentos'] },
+  { key: 'compraventa', name: 'Compraventa', pitch: 'Captación, compradores, vendedores, visitas y cierres.', modules: ['centro', 'contactos_inmo', 'instagram', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'equipo', 'analisis', 'documentos'] },
+  { key: 'turistico', name: 'Alquiler turístico', pitch: 'Reservas de Airbnb y Booking, calendario, limpiezas e ingresos.', modules: ['centro', 'turistico', 'cartera', 'contactos_inmo', 'instagram', 'equipo', 'analisis'] },
+  { key: 'ambos', name: 'Las dos cosas', pitch: 'Vendes, alquilas y gestionas pisos turísticos.', modules: ['centro', 'contactos_inmo', 'instagram', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'turistico', 'equipo', 'analisis', 'documentos'] },
 ];
 // The pieces an agency picks from; the older generic ones stay available under «Más piezas».
-const AGENCY = ['centro', 'contactos_inmo', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'turistico', 'equipo', 'analisis', 'documentos', 'automatizaciones', 'gastos'];
+const AGENCY = ['centro', 'contactos_inmo', 'instagram', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'turistico', 'equipo', 'analisis', 'documentos', 'automatizaciones', 'gastos'];
 export const agencyModules = () => AGENCY.map((k) => MODULES.find((m) => m.key === k)!);
 export const extraModules = () => MODULES.filter((m) => !AGENCY.includes(m.key));
 export const composePack = (pack: PackKey, name: string) => composeApp('crm', name, PACKS.find((p) => p.key === pack)?.modules ?? PACKS[2].modules);
@@ -730,6 +775,7 @@ const PANEL: Record<string, DashboardWidget[]> = {
   operacion: [{ kind: 'metric', label: 'En operaciones', entity: 'operacion', agg: 'sum', field: 'importe' }, { kind: 'bars', label: 'Operaciones por etapa', entity: 'operacion', agg: 'count', groupBy: 'etapa' }],
   reserva: [{ kind: 'metric', label: 'Reservado', entity: 'reserva', agg: 'sum', field: 'importe' }, { kind: 'bars', label: 'Ingresos por canal', entity: 'reserva', agg: 'sum', field: 'importe', groupBy: 'canal' }],
   contacto_inmo: [{ kind: 'metric', label: 'Contactos', entity: 'contacto_inmo', agg: 'count' }, { kind: 'bars', label: 'Por temperatura', entity: 'contacto_inmo', agg: 'count', groupBy: 'temperatura' }],
+  conversacion: [{ kind: 'metric', label: 'Conversaciones de Instagram', entity: 'conversacion', agg: 'count' }, { kind: 'bars', label: 'Instagram por estado', entity: 'conversacion', agg: 'count', groupBy: 'estado' }],
   contacto: [{ kind: 'metric', label: 'Contactos', entity: 'contacto', agg: 'count' }, { kind: 'bars', label: 'Consentimiento RGPD', entity: 'contacto', agg: 'count', groupBy: 'consentimiento' }],
 };
 
@@ -737,8 +783,8 @@ const clone = <T>(x: T): T => JSON.parse(JSON.stringify(x));
 export const getModule = (key: string) => MODULES.find((m) => m.key === key);
 // Order of the cards and of the panels on the page: what each kind of business looks at first.
 const ORDER: Record<AppKind, string[]> = {
-  crm: ['centro', 'contactos_inmo', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'turistico', 'equipo', 'panel', 'analisis', 'leads', 'inmuebles', 'visitas', 'embudo', 'agenda', 'contactos', 'clientes', 'presupuestos', 'soporte', 'operaciones', 'proyectos', 'documentos', 'automatizaciones', 'facturas', 'pedidos', 'inventario', 'movimientos', 'compras', 'gastos'],
-  erp: ['panel', 'analisis', 'facturas', 'pedidos', 'inventario', 'movimientos', 'clientes', 'compras', 'gastos', 'operaciones', 'presupuestos', 'proyectos', 'contactos', 'documentos', 'automatizaciones', 'agenda', 'leads', 'embudo', 'inmuebles', 'visitas', 'soporte', 'centro', 'contactos_inmo', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'turistico', 'equipo'],
+  crm: ['centro', 'contactos_inmo', 'instagram', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'turistico', 'equipo', 'panel', 'analisis', 'leads', 'inmuebles', 'visitas', 'embudo', 'agenda', 'contactos', 'clientes', 'presupuestos', 'soporte', 'operaciones', 'proyectos', 'documentos', 'automatizaciones', 'facturas', 'pedidos', 'inventario', 'movimientos', 'compras', 'gastos'],
+  erp: ['panel', 'analisis', 'facturas', 'pedidos', 'inventario', 'movimientos', 'clientes', 'compras', 'gastos', 'operaciones', 'presupuestos', 'proyectos', 'contactos', 'documentos', 'automatizaciones', 'agenda', 'leads', 'embudo', 'inmuebles', 'visitas', 'soporte', 'centro', 'contactos_inmo', 'instagram', 'operaciones_inmo', 'cartera', 'agenda_inmo', 'turistico', 'equipo'],
 };
 const rankIn = (kind: AppKind, key: string) => { const i = ORDER[kind].indexOf(key); return i < 0 ? ORDER[kind].length : i; };
 export const modulesFor = (kind: AppKind) => MODULES.filter((m) => m.kinds.includes(kind)).sort((a, b) => rankIn(kind, a.key) - rankIn(kind, b.key));
@@ -818,6 +864,9 @@ export function addModule(current: Blueprint, key: string): Blueprint {
   sortViews(bp);
   rebuildPanel(bp);
   tidyAnalysis(bp);
+  // The Instagram assistant comes with the piece; one you had before comes back as it was.
+  if (key === 'instagram') { if (bp.bot) bp.bot.enabled = true; else bp.bot = botTemplate(bp); }
+  fitBot(bp);
   return bp;
 }
 
@@ -838,6 +887,9 @@ export function removeModule(current: Blueprint, key: string): Blueprint {
   bp.entities = bp.entities.filter((e) => needed.has(e.key) || !LIBRARY[e.key]);
   rebuildPanel(bp);
   tidyAnalysis(bp);
+  // Removing the piece switches the assistant off but keeps how you set it up.
+  if (key === 'instagram' && bp.bot) bp.bot.enabled = false;
+  fitBot(bp);
   return bp;
 }
 
@@ -853,6 +905,17 @@ const rel = (days: number, time?: string) => {
   const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   return time ? `${day}T${time}` : day;
 };
+
+// Last night's Instagram: before midnight is yesterday, after it is today.
+const dm = (day: string) => `${Number(day.slice(8, 10))}/${Number(day.slice(5, 7))}`;
+const night = (time: string) => rel(Number(time.slice(0, 2)) >= 18 ? -1 : 0, time);
+// A short transcript: [hour, 0 = the lead / 1 = the assistant, text].
+const chat = (user: string, lines: [string, 0 | 1, string][]) => lines.map(([t, who, text]) => `[${t}] ${who ? 'Asistente' : user}: ${text}`).join('\n');
+const HELLO = '¡Hola! 👋 Soy el asistente de la inmobiliaria. Te hago cuatro preguntas rápidas y te busco un hueco para verlo.';
+const STAY = '¡Hola! 👋 Soy el asistente. Reservando directo no pagas comisiones de plataforma. Te miro la disponibilidad en un momento.';
+const IG_VISIT = ['conversacion', 'cita_inmo'];
+const IG_STAY = ['conversacion', 'reserva'];
+const IG = ['conversacion'];
 
 const SAMPLES: Record<string, Record<string, unknown>[]> = {
   cliente: [
@@ -999,6 +1062,19 @@ const SAMPLES: Record<string, Record<string, unknown>[]> = {
     { id: 'm-ki7', nombre: 'Elena', apellidos: 'Sorní', telefono: '666 902 381', email: 'elena.sorni@correo.es', tipo: 'comprador', temperatura: 'descartado', proxima_accion: 'Compró con otra agencia', presupuesto: 300000, zonas: 'Centro', tipo_deseado: 'atico', origen: 'idealista', agente: 'm-pe-1', alta: rel(-90) },
     { id: 'm-ki8', nombre: 'Marc', apellidos: 'Albert', telefono: '677 440 128', email: 'marc.albert@correo.es', tipo: 'comprador', temperatura: 'cerrado', proxima_accion: 'Firmó Plaza Redonda 3', presupuesto: 340000, zonas: 'Centro', tipo_deseado: 'atico', origen: 'fotocasa', agente: 'm-pe-1', alta: rel(-120) },
     { id: 'm-ki9', nombre: 'Sofía', apellidos: 'Llorens', telefono: '688 330 915', email: 'sofia.llorens@correo.es', tipo: 'propietario', temperatura: 'templado', proxima_accion: 'Propuesta de gestión turística de su casa', seguimiento: rel(3, '11:00'), zonas: 'Patacona', origen: 'llamada', agente: 'm-pe-3', prioridad: 'media', alta: rel(-8) },
+    // Last night's Instagram leads (the assistant created them).
+    { id: 'm-ki10', _needs: IG_VISIT, nombre: 'Marta', apellidos: 'García', telefono: '611 220 931', tipo: 'comprador', temperatura: 'caliente', proxima_accion: 'Visita mañana a las 10:00', seguimiento: rel(1, '10:00'), presupuesto: 260000, zonas: 'Ruzafa', origen: 'instagram', agente: 'm-pe-2', alta: rel(-1) },
+    { id: 'm-ki11', _needs: IG_VISIT, nombre: 'Pau', apellidos: 'Ferrandis', telefono: '644 018 772', tipo: 'vendedor', temperatura: 'caliente', proxima_accion: 'Tasación mañana a las 12:00', seguimiento: rel(1, '12:00'), presupuesto: 320000, zonas: 'Benimaclet', origen: 'instagram', agente: 'm-pe-1', alta: rel(-1) },
+    { id: 'm-ki12', _needs: IG_VISIT, nombre: 'Laura', apellidos: 'Ibáñez', telefono: '622 901 455', tipo: 'comprador', temperatura: 'caliente', proxima_accion: 'Visita pasado mañana a las 17:00', seguimiento: rel(2, '17:00'), presupuesto: 180000, zonas: 'Campanar', origen: 'instagram', agente: 'm-pe-2', alta: rel(-1) },
+    { id: 'm-ki13', _needs: IG_VISIT, nombre: 'Raúl', apellidos: 'Navarro', telefono: '655 300 118', tipo: 'inversor', temperatura: 'caliente', proxima_accion: 'Llamada en 3 días a las 09:00', seguimiento: rel(3, '09:00'), presupuesto: 450000, zonas: 'El Carmen, Ruzafa', origen: 'instagram', agente: 'm-pe-1', alta: rel(-1) },
+    { id: 'm-ki14', _needs: IG_STAY, nombre: 'Sophie Martin', email: 'sophie.martin@correo.fr', tipo: 'huesped', temperatura: 'caliente', proxima_accion: 'Confirmar la prerreserva y enviarle la forma de pago', origen: 'instagram', agente: 'm-pe-3', alta: rel(0) },
+    { id: 'm-ki15', _needs: IG_STAY, nombre: 'Jonas Keller', email: 'jonas.keller@mail.de', tipo: 'huesped', temperatura: 'cerrado', proxima_accion: 'Reserva confirmada', origen: 'instagram', agente: 'm-pe-3', alta: rel(0) },
+    { id: 'm-ki16', _needs: IG, nombre: 'Carlos', apellidos: 'Molina', tipo: 'arrendatario', temperatura: 'templado', proxima_accion: 'Escribirle: no eligió hueco para la visita', presupuesto: 900, zonas: 'Benimaclet', origen: 'instagram', alta: rel(0) },
+    { id: 'm-ki17', _needs: IG, nombre: 'Ana Belén', apellidos: 'Ruiz', tipo: 'comprador', temperatura: 'templado', proxima_accion: 'Respondiendo al asistente de Instagram', presupuesto: 150000, origen: 'instagram', alta: rel(0) },
+    { id: 'm-ki18', _needs: IG, nombre: 'Nuria', apellidos: 'Sanchis', tipo: 'comprador', temperatura: 'templado', proxima_accion: 'Respondiendo al asistente de Instagram', origen: 'instagram', alta: rel(0) },
+    { id: 'm-ki19', _needs: IG, nombre: 'David', apellidos: 'López', tipo: 'arrendatario', temperatura: 'templado', proxima_accion: 'Llamar: pregunta si se admiten perros', origen: 'instagram', prioridad: 'media', alta: rel(0) },
+    { id: 'm-ki20', _needs: IG, nombre: 'Elisa', apellidos: 'Martorell', tipo: 'comprador', temperatura: 'descartado', proxima_accion: 'No le interesa (Instagram)', origen: 'instagram', alta: rel(0) },
+    { id: 'm-ki21', _needs: IG, nombre: 'Joan', apellidos: 'Peris', temperatura: 'descartado', proxima_accion: 'No le interesa (Instagram)', origen: 'instagram', alta: rel(0) },
   ],
   operacion: [
     { id: 'm-op1', titulo: 'Clara Vidal · V-1043', embudo: 'compradores', etapa: 'visita', contacto: 'm-ki1', inmueble: 'm-in1', importe: 215000, comision: 3, probabilidad: 60, agente: 'm-pe-2', cierre: rel(25) },
@@ -1016,6 +1092,10 @@ const SAMPLES: Record<string, Record<string, unknown>[]> = {
     { id: 'm-cv3', titulo: 'Firma alquiler A-0388', tipo: 'firma', cuando: rel(0, '17:30'), contacto: 'm-ki2', inmueble: 'm-in2', agente: 'm-pe-2', resultado: 'pendiente' },
     { id: 'm-cv4', titulo: 'Visita A-0388 con Hugo', tipo: 'visita', cuando: rel(-4, '12:30'), contacto: 'm-ki2', inmueble: 'm-in2', agente: 'm-pe-2', resultado: 'oferta' },
     { id: 'm-cv5', titulo: 'Reunión gestión turística Patacona', tipo: 'captacion', cuando: rel(3, '11:00'), contacto: 'm-ki9', agente: 'm-pe-3', resultado: 'pendiente' },
+    { id: 'm-cv6', _needs: IG_VISIT, titulo: 'Visita con Marta García', tipo: 'visita', cuando: rel(1, '10:00'), contacto: 'm-ki10', agente: 'm-pe-2', resultado: 'pendiente', notas: 'Agendada por el asistente de Instagram (@martagarcia.vlc).' },
+    { id: 'm-cv7', _needs: IG_VISIT, titulo: 'Tasación con Pau Ferrandis', tipo: 'tasacion', cuando: rel(1, '12:00'), contacto: 'm-ki11', agente: 'm-pe-1', resultado: 'pendiente', notas: 'Agendada por el asistente de Instagram (@pau.ferrandis).' },
+    { id: 'm-cv8', _needs: IG_VISIT, titulo: 'Visita con Laura Ibáñez', tipo: 'visita', cuando: rel(2, '17:00'), contacto: 'm-ki12', agente: 'm-pe-2', resultado: 'pendiente', notas: 'Agendada por el asistente de Instagram (@lauraibz_).' },
+    { id: 'm-cv9', _needs: IG_VISIT, titulo: 'Llamada con Raúl Navarro', tipo: 'llamada', cuando: rel(3, '09:00'), contacto: 'm-ki13', agente: 'm-pe-1', resultado: 'pendiente', notas: 'Agendada por el asistente de Instagram (@inversiones.navarro).' },
   ],
   reserva: [
     { id: 'm-rs1', huesped: 'Emma Schneider', alojamiento: 'm-in5', canal: 'airbnb', entrada: rel(-3), salida: rel(0), estado: 'en_casa', huespedes: 3, importe: 472, comision: 71, gastos: 45, pago: 'cobrado', localizador: 'HMQ4ZK2', llegada: '16:00', origen_sync: 'ical' },
@@ -1030,6 +1110,70 @@ const SAMPLES: Record<string, Record<string, unknown>[]> = {
     { id: 'm-rs10', huesped: 'Familia Ortega', alojamiento: 'm-in8', canal: 'directa', entrada: rel(-2), salida: rel(5), estado: 'en_casa', huespedes: 7, importe: 1750, comision: 0, gastos: 80, pago: 'cobrado' },
     { id: 'm-rs11', huesped: 'Noah Weber', alojamiento: 'm-in8', canal: 'airbnb', entrada: rel(7), salida: rel(14), estado: 'confirmada', huespedes: 6, importe: 1820, comision: 273, gastos: 80, pago: 'pendiente', origen_sync: 'ical' },
     { id: 'm-rs12', huesped: 'Marta Gil', alojamiento: 'm-in6', canal: 'booking', entrada: rel(-10), salida: rel(-7), estado: 'cancelada', huespedes: 2, importe: 0, origen_sync: 'ical' },
+    { id: 'm-rs13', _needs: IG_STAY, huesped: 'Sophie Martin', alojamiento: 'm-in5', canal: 'directa', entrada: rel(20), salida: rel(23), estado: 'pendiente', huespedes: 2, importe: 399, comision: 0, pago: 'pendiente', email: 'sophie.martin@correo.fr', notas: 'Pedida por Instagram (@sophie.travels). Pendiente de confirmar: confírmala y envía tú la forma de pago; el asistente no cobra nada.' },
+    { id: 'm-rs14', _needs: IG_STAY, huesped: 'Jonas Keller', alojamiento: 'm-in7', canal: 'directa', entrada: rel(27), salida: rel(31), estado: 'confirmada', huespedes: 4, importe: 720, comision: 0, gastos: 60, pago: 'pendiente', email: 'jonas.keller@mail.de', notas: 'Pedida por Instagram (@jonas.k). Confirmada por Sara esta mañana.' },
+  ],
+  conversacion: [
+    {
+      id: 'm-ig1', _needs: IG_VISIT, usuario: '@martagarcia.vlc', nombre: 'Marta García', estado: 'agendado', puntuacion: 90, interes: 'comprar', presupuesto: 260000, zona: 'Ruzafa', plazo: 'ya', disparador: 'comentario', palabra_clave: 'PISO', canal: 'instagram', contacto: 'm-ki10', inicio: night('22:04'), ultima_actividad: night('22:09'), enlace: 'https://ig.me/m/martagarcia.vlc',
+      resumen: 'Comprar · 260.000 € · Ruzafa · Cuanto antes · 90/100 · Visita mañana a las 10:00',
+      transcripcion: chat('@martagarcia.vlc', [['22:04', 0, '(comentario) PISO'], ['22:04', 1, `${HELLO} ¿Qué estás buscando?`], ['22:05', 0, 'Comprar'], ['22:05', 1, '¿En qué zona te gustaría?'], ['22:06', 0, 'Ruzafa o cerca'], ['22:06', 1, '¿Qué presupuesto manejas, más o menos?'], ['22:07', 0, 'Unos 260.000'], ['22:07', 1, '¿Para cuándo lo necesitas?'], ['22:07', 0, 'Cuanto antes'], ['22:08', 0, '611 220 931'], ['22:08', 1, '¿Cuándo te viene bien que te enseñemos lo que tenemos?'], ['22:09', 0, 'Mañana a las 10'], ['22:09', 1, '¡Hecho! Te apunto: visita mañana a las 10:00.']]),
+    },
+    {
+      id: 'm-ig2', _needs: IG_VISIT, usuario: '@pau.ferrandis', nombre: 'Pau Ferrandis', estado: 'agendado', puntuacion: 95, interes: 'vender', presupuesto: 320000, zona: 'Benimaclet', plazo: 'ya', disparador: 'historia', canal: 'instagram', contacto: 'm-ki11', inicio: night('22:31'), ultima_actividad: night('22:38'), enlace: 'https://ig.me/m/pau.ferrandis',
+      resumen: 'Vender · 320.000 € · Benimaclet · Cuanto antes · 95/100 · Tasación mañana a las 12:00',
+      transcripcion: chat('@pau.ferrandis', [['22:31', 0, '(respuesta a historia) ¿Cuánto vale mi piso? 🙋‍♂️'], ['22:31', 1, `${HELLO} ¿Qué estás buscando?`], ['22:32', 0, 'Vender mi casa'], ['22:33', 0, 'Benimaclet, 3 habitaciones'], ['22:34', 0, '320.000 más o menos'], ['22:35', 0, 'Cuanto antes, nos mudamos'], ['22:36', 0, '644 018 772'], ['22:37', 1, '¿Cuándo pasamos a verla? La valoración es gratis.'], ['22:38', 0, 'Mañana a las 12'], ['22:38', 1, '¡Hecho! Te apunto: tasación mañana a las 12:00.']]),
+    },
+    {
+      id: 'm-ig3', _needs: IG_VISIT, usuario: '@lauraibz_', nombre: 'Laura Ibáñez', estado: 'agendado', puntuacion: 75, interes: 'comprar', presupuesto: 180000, zona: 'Campanar', plazo: 'tres_meses', disparador: 'comentario', palabra_clave: 'INFO', canal: 'instagram', contacto: 'm-ki12', inicio: night('23:12'), ultima_actividad: night('23:20'), enlace: 'https://ig.me/m/lauraibz_',
+      resumen: 'Comprar · 180.000 € · Campanar · En 3–6 meses · 75/100 · Visita pasado mañana a las 17:00',
+      transcripcion: chat('@lauraibz_', [['23:12', 0, '(comentario) INFO 😍'], ['23:12', 1, `${HELLO} ¿Qué estás buscando?`], ['23:14', 0, 'Comprar'], ['23:15', 0, 'Campanar'], ['23:16', 0, 'Hasta 180 mil'], ['23:17', 0, 'En unos meses'], ['23:18', 0, '622 901 455'], ['23:19', 1, '¿Cuándo te viene bien que te enseñemos lo que tenemos?'], ['23:20', 0, 'Pasado mañana por la tarde'], ['23:20', 1, '¡Hecho! Te apunto: visita pasado mañana a las 17:00.']]),
+    },
+    {
+      id: 'm-ig4', _needs: IG_VISIT, usuario: '@inversiones.navarro', nombre: 'Raúl Navarro', estado: 'agendado', puntuacion: 100, interes: 'invertir', presupuesto: 450000, zona: 'El Carmen', plazo: 'ya', disparador: 'dm', canal: 'instagram', contacto: 'm-ki13', inicio: night('23:47'), ultima_actividad: night('23:55'), enlace: 'https://ig.me/m/inversiones.navarro',
+      resumen: 'Invertir · 450.000 € · El Carmen · Cuanto antes · 100/100 · Llamada en 3 días a las 09:00',
+      transcripcion: chat('@inversiones.navarro', [['23:47', 0, 'Buenas, busco 2 pisos para alquiler turístico en el centro'], ['23:47', 1, `${HELLO} ¿Qué estás buscando?`], ['23:48', 0, 'Invertir'], ['23:49', 0, 'El Carmen o Ruzafa'], ['23:50', 0, 'Más de 300.000 €'], ['23:51', 0, 'Cuanto antes'], ['23:52', 0, '655 300 118'], ['23:54', 1, '¿Cuándo te viene bien que te enseñemos lo que tenemos?'], ['23:55', 0, 'Que me llaméis a primera hora'], ['23:55', 1, '¡Hecho! Te apunto una llamada a las 09:00.']]),
+    },
+    {
+      id: 'm-ig5', _needs: IG_STAY, usuario: '@sophie.travels', nombre: 'Sophie Martin', estado: 'reservado', puntuacion: 80, interes: 'reservar', fechas: `${dm(rel(20))} → ${dm(rel(23))} (3 noches)`, huespedes: 2, disparador: 'comentario', palabra_clave: 'RESERVA', canal: 'instagram', contacto: 'm-ki14', inmueble: 'm-in5', inicio: night('00:18'), ultima_actividad: night('00:26'), enlace: 'https://ig.me/m/sophie.travels',
+      resumen: 'Reservar · 3 noches · 2 personas · 80/100 · Prerreserva Apartamento Malvarrosa Sol',
+      transcripcion: chat('@sophie.travels', [['00:18', 0, '(comentario) RESERVA ❤️'], ['00:18', 1, `${STAY} ¿A nombre de quién hago la reserva?`], ['00:19', 0, 'Sophie Martin'], ['00:20', 0, 'sophie.martin@correo.fr'], ['00:20', 1, '¿Qué día llegaríais? Escríbelo así: 14/11.'], ['00:22', 0, 'Llegamos un viernes, 3 noches, somos 2'], ['00:24', 1, 'Tengo libre: • Apartamento Malvarrosa Sol: 3 noches, unos 399 € ¿Cuál te guardo?'], ['00:26', 0, 'Apartamento Malvarrosa Sol'], ['00:26', 1, '¡Te la guardo! Es una prerreserva: un compañero te la confirma y te dice cómo pagar. Por aquí no se cobra nada.']]),
+    },
+    {
+      id: 'm-ig6', _needs: IG_STAY, usuario: '@jonas.k', nombre: 'Jonas Keller', estado: 'reservado', puntuacion: 80, interes: 'reservar', fechas: `${dm(rel(27))} → ${dm(rel(31))} (4 noches)`, huespedes: 4, disparador: 'historia', canal: 'instagram', contacto: 'm-ki15', inmueble: 'm-in7', inicio: night('00:41'), ultima_actividad: night('00:50'), enlace: 'https://ig.me/m/jonas.k',
+      resumen: 'Reservar · 4 noches · 4 personas · 80/100 · Ático Ruzafa Terraza (confirmada por Sara esta mañana)',
+      transcripcion: chat('@jonas.k', [['00:41', 0, '(respuesta a historia) Is the terrace flat free next month? We are 4'], ['00:41', 1, `${STAY} ¿A nombre de quién hago la reserva?`], ['00:43', 0, 'Jonas Keller'], ['00:44', 0, 'jonas.keller@mail.de'], ['00:47', 0, '4 noches, 4 personas'], ['00:48', 1, 'Tengo libre: • Ático Ruzafa Terraza: 4 noches, unos 720 € ¿Cuál te guardo?'], ['00:50', 0, 'Ático Ruzafa Terraza'], ['00:50', 1, '¡Te la guardo! Es una prerreserva: un compañero te la confirma y te dice cómo pagar.']]),
+    },
+    {
+      id: 'm-ig7', _needs: IG, usuario: '@carlos.mp', nombre: 'Carlos Molina', estado: 'cualificado', puntuacion: 60, interes: 'alquilar', presupuesto: 900, zona: 'Benimaclet', plazo: 'ya', disparador: 'dm', canal: 'instagram', contacto: 'm-ki16', inicio: night('01:02'), ultima_actividad: night('01:07'), enlace: 'https://ig.me/m/carlos.mp',
+      resumen: 'Alquilar · 900 € · Benimaclet · Cuanto antes · 60/100 · Le ofrecí 3 huecos y no ha elegido',
+      transcripcion: chat('@carlos.mp', [['01:02', 0, 'Hola! Tenéis pisos de alquiler por Benimaclet?'], ['01:02', 1, `${HELLO} ¿Qué estás buscando?`], ['01:03', 0, 'Alquilar'], ['01:04', 0, 'Benimaclet'], ['01:05', 0, '900 al mes'], ['01:06', 0, 'Ya'], ['01:06', 0, 'no'], ['01:07', 1, '¿Cuándo te viene bien que te enseñemos lo que tenemos?']]),
+    },
+    {
+      id: 'm-ig8', _needs: IG, usuario: '@ana_belen.r', nombre: 'Ana Belén Ruiz', estado: 'en_curso', puntuacion: 0, interes: 'comprar', presupuesto: 150000, disparador: 'comentario', palabra_clave: 'PISO', canal: 'instagram', contacto: 'm-ki17', inicio: night('01:15'), ultima_actividad: night('01:19'), enlace: 'https://ig.me/m/ana_belen.r',
+      resumen: 'Comprar · 150.000 € · a medias: falta el plazo',
+      transcripcion: chat('@ana_belen.r', [['01:15', 0, '(comentario) PISO'], ['01:15', 1, `${HELLO} ¿Qué estás buscando?`], ['01:16', 0, 'Comprar'], ['01:17', 0, 'Patraix'], ['01:18', 0, '150.000'], ['01:19', 1, '¿Para cuándo lo necesitas?']]),
+    },
+    {
+      id: 'm-ig9', _needs: IG, usuario: '@nuria.sanchis', nombre: 'Nuria Sanchis', estado: 'en_curso', interes: 'comprar', disparador: 'comentario', palabra_clave: 'INFO', canal: 'instagram', contacto: 'm-ki18', inicio: night('01:33'), ultima_actividad: night('01:34'), enlace: 'https://ig.me/m/nuria.sanchis',
+      resumen: 'Comprar · a medias: falta la zona',
+      transcripcion: chat('@nuria.sanchis', [['01:33', 0, '(comentario) INFO'], ['01:33', 1, `${HELLO} ¿Qué estás buscando?`], ['01:34', 0, 'Comprar'], ['01:34', 1, '¿En qué zona te gustaría?']]),
+    },
+    {
+      id: 'm-ig10', _needs: IG, usuario: '@dlopez_', nombre: 'David López', estado: 'humano', interes: 'alquilar', disparador: 'anuncio', canal: 'instagram', contacto: 'm-ki19', inicio: night('01:40'), ultima_actividad: night('01:42'), enlace: 'https://ig.me/m/dlopez_',
+      resumen: 'Alquilar · pregunta si se admiten mascotas: quiere hablar con una persona',
+      transcripcion: chat('@dlopez_', [['01:40', 0, 'Vengo del anuncio. ¿Aceptáis perros?'], ['01:40', 1, `${HELLO} ¿Qué estás buscando?`], ['01:41', 0, 'Alquilar'], ['01:42', 0, 'Prefiero hablar con una persona'], ['01:42', 1, 'Te paso con una persona del equipo. Te escribimos por aquí en cuanto podamos.']]),
+    },
+    {
+      id: 'm-ig11', _needs: IG, usuario: '@eli.martorell', nombre: 'Elisa Martorell', estado: 'descartado', puntuacion: 0, interes: 'comprar', plazo: 'mirando', disparador: 'historia', canal: 'instagram', contacto: 'm-ki20', inicio: night('01:48'), ultima_actividad: night('01:51'), enlace: 'https://ig.me/m/eli.martorell',
+      resumen: 'Comprar · Solo mirando · no le interesa por ahora',
+      transcripcion: chat('@eli.martorell', [['01:48', 0, '(respuesta a historia) 😍😍'], ['01:48', 1, `${HELLO} ¿Qué estás buscando?`], ['01:49', 0, 'Comprar'], ['01:50', 0, 'Solo estoy mirando'], ['01:51', 0, 'No me interesa, gracias'], ['01:51', 1, 'Entendido, no te escribimos más. Si cambias de idea, aquí estamos. ¡Gracias!']]),
+    },
+    {
+      id: 'm-ig12', _needs: IG, usuario: '@joan.peris', nombre: 'Joan Peris', estado: 'descartado', puntuacion: 5, interes: 'informacion', disparador: 'comentario', palabra_clave: 'INFO', canal: 'instagram', contacto: 'm-ki21', inicio: night('01:52'), ultima_actividad: night('01:53'), enlace: 'https://ig.me/m/joan.peris',
+      resumen: 'Información · solo quería saber el precio del reel',
+      transcripcion: chat('@joan.peris', [['01:52', 0, '(comentario) INFO precio?'], ['01:52', 1, `${HELLO} ¿Qué estás buscando?`], ['01:53', 0, 'Nada, solo era curiosidad. No me interesa'], ['01:53', 1, 'Entendido, no te escribimos más. Si cambias de idea, aquí estamos. ¡Gracias!']]),
+    },
   ],
   servicio: [
     { id: 'm-sv1', titulo: 'Limpieza salida Emma · T-01', tipo: 'limpieza', alojamiento: 'm-in5', reserva: 'm-rs1', fecha: rel(0, '11:00'), responsable: 'm-pe-4', estado: 'asignada', coste: 45, checklist: 'Sábanas y toallas\nCocina\nBaños\nReponer café y papel\nFoto final' },
@@ -1061,6 +1205,8 @@ export function sampleRecordsFor(bp: Blueprint): AppRecord[] {
     for (const { id, ...base } of SAMPLES[e.key] ?? []) {
       // Tourist flats only come with an app that takes bookings.
       if (e.key === 'inmueble' && base.operacion === 'turistico' && !bookings) continue;
+      // Rows that only make sense with other sections (a lead the assistant booked a visit for).
+      if (Array.isArray(base._needs) && !base._needs.every((k) => bp.entities.some((x) => x.key === k))) continue;
       const data = { ...base, ...sector?.samples?.[String(id)] };
       const clean: Record<string, unknown> = {};
       for (const f of e.fields) {
