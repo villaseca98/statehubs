@@ -182,7 +182,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
             )}
 
             {view && filters.entity && <div className="mb-4"><FilterBar filters={filters} records={records} titleOf={titleOf} dark={dark} /></div>}
-            {!view && <TodayView blueprint={blueprint} records={records} now={now} dark={dark} onOpen={(r) => setOpenId(r.id)} />}
+            {!view && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
             {view && view.type === 'worklist' && (
               <WorklistView blueprint={blueprint} view={view} records={shown} dark={dark} titleOf={titleOf} selectedId={openId}
                 onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
