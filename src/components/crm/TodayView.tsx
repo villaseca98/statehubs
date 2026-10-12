@@ -81,6 +81,8 @@ function RealEstateOverview({ blueprint, records, today, onOpen, date }: {
   const deals = records.filter((r) => r.entity === 'oportunidad' || r.entity === 'operacion');
   const overdue = today.atrasado.length;
   const followUps = today.hoy.length + overdue;
+  const socialLeads = leads.filter((r) => ['instagram', 'meta_ads'].includes(String(r.data.fuente_lead ?? r.data.origen ?? '')));
+  const qualifiedLeads = leads.filter((r) => r.data.estado_cualificacion === 'cualificado');
   const leadEntity = entity('lead');
   const homeEntity = entity('inmueble');
   const visitEntity = entity('visita');
@@ -91,6 +93,8 @@ function RealEstateOverview({ blueprint, records, today, onOpen, date }: {
     { label: 'Leads en cartera', value: leads.length, icon: Users, note: 'Compradores y propietarios', tint: '#dce9e5', ink: '#315f52' },
     { label: 'Inmuebles activos', value: homes.length, icon: Home, note: 'En cartera comercial', tint: '#e8e3f6', ink: '#65538c' },
     { label: 'Visitas registradas', value: visits.length, icon: CalendarClock, note: 'Actividad del equipo', tint: '#f5e8d6', ink: '#986b35' },
+    { label: 'Leads desde redes', value: socialLeads.length, icon: MessageCircle, note: 'Instagram y Meta Ads', tint: '#f8e1eb', ink: '#9c3f68' },
+    { label: 'Leads cualificados', value: qualifiedLeads.length, icon: CheckCircle2, note: 'Con datos suficientes para priorizar', tint: '#dce9e5', ink: '#315f52' },
     { label: 'Seguimientos pendientes', value: followUps, icon: Clock3, note: overdue ? `${overdue} fuera de plazo` : 'Sin retrasos acumulados', tint: overdue ? '#fae1dc' : '#dce9e5', ink: overdue ? '#a84232' : '#315f52' },
   ];
 
@@ -125,7 +129,7 @@ function RealEstateOverview({ blueprint, records, today, onOpen, date }: {
         </div>
       </section>
 
-      <section aria-label="Resumen comercial" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      <section aria-label="Resumen comercial" className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-6">
         {stats.map((s) => (
           <div key={s.label} className="rounded-2xl p-4 sm:p-5" style={{ ...card, boxShadow: '0 5px 20px rgba(24,39,36,.025)' }}>
             <div className="flex items-start justify-between gap-2">
