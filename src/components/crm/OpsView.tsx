@@ -56,13 +56,13 @@ function Panel({ title, icon: Icon, count, action, children, className = '' }: {
 
 function Chip({ label, value, sub, icon: Icon, tone }: { label: string; value: string; sub: string; icon: LucideIcon; tone?: 'up' | 'warn' }) {
   return (
-    <div className="flex min-w-0 items-center gap-3" style={{ ...card, padding: '12px 14px', borderRadius: 999 }}>
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full" style={{ background: 'var(--crm-soft)', color: 'var(--crm-primary)' }}><Icon className="h-[18px] w-[18px]" /></span>
+    <div className="flex min-w-0 items-center gap-3" style={{ ...card, padding: '10px 12px', borderRadius: 999 }}>
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full sm:h-10 sm:w-10" style={{ background: 'var(--crm-soft)', color: 'var(--crm-primary)' }}><Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" /></span>
       <span className="min-w-0">
         <span className="block truncate text-[0.82em]" style={{ color: 'var(--crm-muted)' }}>{label}</span>
         <span className="flex items-baseline gap-2">
-          <span className="truncate text-[1.35em] font-semibold leading-tight tracking-tight" style={{ fontFamily: 'var(--crm-number-font)' }}>{value}</span>
-          <span className="truncate rounded-full px-1.5 text-[0.74em] font-medium" style={tone === 'warn' ? { background: '#fdecc8', color: '#7a4b00' } : { background: 'var(--crm-accent)', color: '#1d2a12' }}>{sub}</span>
+          <span className="whitespace-nowrap text-[1.25em] font-semibold leading-tight tracking-tight sm:text-[1.35em]" style={{ fontFamily: 'var(--crm-number-font)' }}>{value}</span>
+          <span className="hidden truncate rounded-full px-1.5 text-[0.74em] font-medium min-[420px]:inline" style={tone === 'warn' ? { background: '#fdecc8', color: '#7a4b00' } : { background: 'var(--crm-accent)', color: '#1d2a12' }}>{sub}</span>
         </span>
       </span>
     </div>
@@ -270,7 +270,7 @@ export function OpsView({ blueprint, records, onOpen, now }: { blueprint: Bluepr
 
       {ops.instagram && <NightCard night={ops.instagram} blueprint={blueprint} onOpen={onOpen} />}
 
-      <section aria-label="Cifras del día" className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <section aria-label="Cifras del día" className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 xl:grid-cols-5">
         {ops.occupancy && (
           <Chip icon={BedDouble} label="Ocupación hoy" value={ops.occupancy.total ? `${Math.round((ops.occupancy.busy / ops.occupancy.total) * 100)} %` : '—'}
             sub={ops.occupancy.total ? `${ops.occupancy.busy}/${ops.occupancy.total}` : 'sin pisos'} />
