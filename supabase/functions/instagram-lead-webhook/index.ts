@@ -7,7 +7,18 @@ const env = (key: string) => Deno.env.get(key) ?? "";
 const normalize = (value: unknown) => String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 const has = (value: unknown) => value !== undefined && value !== null && String(value).trim().length > 0;
 const asNumber = (value: unknown) => {
-  const n = Number(String(value ?? "").replace(/[^\d,.-]/g, "").replace(",", "."));
+  let raw = String(value ?? "").trim().replace(/[^\d,.-]/g, "");
+  if (!raw) return 0;
+  const comma = raw.lastIndexOf(",");
+  const dot = raw.lastIndexOf(".");
+  if (comma >= 0 && dot >= 0) {
+    raw = comma > dot ? raw.replace(/\./g, "").replace(",", ".") : raw.replace(/,/g, "");
+  } else if (comma >= 0) {
+    raw = /,\d{3}$/.test(raw) ? raw.replace(/,/g, "") : raw.replace(",", ".");
+  } else if (/\.\d{3}$/.test(raw)) {
+    raw = raw.replace(/\./g, "");
+  }
+  const n = Number(raw);
   return Number.isFinite(n) ? n : 0;
 };
 
