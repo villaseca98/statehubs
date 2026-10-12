@@ -7,7 +7,9 @@ import { useAuth } from '@/lib/useAuth';
 // Sign in with Google or with a link sent by email. No passwords to forget.
 export default function Login() {
   const [params] = useSearchParams();
-  const next = params.get('next')?.startsWith('/') ? params.get('next')! : '/';
+  const requestedNext = params.get('next');
+  // Reject protocol-relative URLs (//evil.example) and backslash variants.
+  const next = requestedNext?.startsWith('/') && !requestedNext.startsWith('//') && !requestedNext.includes('\\') ? requestedNext : '/';
   const { user } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');

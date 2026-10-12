@@ -41,9 +41,13 @@ export default function Landing() {
     Promise.all([localCrmApi.listApps(), user ? crmApi.listApps().catch(() => []) : Promise.resolve([])]).then(([mine, remote]) => setApps([...remote, ...mine]));
   }, [user, loading]);
 
-  // With an account the app lives on the server; if that fails (or there is no account) it lives in this browser.
-  const newApp = async () => (user ? await crmApi.createApp(user.id).then((a) => ({ api: crmApi, app: a })).catch(() => null) : null)
-    ?? { api: localCrmApi, app: await localCrmApi.createApp('') };
+  // Signed-in apps must persist on the server; guest demos remain browser-only.
+  const newApp = async () => {
+    // Never silently create a browser-only app for a signed-in agency if the server fails.
+    // Otherwise the user may believe their business data has been saved to their account.
+    if (user) return { api: crmApi, app: await crmApi.createApp(user.id) };
+    return { api: localCrmApi, app: await localCrmApi.createApp('') };
+  };
 
   // Each answer opens the same unified app with the pieces that business uses.
   const open = async (pack: PackKey) => {
@@ -113,7 +117,7 @@ export default function Landing() {
             <Reveal className="text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-estate-lime">Empieza en un minuto</p>
               <h2 id="empezar-title" className="mt-4 text-balance font-serif text-[2.5rem] font-normal leading-[1.02] tracking-[-0.02em] text-white sm:text-[4rem]">¿A qué se dedica tu agencia?</h2>
-              <p className="mx-auto mt-4 max-w-xl text-pretty text-estate-cream/75 sm:text-lg">Se abre funcionando, con datos de ejemplo marcados como ejemplo. Luego lo ajustas a tu manera.</p>
+              <p className="mx-auto mt-4 max-w-xl text-pretty text-estate-cream/75 sm:text-lg">Se abre con datos de ejemplo. Sin cuenta, el trabajo se guarda únicamente en este navegador.</p>
             </Reveal>
             <div role="group" aria-label="Tipo de agencia" className="mt-10 grid gap-3 sm:gap-4 md:grid-cols-3">
               {PACKS.map((p) => {
@@ -148,7 +152,7 @@ export default function Landing() {
                   placeholder="Somos tres agentes en Valencia, vendemos pisos y gestionamos 12 apartamentos turísticos en Airbnb y Booking."
                   className="w-full resize-none bg-transparent px-3 py-2 text-sm text-white outline-none placeholder:text-estate-cream/50" />
                 <div className="flex items-center justify-between gap-2 px-3 pb-2">
-                  <span className="text-xs text-estate-cream/65">{user ? 'Se guarda en tu cuenta.' : 'Sin cuenta: se guarda en este navegador.'}</span>
+                  <span className="text-xs text-estate-cream/65">{user ? 'Se guarda en tu cuenta. Si el servidor falla, no se creará una copia local.' : 'Sin cuenta: se guarda solo en este navegador.'}</span>
                   <button disabled={!!busy || !prompt.trim()} className="inline-flex items-center gap-1.5 rounded-full bg-estate-lime px-4 py-2 text-sm font-semibold text-estate-forest transition disabled:opacity-50">
                     {busy === 'chat' && <Loader2 className="h-4 w-4 animate-spin" />} Crear mi app
                   </button>
