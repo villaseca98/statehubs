@@ -1,28 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Building2, CalendarRange, Layers, Loader2, Search, Sparkles, Sun, Trash2, Undo2 } from 'lucide-react';
+import { MotionConfig } from 'framer-motion';
+import { ArrowRight, Building2, CalendarRange, Layers, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 import { hasServer } from '@/lib/supabase';
 import { crmApi } from '@/lib/crm/api';
 import type { CrmApp } from '@/lib/crm/api';
 import { isLocalApp, localCrmApi } from '@/lib/crm/localApi';
 import { ScrollHero } from '@/components/crm/ScrollHero';
-import { ModuleIcon } from '@/components/crm/ModuleCards';
+import { Nav } from '@/components/landing/Nav';
+import { Features } from '@/components/landing/Features';
+import { Audience, Channels, Closing, Footer, Leads, Marquee, Numbers } from '@/components/landing/Sections';
+import { Reveal } from '@/components/landing/Backdrop';
 import { composePack, getModule, PACKS } from '@shared/blueprint/modules.ts';
 import type { PackKey } from '@shared/blueprint/modules.ts';
 
-// Landing: the 3D story, then one question (what does your agency do?) that
-// opens a working app straight away, or a sentence to the AI.
+// Landing: the public web of the CRM for estate agencies and holiday lets.
+// The 3D story, what it does (bento of features), the Instagram leads bot,
+// the honest part about Airbnb and Booking, who it is for and, to close, one
+// question (what does your agency do?) that opens a working app straight
+// away. A discreet link below takes a free description instead. Estate look:
+// cream, white, forest green and lime. Pieces live in components/landing.
 
 const PACK_ICON: Record<PackKey, typeof Building2> = { compraventa: Building2, turistico: CalendarRange, ambos: Layers };
 const PACK_NAME: Record<PackKey, string> = { compraventa: 'Mi inmobiliaria', turistico: 'Mis alojamientos', ambos: 'Mi inmobiliaria' };
-
-const POINTS = [
-  { icon: Sun, title: 'Abres y sabes qué toca', text: 'Llegadas, salidas, limpiezas, visitas y seguimientos de hoy, con avisos de lo que se cruza.' },
-  { icon: Search, title: 'Encuentras cualquier caso', text: 'Filtros como en Notion y búsqueda en todo: operaciones cerradas, perdidas, de un agente o de una zona.' },
-  { icon: CalendarRange, title: 'Airbnb y Booking en tu calendario', text: 'Las reservas llegan por el calendario iCal de cada anuncio. Sin prometer lo que las plataformas no dejan.' },
-  { icon: Undo2, title: 'Lo cambias hablando', text: 'Pide un campo o una pantalla a la IA. Ves la propuesta antes y siempre hay vuelta atrás.' },
-];
 
 export default function Landing() {
   const { user, loading } = useAuth();
@@ -32,6 +33,7 @@ export default function Landing() {
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState('');
   const start = useRef<HTMLElement>(null);
+  const toStart = () => start.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
 
   useEffect(() => { document.title = 'StateHubs · El CRM para inmobiliarias y alquiler turístico'; }, []);
   useEffect(() => {
@@ -69,84 +71,96 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <ScrollHero onChoose={(k) => { start.current?.scrollIntoView({ behavior: 'smooth' }); void open(k); }}
-        nav={!loading && (user
-          ? <span className="text-white/60">{user.email}</span>
-          : hasServer && <Link to="/entrar" className="rounded-md border border-white/25 px-3 py-1.5 text-white hover:border-white/60">Entrar</Link>)} />
+    <MotionConfig reducedMotion="user">
+    <div className="min-h-screen overflow-x-clip bg-estate-cream text-estate-ink">
+      <a href="#empezar" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-estate-forest focus:px-4 focus:py-2 focus:text-white">Saltar a empezar</a>
+      <Nav onStart={toStart} account={!loading && (user
+        ? <span className="hidden max-w-[12rem] truncate text-estate-muted sm:inline">{user.email}</span>
+        : hasServer && <Link to="/entrar" className="rounded-full px-3 py-2 font-medium text-estate-ink transition hover:bg-estate-forest/[.06]">Entrar</Link>)} />
 
-      <section ref={start} aria-label="Empezar" className="mx-auto max-w-4xl scroll-mt-6 px-4 pb-10 pt-14 md:pt-20">
-        <h2 className="text-center font-display text-3xl font-bold tracking-tight md:text-4xl">¿A qué se dedica tu agencia?</h2>
-        <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">Se abre funcionando, con datos de ejemplo marcados como ejemplo. Luego lo ajustas tú o se lo pides a la IA.</p>
-        <div role="group" aria-label="Tipo de agencia" className="mt-8 grid gap-4 md:grid-cols-3">
-          {PACKS.map((p) => {
-            const Icon = PACK_ICON[p.key];
-            return (
-              <button key={p.key} onClick={() => open(p.key)} disabled={!!busy}
-                className={`group flex flex-col rounded-2xl border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md disabled:opacity-60 ${p.key === 'ambos' ? 'border-primary/40 ring-1 ring-primary/20' : ''}`}>
-                <span className="flex items-center gap-3">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink text-white"><Icon className="h-5 w-5" /></span>
-                  <span className="font-display text-xl font-bold">{p.name}</span>
-                  {busy === p.key ? <Loader2 className="ml-auto h-5 w-5 animate-spin text-primary" /> : <ArrowRight className="ml-auto h-5 w-5 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />}
-                </span>
-                <span className="mt-3 block text-sm text-muted-foreground">{p.pitch}</span>
-                <span className="mt-3 flex flex-wrap gap-1.5">
-                  {p.modules.filter((k) => k !== 'centro').map((k) => <span key={k} className="rounded-full bg-muted px-2 py-0.5 text-xs">{getModule(k)?.name}</span>)}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+      <main>
+        <ScrollHero onStart={toStart} />
 
-        <form className="mt-5 rounded-2xl border bg-card p-2 shadow-sm" onSubmit={(e) => { e.preventDefault(); void ask(); }}>
-          <label htmlFor="pedir" className="flex items-center gap-2 px-2 pt-1 text-sm font-medium"><Sparkles className="h-4 w-4 text-primary" /> O cuéntale tu agencia a la IA</label>
-          <textarea id="pedir" value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={2} maxLength={4000}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void ask(); } }}
-            placeholder="Somos tres agentes en Valencia, vendemos pisos y gestionamos 12 apartamentos turísticos en Airbnb y Booking."
-            className="w-full resize-none bg-transparent p-2 text-sm outline-none" />
-          <div className="flex items-center justify-between gap-2 px-2 pb-1">
-            <span className="text-xs text-muted-foreground">{user ? 'Se guarda en tu cuenta.' : 'Sin cuenta: se guarda en este navegador.'}</span>
-            <button disabled={!!busy || !prompt.trim()} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50">
-              {busy === 'chat' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Proponer
-            </button>
-          </div>
-        </form>
-        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-      </section>
+        {apps.length > 0 && (
+          <section aria-label="Tus aplicaciones" className="mx-auto max-w-6xl px-4 pt-16">
+            <h2 className="mb-4 font-serif text-2xl">Tus aplicaciones</h2>
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {apps.map((a) => (
+                <li key={a.id} className="flex items-center justify-between rounded-2xl border border-estate-line bg-white p-4 transition hover:shadow-md">
+                  <Link to={`/app/${a.id}`} className="min-w-0">
+                    <span className="block truncate font-medium">{a.name}</span>
+                    <span className="text-xs text-estate-muted">{a.current_version ? `Versión ${a.current_version}` : 'Sin crear todavía'} · {new Date(a.updated_at).toLocaleDateString('es-ES')}{isLocalApp(a.id) && ' · en este navegador'}</span>
+                  </Link>
+                  <span className="flex items-center">
+                    <button aria-label={`Borrar ${a.name}`} onClick={() => remove(a)} className="rounded-full p-2 text-estate-muted hover:text-red-700"><Trash2 className="h-4 w-4" /></button>
+                    <Link to={`/app/${a.id}`} aria-label={`Abrir ${a.name}`} className="rounded-full p-2 text-estate-forest"><ArrowRight className="h-4 w-4" /></Link>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-      {apps.length > 0 && (
-        <section aria-label="Tus aplicaciones" className="mx-auto max-w-4xl px-4 pb-12">
-          <h2 className="mb-3 text-lg font-semibold">Tus aplicaciones</h2>
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {apps.map((a) => (
-              <li key={a.id} className="flex items-center justify-between rounded-xl border bg-card p-4">
-                <Link to={`/app/${a.id}`} className="min-w-0">
-                  <span className="block truncate font-medium">{a.name}</span>
-                  <span className="text-xs text-muted-foreground">{a.current_version ? `Versión ${a.current_version}` : 'Sin crear todavía'} · {new Date(a.updated_at).toLocaleDateString('es-ES')}{isLocalApp(a.id) && ' · en este navegador'}</span>
-                </Link>
-                <span className="flex items-center">
-                  <button aria-label={`Borrar ${a.name}`} onClick={() => remove(a)} className="rounded p-2 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
-                  <Link to={`/app/${a.id}`} aria-label={`Abrir ${a.name}`} className="rounded p-2"><ArrowRight className="h-4 w-4" /></Link>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+        <div className="pt-16"><Marquee /></div>
+        <Features />
+        <Leads />
+        <Numbers />
+        <Channels />
+        <Audience onPick={(k) => { toStart(); void open(k); }} busy={!!busy} />
 
-      <section className="mx-auto grid max-w-5xl gap-4 px-4 pb-16 sm:grid-cols-2 lg:grid-cols-4">
-        {POINTS.map(({ icon: Icon, title, text }) => (
-          <div key={title} className="rounded-2xl border bg-card p-5">
-            <Icon className="mb-3 h-5 w-5 text-primary" />
-            <h3 className="font-semibold">{title}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{text}</p>
-          </div>
-        ))}
-      </section>
+        <Closing>
+          <section ref={start} id="empezar" aria-labelledby="empezar-title" className="scroll-mt-24">
+            <Reveal className="text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-estate-lime">Empieza en un minuto</p>
+              <h2 id="empezar-title" className="mt-4 text-balance font-serif text-[2.5rem] font-normal leading-[1.02] tracking-[-0.02em] text-white sm:text-[4rem]">¿A qué se dedica tu agencia?</h2>
+              <p className="mx-auto mt-4 max-w-xl text-pretty text-estate-cream/75 sm:text-lg">Se abre funcionando, con datos de ejemplo marcados como ejemplo. Luego lo ajustas a tu manera.</p>
+            </Reveal>
+            <div role="group" aria-label="Tipo de agencia" className="mt-10 grid gap-3 sm:gap-4 md:grid-cols-3">
+              {PACKS.map((p) => {
+                const Icon = PACK_ICON[p.key];
+                const main = p.key === 'ambos';
+                return (
+                  <button key={p.key} onClick={() => open(p.key)} disabled={!!busy}
+                    className={`group flex flex-col rounded-[26px] border p-5 text-left transition duration-300 hover:-translate-y-1 disabled:opacity-60 ${main ? 'border-estate-lime bg-estate-cream text-estate-ink' : 'border-white/15 bg-white/[.06] text-white hover:bg-white/[.1]'}`}>
+                    <span className="flex items-center gap-3">
+                      <span className={`grid h-11 w-11 place-items-center rounded-full ${main ? 'bg-estate-forest text-estate-lime' : 'bg-estate-lime text-estate-forest'}`}><Icon className="h-5 w-5" /></span>
+                      <span className="font-serif text-2xl">{p.name}</span>
+                      {busy === p.key ? <Loader2 className="ml-auto h-5 w-5 animate-spin" /> : <ArrowRight className={`ml-auto h-5 w-5 transition group-hover:translate-x-0.5 ${main ? 'text-estate-forest' : 'text-estate-cream/70'}`} />}
+                    </span>
+                    <span className={`mt-3 block text-sm ${main ? 'text-estate-muted' : 'text-estate-cream/75'}`}>{p.pitch}</span>
+                    <span className="mt-4 flex flex-wrap gap-1.5">
+                      {p.modules.filter((k) => k !== 'centro').map((k) => <span key={k} className={`rounded-full px-2 py-0.5 text-xs ${main ? 'bg-estate-sand text-estate-ink' : 'bg-white/10 text-estate-cream/85'}`}>{getModule(k)?.name}</span>)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {error && <p role="alert" className="mt-3 text-sm text-red-200">{error}</p>}
+            <p className="mt-8 text-center text-sm text-estate-cream/75">¿Prefieres mirar antes? <Link to="/demo" className="font-semibold text-white underline decoration-estate-lime/50 underline-offset-4 hover:decoration-estate-lime">Abre la demo</Link>, sin crear nada.</p>
 
-      <footer className="border-t py-8 text-center text-sm text-muted-foreground">
-        StateHubs · <Link to="/demo" className="underline">Demo</Link> · <Link to="/reels" className="underline">Reels</Link>
-      </footer>
+            {/* A discreet way in for agencies that do not fit the three answers. */}
+            <details className="group mx-auto mt-6 max-w-2xl text-sm">
+              <summary className="cursor-pointer list-none text-center text-estate-cream/70 underline decoration-white/20 underline-offset-4 hover:text-white">¿No encaja ninguna? Descríbenos tu agencia</summary>
+              <form className="mt-4 rounded-[22px] border border-white/15 bg-white/[.06] p-2" onSubmit={(e) => { e.preventDefault(); void ask(); }}>
+                <label htmlFor="pedir" className="block px-3 pt-2 text-sm font-medium text-white">Descríbenos tu agencia</label>
+                <textarea id="pedir" value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={2} maxLength={4000}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void ask(); } }}
+                  placeholder="Somos tres agentes en Valencia, vendemos pisos y gestionamos 12 apartamentos turísticos en Airbnb y Booking."
+                  className="w-full resize-none bg-transparent px-3 py-2 text-sm text-white outline-none placeholder:text-estate-cream/50" />
+                <div className="flex items-center justify-between gap-2 px-3 pb-2">
+                  <span className="text-xs text-estate-cream/65">{user ? 'Se guarda en tu cuenta.' : 'Sin cuenta: se guarda en este navegador.'}</span>
+                  <button disabled={!!busy || !prompt.trim()} className="inline-flex items-center gap-1.5 rounded-full bg-estate-lime px-4 py-2 text-sm font-semibold text-estate-forest transition disabled:opacity-50">
+                    {busy === 'chat' && <Loader2 className="h-4 w-4 animate-spin" />} Crear mi app
+                  </button>
+                </div>
+              </form>
+            </details>
+          </section>
+        </Closing>
+      </main>
+
+      <Footer />
     </div>
+    </MotionConfig>
   );
 }
