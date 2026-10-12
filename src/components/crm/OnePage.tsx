@@ -5,6 +5,7 @@ import { isoDay } from '@shared/blueprint/slots.ts';
 import { chipStyle, formatMoney, formatValue, isNumeric, titleOfRecord } from './theme';
 import { Cell, Chip, KanbanView } from './views';
 import { WorklistView } from './WorklistView';
+import { AnalysisView } from './AnalysisView';
 
 // The house layout: the whole business on one page. Key figures on top,
 // then every screen as a panel (work lists and boards full width, tables
@@ -22,7 +23,7 @@ interface Props {
 }
 
 const card = { background: 'var(--crm-surface)', border: '1px solid var(--crm-border)', borderRadius: 'var(--crm-radius)' } as const;
-const WIDE = new Set(['worklist', 'kanban']);
+const WIDE = new Set(['worklist', 'kanban', 'analysis']);
 
 function aggregate(rs: AppRecord[], agg: string, field?: string) {
   if (agg === 'count') return rs.length;
@@ -116,7 +117,7 @@ export function OnePage({ blueprint, records, titleOf, openId, onOpen, onCreate,
                   <button onClick={() => toggle(v.key)} className="flex items-center gap-2 text-left" aria-expanded={!isClosed}>
                     {isClosed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     <h2 className="text-[1.15em] font-semibold" style={{ fontFamily: 'var(--crm-heading-font)' }}>{v.label}</h2>
-                    <span className="rounded-full px-2 text-[0.85em]" style={{ background: 'color-mix(in srgb, var(--crm-border) 70%, transparent)', color: 'var(--crm-muted)' }}>{count}</span>
+                    {v.entity && <span className="rounded-full px-2 text-[0.85em]" style={{ background: 'color-mix(in srgb, var(--crm-border) 70%, transparent)', color: 'var(--crm-muted)' }}>{count}</span>}
                   </button>
                   {entity && (
                     <button onClick={() => onCreate(entity.key)} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.9em]" style={{ border: '1px solid var(--crm-border)' }}>
@@ -125,7 +126,8 @@ export function OnePage({ blueprint, records, titleOf, openId, onOpen, onCreate,
                   )}
                 </div>
                 {!isClosed && (
-                  <PanelBody view={v} blueprint={blueprint} records={shown} dark={dark} solid={solid} titleOf={titleOf} openId={openId}
+                  // The analysis always reads everything; the search box only narrows the lists.
+                  <PanelBody view={v} blueprint={blueprint} records={v.type === 'analysis' ? records : shown} dark={dark} solid={solid} titleOf={titleOf} openId={openId}
                     onOpen={onOpen} onCreate={(e, d) => onCreate(e, d)} onUpdate={onUpdate} />
                 )}
               </section>
@@ -172,6 +174,7 @@ interface BodyProps {
 function PanelBody(p: BodyProps) {
   const common = { blueprint: p.blueprint, view: p.view, records: p.records, dark: p.dark, solid: p.solid, titleOf: p.titleOf, selectedId: p.openId, onOpen: p.onOpen, onCreate: p.onCreate, onUpdate: p.onUpdate };
   if (p.view.type === 'worklist') return <WorklistView {...common} />;
+  if (p.view.type === 'analysis') return <AnalysisView {...common} />;
   if (p.view.type === 'kanban') return <KanbanView {...common} />;
   if (p.view.type === 'calendar') return <AgendaList {...p} />;
   return <CompactTable {...p} />;

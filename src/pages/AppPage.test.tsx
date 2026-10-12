@@ -39,4 +39,18 @@ describe('AppPage: change the app with pieces, preview first, undo later', () =>
     const v = await localCrmApi.versions(id);
     expect(v[0].blueprint.modules).not.toContain('presupuestos');
   }, 20000);
+
+  it('sets up the analysis from the pieces panel, as a proposal', async () => {
+    const id = await guestApp();
+    render(<Toaster><MemoryRouter initialEntries={[`/app/${id}`]}><Routes><Route path="/app/:appId" element={<AppPage />} /></Routes></MemoryRouter></Toaster>);
+    await screen.findByRole('heading', { level: 1, name: 'Hoy' });
+    fireEvent.click(screen.getAllByRole('button', { name: /^Piezas/ })[0]);
+    const setup = within(screen.getByRole('dialog', { name: 'Piezas' })).getByRole('region', { name: 'Configurar el análisis' });
+    fireEvent.change(within(setup).getByRole('combobox'), { target: { value: '14' } });
+    await screen.findByText(/Vista previa/);
+    fireEvent.click(screen.getByRole('button', { name: /^Aplicar/ }));
+    await waitFor(async () => expect((await localCrmApi.getApp(id))?.current_version).toBe(2));
+    const [v] = await localCrmApi.versions(id);
+    expect(v.blueprint.views.find((x) => x.type === 'analysis')?.analysis?.staleDays).toBe(14);
+  }, 20000);
 });

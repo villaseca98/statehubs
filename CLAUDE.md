@@ -17,3 +17,8 @@ Constructor de CRM y ERP para pymes y autónomos en España. Español de España
 - Antes de dar algo por terminado: `npm run build`, `npm test` y `npm run lint` sin errores.
 - Cambios visibles: míralos en móvil (390 px) y escritorio.
 - Los estilos de texto y colores van por variables CSS (`--crm-*` en la app, tokens de Tailwind en el resto).
+
+## Análisis y sectores
+
+- **Análisis de datos** (pieza `analisis`, vista `analysis`, motor en `_shared/blueprint/analysis.ts`, sin IA): embudo y previsión, leads puntuados con su porqué y los que se enfrían, casuísticas y base de datos con huecos, duplicados y CSV. Qué enfoques, qué secciones y los días para darlo por frío se eligen en Piezas y llegan como propuesta.
+- **Sectores** (`_shared/blueprint/sectors.ts`): ventas, inmobiliaria, almacén y control de BBDD. Cada uno trae sus piezas y campos extra, que se aplican también a las piezas que se pongan después. Se eligen al empezar, en la Landing.

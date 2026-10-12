@@ -50,8 +50,8 @@ export interface Entity {
   fields: Field[];
 }
 
-export type ViewType = 'table' | 'kanban' | 'calendar' | 'dashboard' | 'worklist';
-export const VIEW_TYPES: ViewType[] = ['table', 'kanban', 'calendar', 'dashboard', 'worklist'];
+export type ViewType = 'table' | 'kanban' | 'calendar' | 'dashboard' | 'worklist' | 'analysis';
+export const VIEW_TYPES: ViewType[] = ['table', 'kanban', 'calendar', 'dashboard', 'worklist', 'analysis'];
 
 // Worklist actions. Each is a button on a row, shown only in the stages
 // listed in `when` (all stages if empty), so what you can do depends on
@@ -93,6 +93,20 @@ export interface DashboardWidget {
   groupBy?: string;  // select field, for bars
 }
 
+// The analysis screen reads the records of the sections it is pointed at.
+// oportunidades: open value, forecast, win rate and where the funnel sticks.
+// leads: every open record scored 0–100 with its reasons, and the ones going cold.
+// casuisticas: which origin, client or reason wins or loses more than average.
+// datos: the database behind it: how much of each, what is missing, CSV export.
+export type AnalysisLens = 'oportunidades' | 'leads' | 'casuisticas' | 'datos';
+export const ANALYSIS_LENSES: AnalysisLens[] = ['oportunidades', 'leads', 'casuisticas', 'datos'];
+
+export interface AnalysisConfig {
+  lenses: AnalysisLens[];
+  staleDays: number;     // open and untouched for longer than this = going cold
+  entities?: string[];   // sections to analyse; empty = every section with stages or amounts
+}
+
 export interface View {
   key: string;
   label: string;
@@ -105,6 +119,7 @@ export interface View {
   widgets?: DashboardWidget[]; // dashboard
   actions?: ViewAction[];       // worklist (groupBy = stage select, optional)
   availability?: Availability;  // worklist with schedule actions
+  analysis?: AnalysisConfig;    // analysis
 }
 
 export interface Blueprint {
@@ -113,6 +128,7 @@ export interface Blueprint {
   description?: string;
   kind?: 'crm' | 'erp';
   modules?: string[]; // module cards in use (see modules.ts)
+  sector?: string;    // business template whose extra fields it carries (see sectors.ts)
   entities: Entity[];
   views: View[];      // navigation order = array order
 }
