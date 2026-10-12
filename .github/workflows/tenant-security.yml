@@ -67,4 +67,5 @@ jobs:
       - name: Harden tenant access and run negative checks
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261012200000_tenant_security_hardening.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261012210000_global_org_preferences.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/phase10_negative_rls.sql

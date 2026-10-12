@@ -9,16 +9,16 @@
 @layer base {
   :root {
     /* StateHubs: warm paper, near-black ink, one red (the logo's). */
-    --background: 45 17% 95%;
-    --foreground: 144 21% 12%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
     --card: 0 0% 100%;
-    --border: 40 18% 88%;
-    --muted: 42 16% 92%;
-    --muted-foreground: 40 5% 40%;
-    --primary: 156 50% 24%;
+    --border: 0 0% 90%;
+    --muted: 0 0% 97%;
+    --muted-foreground: 0 0% 40%;
+    --primary: 348 78% 40%;
     --primary-foreground: 0 0% 100%;
     --destructive: 0 70% 46%;
-    --ink: 144 21% 12%;
+    --ink: 0 0% 9%;
   }
   * { @apply border-border; }
   html { -webkit-text-size-adjust: 100%; }
@@ -115,3 +115,10 @@
   html:focus-within { scroll-behavior: auto; }
   *, *::before, *::after { scroll-behavior: auto !important; }
 }
+
+/* Phase 11: restrained official black/white/red public identity. */
+.sh-blob-a,.sh-blob-b,.sh-blob-c,.sh-blob-d{background:radial-gradient(circle,rgba(180,22,54,.08),transparent 64%)!important}
+.sh-accent{color:#b41636!important}
+.sh-dark .sh-accent{color:#ffffff!important}
+.sh-dot-run{background:#b41636;box-shadow:0 0 10px rgba(180,22,54,.3)}
+.sh-photo{background:linear-gradient(155deg,#ffffff 0%,#f5f5f5 55%,#eee 100%)}

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import { ArrowRight, Building2, CalendarRange, Layers, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
+import { useI18n } from '@/i18n';
 import { hasServer } from '@/lib/supabase';
 import { crmApi } from '@/lib/crm/api';
 import type { CrmApp } from '@/lib/crm/api';
@@ -27,6 +28,7 @@ const PACK_NAME: Record<PackKey, string> = { compraventa: 'Mi inmobiliaria', tur
 
 export default function Landing() {
   const { user, loading } = useAuth();
+  const { t,language } = useI18n();
   const navigate = useNavigate();
   const [apps, setApps] = useState<CrmApp[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -35,7 +37,7 @@ export default function Landing() {
   const start = useRef<HTMLElement>(null);
   const toStart = () => start.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
 
-  useEffect(() => { document.title = 'StateHubs · El CRM para inmobiliarias y alquiler turístico'; }, []);
+  useEffect(() => { document.title = 'StateHubs — Global Real Estate CRM & ERP'; }, [language]);
   useEffect(() => {
     if (loading) return;
     Promise.all([localCrmApi.listApps(), user ? crmApi.listApps().catch(() => []) : Promise.resolve([])]).then(([mine, remote]) => setApps([...remote, ...mine]));
@@ -69,7 +71,7 @@ export default function Landing() {
     } catch (e) { setError((e as Error).message); setBusy(null); }
   };
   const remove = async (a: CrmApp) => {
-    if (!window.confirm(`¿Borrar «${a.name}» con todos sus datos? No se puede deshacer.`)) return;
+    if (!window.confirm(`${t('confirmDelete')} (${a.name})`)) return;
     await (isLocalApp(a.id) ? localCrmApi : crmApi).deleteApp(a.id);
     setApps((xs) => xs.filter((x) => x.id !== a.id));
   };
@@ -87,7 +89,7 @@ export default function Landing() {
 
         {apps.length > 0 && (
           <section aria-label="Tus aplicaciones" className="mx-auto max-w-6xl px-4 pt-16">
-            <h2 className="mb-4 font-serif text-2xl">Tus aplicaciones</h2>
+            <h2 className="mb-4 font-serif text-2xl">{t('yourApps')}</h2>
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {apps.map((a) => (
                 <li key={a.id} className="flex items-center justify-between rounded-2xl border border-estate-line bg-white p-4 transition hover:shadow-md">
@@ -115,9 +117,9 @@ export default function Landing() {
         <Closing>
           <section ref={start} id="empezar" aria-labelledby="empezar-title" className="scroll-mt-24">
             <Reveal className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-estate-lime">Empieza en un minuto</p>
-              <h2 id="empezar-title" className="mt-4 text-balance font-serif text-[2.5rem] font-normal leading-[1.02] tracking-[-0.02em] text-white sm:text-[4rem]">¿A qué se dedica tu agencia?</h2>
-              <p className="mx-auto mt-4 max-w-xl text-pretty text-estate-cream/75 sm:text-lg">Se abre con datos de ejemplo. Sin cuenta, el trabajo se guarda únicamente en este navegador.</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-estate-lime">{t('startMinute')}</p>
+              <h2 id="empezar-title" className="mt-4 text-balance font-serif text-[2.5rem] font-normal leading-[1.02] tracking-[-0.02em] text-white sm:text-[4rem]">{t('agencyQuestion')}</h2>
+              <p className="mx-auto mt-4 max-w-xl text-pretty text-estate-cream/75 sm:text-lg">{t('browserOnly')}</p>
             </Reveal>
             <div role="group" aria-label="Tipo de agencia" className="mt-10 grid gap-3 sm:gap-4 md:grid-cols-3">
               {PACKS.map((p) => {
@@ -140,7 +142,7 @@ export default function Landing() {
               })}
             </div>
             {error && <p role="alert" className="mt-3 text-sm text-red-200">{error}</p>}
-            <p className="mt-8 text-center text-sm text-estate-cream/75">¿Prefieres mirar antes? <Link to="/demo" className="font-semibold text-white underline decoration-estate-lime/50 underline-offset-4 hover:decoration-estate-lime">Abre la demo</Link>, sin crear nada.</p>
+            <p className="mt-8 text-center text-sm text-estate-cream/75">{t('previewFirst')} <Link to="/demo" className="font-semibold text-white underline decoration-estate-lime/50 underline-offset-4 hover:decoration-estate-lime">{t('openDemo')}</Link>, sin crear nada.</p>
 
             {/* A discreet way in for agencies that do not fit the three answers. */}
             <details className="group mx-auto mt-6 max-w-2xl text-sm">
