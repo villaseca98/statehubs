@@ -115,7 +115,7 @@ grant execute on function public.crm_media_allowed(text,boolean) to authenticate
 -- Only owner/admin can delete. Reuse safe UUID parser from crm_media_allowed
 -- and resolve the org through a constrained record, not an untrusted cast.
 create or replace function public.crm_media_can_delete(p_path text)
-returns boolean language plpgsql stable security definer set search_path = '' as $
+returns boolean language plpgsql stable security definer set search_path = '' as $$
 declare v_app uuid; v_record uuid; v_org uuid;
 begin
  if not public.crm_media_allowed(p_path,true) then return false; end if;
@@ -124,7 +124,7 @@ begin
  select r.org_id into v_org from public.crm_records r
  where r.id=v_record and r.app_id=v_app;
  return public.crm_org_role(v_org) in ('owner','admin');
-end $;
+end $$;
 revoke all on function public.crm_media_can_delete(text) from public,anon;
 grant execute on function public.crm_media_can_delete(text) to authenticated;
 
