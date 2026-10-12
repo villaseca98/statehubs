@@ -25,7 +25,7 @@ export const LOOK: Look = {
   density: 'comfortable',
   radius: 14,
   colors: {
-    bg: '#f5f4f0', surface: '#ffffff', border: '#e6e2d9', text: '#1c1a16', muted: '#6e695f',
-    primary: '#0f9fae', primaryText: '#ffffff', navBg: '#1c1a16', navText: '#bdb7ab', navActive: '#ffffff',
+    bg: '#f4f7f1', surface: '#ffffff', border: '#e0e8de', text: '#1c2d23', muted: '#6b7b70',
+    primary: '#557b5d', primaryText: '#ffffff', navBg: '#173b2b', navText: '#c9d8cc', navActive: '#ffffff',
   },
 };

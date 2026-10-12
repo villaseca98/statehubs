@@ -30,7 +30,7 @@ const inmobiliaria: DemoApp = {
   pitch: 'Pisos, compradores y visitas, con el embudo de cada operación.',
   blueprint: {
     version: 1,
-    name: 'Inmobiliaria Sol',
+    name: 'Aurora Inmobiliaria',
     entities: [
       {
         key: 'lead', label: 'Lead', labelPlural: 'Leads', titleField: 'nombre',
@@ -38,7 +38,7 @@ const inmobiliaria: DemoApp = {
           { key: 'nombre', label: 'Nombre', type: 'text', required: true },
           { key: 'telefono', label: 'Teléfono', type: 'phone' },
           { key: 'email', label: 'Email', type: 'email' },
-          { key: 'origen', label: 'Origen', type: 'select', options: opts(['portal', 'Portal inmobiliario', 'blue'], ['web', 'Web', 'teal'], ['whatsapp', 'WhatsApp', 'green'], ['recomendacion', 'Recomendación', 'purple']) },
+          { key: 'origen', label: 'Origen', type: 'select', options: opts(['portal', 'Portal inmobiliario', 'blue'], ['web', 'Web', 'teal'], ['whatsapp', 'WhatsApp', 'green'], ['recomendacion', 'Recomendación', 'purple'], ['instagram', 'Instagram', 'pink'], ['meta_ads', 'Meta Ads', 'teal']) },
           { key: 'busca', label: 'Busca', type: 'text' },
           { key: 'presupuesto', label: 'Presupuesto', type: 'money' },
           { key: 'estado', label: 'Estado', type: 'select', options: opts(['nuevo', 'Nuevo', 'blue'], ['contactado', 'Contactado', 'amber'], ['visita', 'Visita agendada', 'purple'], ['cualificado', 'Cualificado', 'green'], ['descartado', 'Descartado', 'gray']) },
@@ -116,6 +116,8 @@ const inmobiliaria: DemoApp = {
     rec('lead', 'l5', { nombre: 'Paula Esteve', telefono: '644 210 998', email: 'paula.esteve@correo.es', origen: 'portal', busca: 'Ático en el Ensanche', presupuesto: 320000, estado: 'cualificado', visita: rel(-3, '10:00') }),
     rec('lead', 'l6', { nombre: 'Óscar Mena', telefono: '655 001 276', origen: 'web', busca: 'Inversión, piso pequeño', presupuesto: 120000, estado: 'nuevo', visita: rel(1, '10:00') }),
     rec('lead', 'l7', { nombre: 'Laura Gimeno', telefono: '633 870 145', origen: 'portal', busca: 'Alquiler 2 hab.', presupuesto: 850, estado: 'descartado' }),
+    rec('lead', 'l8', { nombre: 'Claudia Martín', telefono: '633 410 825', email: 'claudia.martin@correo.es', origen: 'instagram', busca: 'Chalet con piscina en zona residencial', presupuesto: 520000, estado: 'cualificado', notas: 'Ha llegado por Instagram. Quiere concertar visita esta semana.' }),
+    rec('lead', 'l9', { nombre: 'Álvaro Serrano', telefono: '644 732 190', origen: 'meta_ads', busca: 'Piso para inversión', presupuesto: 185000, estado: 'nuevo', notas: 'Lead de campaña de Meta Ads. Pendiente primer contacto.' }),
     rec('cliente', 'c1', { nombre: 'Lucía Ferrer', telefono: '612 345 678', email: 'lucia.ferrer@correo.es', tipo: 'compra', presupuesto: 240000 }),
     rec('cliente', 'c2', { nombre: 'Javier Molina', telefono: '622 118 940', email: 'jmolina@correo.es', tipo: 'alquiler', presupuesto: 950 }),
     rec('cliente', 'c3', { nombre: 'Marta y Pablo Ruiz', telefono: '699 402 117', tipo: 'compra', presupuesto: 310000 }),

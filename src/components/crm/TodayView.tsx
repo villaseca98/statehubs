@@ -82,7 +82,7 @@ function RealEstateOverview({ blueprint, records, today, onOpen, date }: {
   const overdue = today.atrasado.length;
   const followUps = today.hoy.length + overdue;
   const socialLeads = leads.filter((r) => ['instagram', 'meta_ads'].includes(String(r.data.fuente_lead ?? r.data.origen ?? '')));
-  const qualifiedLeads = leads.filter((r) => r.data.estado_cualificacion === 'cualificado');
+  const qualifiedLeads = leads.filter((r) => (r.data.estado_cualificacion ?? r.data.estado) === 'cualificado');
   const leadEntity = entity('lead');
   const homeEntity = entity('inmueble');
   const visitEntity = entity('visita');
