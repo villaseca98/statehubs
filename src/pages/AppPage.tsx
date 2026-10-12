@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Box, Check, Eye, History, Home, Loader2, Minus, Pencil, Plus, Puzzle, Send, Sparkles, X } from 'lucide-react';
+import { Check, Eye, History, Home, Loader2, Minus, Pencil, Plus, Puzzle, Send, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 import { useToast } from '@/lib/toast';
 import { crmApi } from '@/lib/crm/api';
@@ -12,7 +12,7 @@ import { Workspace } from '@/components/crm/Workspace';
 import type { Tool } from '@/components/crm/Workspace';
 import { ModuleCards } from '@/components/crm/ModuleCards';
 import { AnalysisSetup } from '@/components/crm/AnalysisSetup';
-import { Presentation3D } from '@/components/crm/Presentation3D';
+import { LogoSetup } from '@/components/brand/LogoSetup';
 import { makeTitleLookup } from '@/components/crm/theme';
 import { addModule, modulesFor, otherModules, removeModule } from '@shared/blueprint/modules.ts';
 import { AUTOMATION_ENTITY } from '@shared/blueprint/automations.ts';
@@ -79,7 +79,6 @@ export default function AppPage() {
   const [applying, setApplying] = useState(false);
   const [preview, setPreview] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
-  const [show3d, setShow3d] = useState(false);
   const [draft, setDraft] = useState('');
   const sentFirst = useRef(false);
   const chatEnd = useRef<HTMLDivElement>(null);
@@ -142,6 +141,14 @@ export default function AppPage() {
     const base = proposal?.blueprint ?? current?.blueprint;
     if (!base || thinking) return;
     await proposeBlueprint(base.modules?.includes(key) ? removeModule(base, key) : addModule(base, key));
+  }
+
+  async function setLogo(logo: string | undefined) {
+    const base = proposal?.blueprint ?? current?.blueprint;
+    if (!base || thinking) return;
+    const next = { ...base };
+    if (logo) next.logo = logo; else delete next.logo;
+    await proposeBlueprint(next);
   }
 
   async function setAnalysis(config: AnalysisConfig) {
@@ -245,7 +252,6 @@ export default function AppPage() {
     { key: 'piezas', label: 'Piezas', icon: Puzzle, onClick: () => setPanel('piezas'), active: panel === 'piezas' },
     { key: 'ia', label: 'Pedírselo a la IA', icon: Sparkles, onClick: () => setPanel('ia'), active: panel === 'ia' },
     { key: 'historial', label: 'Historial', icon: History, onClick: () => setPanel('historial'), badge: versions.length || undefined, active: panel === 'historial' },
-    { key: '3d', label: 'Verlo en 3D', icon: Box, onClick: () => setShow3d(true) },
     { key: 'inicio', label: 'Todas mis apps', icon: Home, onClick: () => navigate('/') },
   ];
 
@@ -289,6 +295,9 @@ export default function AppPage() {
               <div className="mt-3"><ModuleCards compact disabled={thinking} modules={otherModules(kind)} selected={(proposal?.blueprint ?? current.blueprint).modules ?? []} onToggle={toggleModule} /></div>
             </details>
           )}
+          <div className="mt-5">
+            <LogoSetup name={(proposal?.blueprint ?? current.blueprint).name} logo={(proposal?.blueprint ?? current.blueprint).logo} disabled={thinking} onChange={setLogo} />
+          </div>
           {analysisView && (
             <div className="mt-5">
               <AnalysisSetup blueprint={proposal?.blueprint ?? current.blueprint} value={analysisView.analysis ?? DEFAULT_ANALYSIS} onChange={setAnalysis} />
@@ -360,7 +369,6 @@ export default function AppPage() {
         </SidePanel>
       )}
 
-      {show3d && showing && <Presentation3D blueprint={showing} records={previewing ? previewRecords : records} onClose={() => setShow3d(false)} />}
     </div>
   );
 }

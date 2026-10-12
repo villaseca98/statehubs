@@ -26,6 +26,7 @@ export function diffBlueprints(before: Blueprint | null, after: Blueprint): Chan
     return out;
   }
 
+  if (before.logo !== after.logo) out.push({ kind: 'change', text: after.logo ? 'Poner tu logo en la aplicación.' : 'Volver al logo de StateHubs.' });
   if (before.name !== after.name) out.push({ kind: 'change', text: `Renombrar la aplicación de «${before.name}» a «${after.name}».` });
 
   const oldE = byKey(before.entities);

@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Box, Home } from 'lucide-react';
+import { ArrowRight, Home } from 'lucide-react';
 import { DEMO_APPS } from '@shared/blueprint/samples.ts';
 import type { DemoApp } from '@shared/blueprint/samples.ts';
 import { composeApp, modulesFor, sampleRecordsFor } from '@shared/blueprint/modules.ts';
 import type { AppRecord, RecordData } from '@shared/blueprint/types.ts';
 import { Workspace } from '@/components/crm/Workspace';
-import { Presentation3D } from '@/components/crm/Presentation3D';
 
 // Public demo: no account, everything in memory. Every piece on, plus the
 // sector templates, so people can feel it before making their own.
@@ -25,7 +24,6 @@ export default function Demo() {
   const [key, setKey] = useState(APPS[0].key);
   const app = APPS.find((a) => a.key === key)!;
   const [records, setRecords] = useState<AppRecord[]>(app.records);
-  const [show3d, setShow3d] = useState(false);
 
   useEffect(() => { document.title = 'Demo · StateHubs'; }, []);
   useEffect(() => { setRecords(app.records); }, [app]);
@@ -54,10 +52,8 @@ export default function Demo() {
       <Workspace key={app.key} blueprint={app.blueprint} records={records} banner={bar} className="h-full"
         onCreate={create} onUpdate={update} onDelete={remove}
         tools={[
-          { key: '3d', label: 'Verlo en 3D', icon: Box, onClick: () => setShow3d(true) },
           { key: 'inicio', label: 'Volver a la portada', icon: Home, onClick: () => { window.location.href = '/'; } },
         ]} />
-      {show3d && <Presentation3D blueprint={app.blueprint} records={records} onClose={() => setShow3d(false)} />}
     </div>
   );
 }

@@ -129,6 +129,7 @@ export interface Blueprint {
   kind?: 'crm' | 'erp';
   modules?: string[]; // module cards in use (see modules.ts)
   sector?: string;    // business template whose extra fields it carries (see sectors.ts)
+  logo?: string;      // the app's own logo (small PNG/JPEG/WebP data URL); none = the StateHubs mark
   entities: Entity[];
   views: View[];      // navigation order = array order
 }

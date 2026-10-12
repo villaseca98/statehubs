@@ -5,6 +5,8 @@ import { motion, useMotionValue, useReducedMotion, useScroll, useTransform } fro
 import type { MotionValue } from 'framer-motion';
 import { ArrowRight, ChevronDown, Plus, Search } from 'lucide-react';
 import type { AppKind } from '@shared/blueprint/modules.ts';
+import { BRAND } from '@shared/blueprint/look.ts';
+import { Logo } from '@/components/brand/Logo';
 
 // Scroll story for /crm: the app itself is the product on the stage. It floats
 // tilted, comes apart into its pieces, swaps one piece for another and closes
@@ -12,7 +14,7 @@ import type { AppKind } from '@shared/blueprint/modules.ts';
 // sharp on any screen and nothing heavy to download.
 
 // The StateHubs look (see _shared/blueprint/look.ts)
-const C = { bg: '#f5f4f0', surface: '#ffffff', border: '#e6e2d9', text: '#1c1a16', muted: '#6e695f', primary: '#0f9fae', nav: '#1c1a16', navText: '#bdb7ab' };
+const C = { bg: '#f5f4f0', surface: '#ffffff', border: '#e6e2d9', text: '#1c1a16', muted: '#6e695f', primary: BRAND.red, nav: '#1c1a16', navText: '#bdb7ab' };
 const CHIP: Record<string, [string, string]> = {
   blue: ['#dbeafe', '#1d4ed8'], amber: ['#fef3c7', '#b45309'], purple: ['#ede9fe', '#6d28d9'], green: ['#dcfce7', '#15803d'],
   teal: ['#ccfbf1', '#0f766e'], pink: ['#fce7f3', '#be185d'], red: ['#fee2e2', '#b91c1c'], gray: ['#f1f0ec', '#57534e'],
@@ -230,8 +232,8 @@ function LegendItem({ p, i, label, out, isNew }: { p: MotionValue<number>; i: nu
   });
   const strike = useTransform(p, (v) => (out && swapAt(v) > 0.5 ? 'line-through' : 'none'));
   return (
-    <motion.li className="flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1 text-xs lg:text-sm" style={{ opacity, textDecoration: strike, borderColor: isNew ? C.primary : 'rgba(255,255,255,.14)', color: isNew ? '#5fd3dd' : 'rgba(255,255,255,.85)' }}>
-      <span className="h-1.5 w-1.5 rounded-full" style={{ background: isNew ? '#5fd3dd' : C.primary }} />
+    <motion.li className="flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1 text-xs lg:text-sm" style={{ opacity, textDecoration: strike, borderColor: isNew ? C.primary : 'rgba(255,255,255,.14)', color: isNew ? BRAND.light : 'rgba(255,255,255,.85)' }}>
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: isNew ? BRAND.light : C.primary }} />
       {label}
     </motion.li>
   );
@@ -273,7 +275,7 @@ export function ScrollHero({ onChoose, nav }: { onChoose: (kind: AppKind) => voi
       `}</style>
       <div className={`${reduced ? 'relative min-h-screen' : 'sticky top-0 h-screen'} flex flex-col overflow-hidden text-white`}>
         <header className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4">
-          <Link to="/" className="text-lg font-semibold">StateHubs</Link>
+          <Link to="/" className="text-lg"><Logo dark /></Link>
           <nav className="flex items-center gap-4 text-sm text-white/70">
             <Link to="/demo" className="hover:text-white">Ver demo</Link>
             {nav}
@@ -287,7 +289,7 @@ export function ScrollHero({ onChoose, nav }: { onChoose: (kind: AppKind) => voi
             <p className="mt-3 text-white/65 md:text-lg">Ventas, agenda, facturas y automatizaciones. Y te dice qué toca hoy.</p>
           </Line>
           <Line p={p} from={[0.17, 0.22]} to={[0.42, 0.47]}>
-            <p className="text-4xl font-bold tracking-tight md:text-6xl">Hecho de <span style={{ color: '#5fd3dd' }}>piezas</span>.</p>
+            <p className="text-4xl font-bold tracking-tight md:text-6xl">Hecho de <span style={{ color: BRAND.light }}>piezas</span>.</p>
             <p className="mt-3 text-white/65 md:text-lg">Cada función es una pieza. Solo pones las que usas.</p>
           </Line>
           <Line p={p} from={[0.47, 0.52]} to={[0.62, 0.67]}>
@@ -299,7 +301,7 @@ export function ScrollHero({ onChoose, nav }: { onChoose: (kind: AppKind) => voi
             <p className="mt-3 text-white/65 md:text-lg">Lo ves funcionando antes de crear nada. Y cada cambio tiene vuelta atrás.</p>
           </Line>
           <Line p={p} from={[0.86, 0.92]}>
-            <p className="text-3xl font-bold tracking-tight md:text-5xl">Tu CRM o tu ERP, <span style={{ color: '#5fd3dd' }}>montado a piezas</span>.</p>
+            <p className="text-3xl font-bold tracking-tight md:text-5xl">Tu CRM o tu ERP, <span style={{ color: BRAND.light }}>montado a piezas</span>.</p>
             <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
               <button onClick={() => onChoose('crm')} className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-semibold text-white" style={{ background: C.primary }}>Montar un CRM <ArrowRight className="h-4 w-4" /></button>
               <button onClick={() => onChoose('erp')} className="inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-2.5 font-semibold text-white hover:border-white/60">Montar un ERP <ArrowRight className="h-4 w-4" /></button>

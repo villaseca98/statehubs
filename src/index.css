@@ -8,14 +8,14 @@
 
 @layer base {
   :root {
-    /* StateHubs: warm paper, near-black ink, one teal. */
+    /* StateHubs: warm paper, near-black ink, one red (the logo's). */
     --background: 45 17% 95%;
     --foreground: 40 11% 10%;
     --card: 0 0% 100%;
     --border: 40 18% 88%;
     --muted: 42 16% 92%;
     --muted-foreground: 40 5% 40%;
-    --primary: 186 84% 37%;
+    --primary: 352 77% 54%;
     --primary-foreground: 0 0% 100%;
     --destructive: 0 70% 46%;
     --ink: 36 13% 7%;

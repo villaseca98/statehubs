@@ -49,6 +49,7 @@ Reglas del plano (versión 1):
 - Vistas: ${VIEW_TYPES.join(', ')}. table lleva columns; kanban lleva groupBy (un select) y opcional sumField (importe); calendar lleva dateField (date); dashboard lleva widgets (metric o bars con agg count/sum/avg; sum y avg necesitan field numérico; bars necesita groupBy select).
 - worklist es una lista de trabajo (ideal para leads o pendientes): lleva columns, groupBy (el select de estado) y actions. Cada acción tiene kind (${ACTION_KINDS.join(', ')}), label y, según el kind, field (call y whatsapp: un phone; email: un email; schedule: un datetime), to (move: estado al que pasa; schedule: estado tras agendar) y when (en qué estados se ofrece; vacío = siempre). Así cada lead muestra solo las acciones que tocan según su estado. launch convierte cada línea de un campo longtext (field, por ejemplo los pasos de un proceso) en un registro de la entidad entity, que debe tener un relation de vuelta. webhook envía el registro a la URL de su campo url (field). Si hay acciones schedule, añade availability con days (1 = lunes … 7 = domingo), from y to (HH:MM), slotMinutes y, si hay pausa, breakFrom y breakTo: el panel lateral enseña los huecos libres y no deja agendar dos veces la misma hora.
 - analysis es la pantalla de análisis de datos (sin entity): lleva analysis con lenses (${ANALYSIS_LENSES.join(', ')}: oportunidades = embudo, previsión y tasa de cierre; leads = cada registro abierto puntuado con su porqué y los que se enfrían; casuisticas = qué origen, cliente o motivo gana o pierde más que la media; datos = cuánto hay, qué falta por rellenar y descarga en CSV), staleDays (días sin moverse para darlo por frío, 1–90) y, opcional, entities (las secciones a analizar; vacío = todas las que tienen etapas o importes). Funciona mejor si las etapas incluyen opciones de ganado y perdido, un campo money y selects como origen o motivo de pérdida.
+- No escribas logo: el logo lo pone la persona desde Piezas.
 - Si el plano actual tiene kind, sector y modules (las piezas que la persona puso con tarjetas), no te preocupes por ellos: se conservan solos. Tú cambia entidades y vistas como siempre.
 - Todas las aplicaciones tienen el mismo diseño de StateHubs; no hay estilos que elegir. La app abre en «Hoy», que reúne solo lo que toca: citas y llamadas de hoy, lo atrasado y lo de los próximos días, a partir de los campos date y datetime y de los select de estado. Por eso pon siempre fechas útiles (cita, vence, límite, entrega) y estados con un final claro.
 - Usa datetime para citas, visitas y llamadas con hora; date para fechas sin hora.
@@ -56,7 +57,7 @@ Reglas del plano (versión 1):
 - Piensa en España: NIF/CIF, IVA (21 %, 10 %, 4 %), IRPF en facturas de profesionales, provincias, WhatsApp como canal.
 - Al crear una aplicación nueva incluye en ejemplos entre 3 y 6 registros realistas (nombres y empresas españolas inventadas) por cada entidad principal. Los campos relation de los ejemplos se dejan vacíos. En cambios posteriores no añadas ejemplos salvo que te los pidan.
 
-${current ? `Plano actual de la aplicación:\n${JSON.stringify(current)}` : 'Todavía no hay aplicación: la primera propuesta la crea entera.'}`;
+${current ? `Plano actual de la aplicación:\n${JSON.stringify({ ...current, logo: undefined })}` : 'Todavía no hay aplicación: la primera propuesta la crea entera.'}`;
 }
 
 const option = { type: 'object', properties: { value: { type: 'string' }, label: { type: 'string' }, color: { type: 'string', enum: OPTION_COLORS } }, required: ['value', 'label'] };
@@ -208,6 +209,7 @@ export async function runAgent(opts: {
       if (opts.current?.kind) bp.kind = opts.current.kind;
       if (opts.current?.modules) bp.modules = opts.current.modules;
       if (opts.current?.sector) bp.sector = opts.current.sector;
+      if (opts.current?.logo) bp.logo = opts.current.logo; else delete bp.logo;
       proposal = {
         summary: String(input.resumen ?? '').trim() || reply,
         blueprint: bp,

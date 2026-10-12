@@ -11,10 +11,12 @@ import { AnalysisView } from './AnalysisView';
 import { RecordPanel } from './RecordPanel';
 import { TodayView } from './TodayView';
 import { RuntimeContext } from './runtimeContext';
+import { AppLogo } from '@/components/brand/Logo';
+import { BRAND } from '@shared/blueprint/look.ts';
 
 // The app itself: a quiet sidebar, one section at a time, «Hoy» first.
 // Records open in a side drawer so you never lose your place. Tools that
-// change the app (pieces, the AI, history, 3D) are passed in by the page
+// change the app (pieces, the AI, history) are passed in by the page
 // and live at the bottom of the sidebar, out of the way of daily work.
 
 export interface Tool { key: string; label: string; icon: LucideIcon; onClick: () => void; badge?: string | number; active?: boolean }
@@ -70,7 +72,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
   );
   const brand = (
     <div className="flex items-center gap-2.5 px-2">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold" style={{ background: 'var(--crm-primary)', color: '#fff' }}>{blueprint.name.slice(0, 1).toUpperCase()}</span>
+      <AppLogo src={blueprint.logo} name={blueprint.name} size={32} />
       <span className="min-w-0">
         <span className="block truncate font-semibold text-white">{blueprint.name}</span>
         <span className="block text-[11px] uppercase tracking-wider" style={{ color: 'var(--crm-nav-text)' }}>{blueprint.kind === 'erp' ? 'ERP' : 'CRM'}</span>
@@ -145,9 +147,9 @@ function NavButton({ icon: Icon, label, active, badge, onClick, quiet }: { icon:
     <button onClick={onClick} aria-current={active ? 'page' : undefined}
       className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[0.95em] transition hover:bg-white/5"
       style={active ? { background: 'rgba(255,255,255,.09)', color: '#fff' } : { color: quiet ? 'rgba(189,183,171,.85)' : 'var(--crm-nav-text)' }}>
-      <Icon className="h-4 w-4 shrink-0" style={active ? { color: '#5fd3dd' } : undefined} />
+      <Icon className="h-4 w-4 shrink-0" style={active ? { color: BRAND.light } : undefined} />
       <span className="min-w-0 flex-1 truncate">{label}</span>
-      {badge !== undefined && <span className="rounded-full px-1.5 text-[0.78em] font-semibold" style={{ background: active ? '#0f9fae' : 'rgba(255,255,255,.1)', color: '#fff' }}>{badge}</span>}
+      {badge !== undefined && <span className="rounded-full px-1.5 text-[0.78em] font-semibold" style={{ background: active ? BRAND.red : 'rgba(255,255,255,.1)', color: '#fff' }}>{badge}</span>}
     </button>
   );
 }
