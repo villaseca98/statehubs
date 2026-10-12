@@ -34,3 +34,8 @@ StateHubs es solo para inmobiliarias y alquiler turístico, y es **una sola app*
 
 - **Análisis de datos** (pieza `analisis`, vista `analysis`, motor en `_shared/blueprint/analysis.ts`, sin IA): embudo y previsión, leads puntuados con su porqué y los que se enfrían, casuísticas y base de datos con huecos, duplicados y CSV. Qué enfoques, qué secciones y los días para darlo por frío se eligen en Piezas y llegan como propuesta.
 - **Sectores** (`_shared/blueprint/sectors.ts`): ventas, inmobiliaria, almacén y control de BBDD. Cada uno trae sus piezas y campos extra, que se aplican también a las piezas que se pongan después. Se eligen al empezar, en la Landing.
+
+## Funciones del servidor (`supabase/functions`)
+
+- `crm-agent`: la IA y las piezas proponen cambios al plano. `crm-automate`: envía registros a los webhooks de «Automatizaciones».
+- `crm-ical`: lee el enlace iCal de Airbnb/Booking de cada inmueble (`ical_airbnb`, `ical_booking`; solo https públicas, sin redirecciones) y crea, mueve o cancela reservas por `ref_externa` = UID (`origen_sync` «ical»). Solo fechas: ni precios ni mensajes. Parser en `_shared/blueprint/ical.ts`; en modo prueba dice que necesita cuenta.

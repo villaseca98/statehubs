@@ -1,6 +1,7 @@
 import { server } from '@/lib/supabase';
 import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import type { Change } from '@shared/blueprint/diff.ts';
+import type { SyncSummary } from '@shared/blueprint/ical.ts';
 
 // The generated Supabase types don't know the crm_* tables yet.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -9,6 +10,8 @@ const db = () => server() as any;
 export interface CrmApp { id: string; name: string; current_version: number | null; updated_at: string }
 export interface CrmVersion { version: number; summary: string; created_at: string; blueprint: Blueprint }
 export interface CrmMessage { id: string; role: 'user' | 'assistant'; content: string; proposal_id: string | null; created_at: string }
+// What a calendar sync did; `mensaje` replaces the counts when there was nothing to do.
+export type IcalSyncResult = SyncSummary & { mensaje?: string };
 export interface CrmProposal {
   id: string; base_version: number | null; blueprint: Blueprint; summary: string; changes: Change[];
   samples: { entity: string; data: RecordData; id?: string }[]; status: 'pending' | 'applied' | 'discarded'; created_at: string;
@@ -43,10 +46,16 @@ export const crmApi = {
   ask: (appId: string, message: string) => invokeAgent({ app_id: appId, message }),
   // Functions picked by hand (cards): the server validates the blueprint and makes the proposal, no AI.
   propose: (appId: string, blueprint: Blueprint) => invokeAgent({ app_id: appId, blueprint }) as Promise<{ message: CrmMessage; proposal: CrmProposal }>,
+  // Reads the Airbnb/Booking iCal link of each property on the server (crm-ical).
+  syncIcal: (appId: string) => invokeFunction<IcalSyncResult>('crm-ical', { app_id: appId }),
 };
 
-async function invokeAgent(body: Record<string, unknown>): Promise<{ message: CrmMessage; proposal: CrmProposal | null }> {
-  const { data, error } = await server().functions.invoke('crm-agent', { body });
+function invokeAgent(body: Record<string, unknown>): Promise<{ message: CrmMessage; proposal: CrmProposal | null }> {
+  return invokeFunction('crm-agent', body);
+}
+
+async function invokeFunction<T>(name: string, body: Record<string, unknown>): Promise<T> {
+  const { data, error } = await server().functions.invoke(name, { body });
   if (error) {
     // supabase-js hides the JSON body of non-2xx answers in error.context.
     let text = error.message;

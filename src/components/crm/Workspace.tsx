@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { BrainCircuit, CalendarDays, Columns3, LayoutDashboard, LayoutGrid, ListChecks, Menu, Moon, Plus, Search, Sun, Table2, X } from 'lucide-react';
+import { BrainCircuit, CalendarDays, CalendarRange, Columns3, LayoutDashboard, LayoutGrid, ListChecks, Menu, Moon, Plus, Search, Sun, Table2, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { AppRecord, Blueprint, RecordData, View } from '@shared/blueprint/types.ts';
 import { computeToday } from '@/lib/crm/today';
@@ -9,6 +9,7 @@ import type { ThemeMode } from './theme';
 import { ViewBody } from './views';
 import { WorklistView } from './WorklistView';
 import { AnalysisView } from './AnalysisView';
+import { TimelineView } from './TimelineView';
 import { RecordPanel } from './RecordPanel';
 import { TodayView } from './TodayView';
 import { OpsView } from './OpsView';
@@ -34,6 +35,7 @@ export interface WorkspaceProps {
   onUpdate: (id: string, data: RecordData) => void;
   onDelete: (id: string) => void;
   onWebhook?: (record: AppRecord) => Promise<string> | string | void;
+  onSyncIcal?: () => Promise<string> | string;
   tools?: Tool[];
   banner?: ReactNode;
   now?: Date;
@@ -42,12 +44,12 @@ export interface WorkspaceProps {
   appId?: string;
 }
 
-const ICON: Record<string, LucideIcon> = { table: Table2, kanban: Columns3, calendar: CalendarDays, worklist: ListChecks, analysis: BrainCircuit, ops: LayoutDashboard, cards: LayoutGrid };
+const ICON: Record<string, LucideIcon> = { table: Table2, kanban: Columns3, calendar: CalendarDays, worklist: ListChecks, analysis: BrainCircuit, ops: LayoutDashboard, cards: LayoutGrid, timeline: CalendarRange };
 const HOY = 'hoy';
 // Sections that get the filter bar (search, rules, sort, saved views).
 const FILTERED = new Set<string>(['table', 'kanban', 'worklist', 'calendar', 'cards']);
 
-export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, onWebhook, tools = [], banner, now, className = '', appId }: WorkspaceProps) {
+export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, onWebhook, onSyncIcal, tools = [], banner, now, className = '', appId }: WorkspaceProps) {
   const sections = useMemo(() => blueprint.views.filter((v) => v.type !== 'dashboard'), [blueprint.views]);
   // With an operations centre first, the app opens there and it replaces «Hoy».
   const home = sections[0]?.type === 'ops' ? sections[0].key : HOY;
@@ -154,7 +156,11 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
             )}
             {view && view.type === 'ops' && <OpsView blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
             {view && view.type === 'cards' && <CardsView blueprint={blueprint} view={view} records={shown} titleOf={titleOf} onOpen={(r) => setOpenId(r.id)} />}
-            {view && !['worklist', 'analysis', 'ops', 'cards'].includes(view.type) && (
+            {view && view.type === 'timeline' && (
+              <TimelineView blueprint={blueprint} view={view} records={records} dark={dark} titleOf={titleOf} selectedId={openId} now={now} onSync={onSyncIcal}
+                onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
+            )}
+            {view && !['worklist', 'analysis', 'ops', 'cards', 'timeline'].includes(view.type) && (
               <ViewBody blueprint={blueprint} view={view} records={shown} dark={dark} filtered={!!filters.entity} titleOf={titleOf} selectedId={openId}
                 onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
             )}
