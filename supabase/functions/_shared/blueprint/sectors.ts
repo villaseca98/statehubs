@@ -113,7 +113,7 @@ export const SECTORS: SectorDef[] = [
   },
   {
     key: 'inmobiliaria', kind: 'crm', name: 'Inmobiliaria', icon: 'Building2',
-    pitch: 'CRM para equipos inmobiliarios: cualifica compradores, registra el resultado de cada visita y deja siempre visible el siguiente paso y su fecha.',
+    pitch: 'CRM para equipos inmobiliarios: recibe leads de Instagram, cualifica intención y presupuesto, asigna al agente adecuado y controla cada siguiente paso.',
     modules: ['panel', 'analisis', 'leads', 'inmuebles', 'visitas', 'embudo', 'clientes', 'documentos'],
     fields: {
       lead: [
@@ -127,6 +127,12 @@ export const SECTORS: SectorDef[] = [
         { key: 'siguiente_paso', label: 'Siguiente paso comercial', type: 'text', help: 'La acción concreta que debe ocurrir para avanzar este lead.' },
         { key: 'proximo_contacto', label: 'Próximo seguimiento', type: 'date', help: 'La vista Hoy lo señalará cuando toque o se retrase.' },
         { key: 'prioridad_comercial', label: 'Prioridad comercial', type: 'select', options: opts(['alta', 'Alta', 'red'], ['media', 'Media', 'amber'], ['baja', 'Baja', 'gray']) },
+        { key: 'fuente_lead', label: 'Origen del lead', type: 'select', options: opts(['instagram', 'Instagram', 'pink'], ['web', 'Web', 'teal'], ['portal', 'Portal inmobiliario', 'blue'], ['recomendacion', 'Recomendación', 'purple'], ['llamada', 'Llamada', 'gray'], ['otro', 'Otro', 'gray']) },
+        { key: 'instagram_usuario', label: 'Usuario de Instagram', type: 'text', help: 'Nombre de usuario público, si el lead llega desde Instagram.' },
+        { key: 'campana_instagram', label: 'Campaña de Instagram', type: 'text' },
+        { key: 'estado_cualificacion', label: 'Cualificación', type: 'select', options: opts(['nuevo', 'Nuevo sin revisar', 'gray'], ['pendiente_datos', 'Faltan datos', 'amber'], ['cualificado', 'Cualificado', 'green'], ['no_cualificado', 'No cualificado', 'red']) },
+        { key: 'puntuacion_lead', label: 'Puntuación del lead', type: 'number', help: 'Puntuación orientativa basada en los datos disponibles; no sustituye la revisión del agente.' },
+        { key: 'contacto_autorizado', label: 'Permiso para contacto comercial', type: 'select', options: opts(['confirmado', 'Confirmado', 'green'], ['pendiente', 'Pendiente de confirmar', 'amber'], ['no', 'No autorizado', 'red']) },
       ],
       oportunidad: [
         { key: 'inmueble', label: 'Inmueble', type: 'relation', relation: 'inmueble' },
@@ -145,12 +151,12 @@ export const SECTORS: SectorDef[] = [
       ],
     },
     columns: {
-      leads: ['operacion_busca', 'zona', 'presupuesto_max', 'financiacion', 'proximo_contacto', 'prioridad_comercial'],
+      leads: ['operacion_busca', 'fuente_lead', 'estado_cualificacion', 'puntuacion_lead', 'zona', 'presupuesto_max', 'financiacion', 'proximo_contacto', 'prioridad_comercial'],
       clientes: ['nombre', 'telefono', 'email', 'rol'],
     },
     samples: {
-      'm-l1': { operacion_busca: 'comprar', tipo_busca: 'piso', zona: 'Ruzafa, Ensanche', presupuesto_max: 220000, habitaciones_min: 2, financiacion: 'preaprobada', plazo: 'trimestre', siguiente_paso: 'Confirmar disponibilidad y proponer segunda visita', proximo_contacto: rel(-1), prioridad_comercial: 'alta' },
-      'm-l2': { operacion_busca: 'alquilar', tipo_busca: 'piso', zona: 'Benimaclet', presupuesto_max: 1100, habitaciones_min: 3, financiacion: 'no_necesita', plazo: 'mes', siguiente_paso: 'Enviar dos opciones que encajen', proximo_contacto: rel(0), prioridad_comercial: 'media' },
+      'm-l1': { operacion_busca: 'comprar', tipo_busca: 'piso', zona: 'Ruzafa, Ensanche', presupuesto_max: 220000, habitaciones_min: 2, financiacion: 'preaprobada', plazo: 'trimestre', siguiente_paso: 'Confirmar disponibilidad y proponer segunda visita', proximo_contacto: rel(-1), prioridad_comercial: 'alta', fuente_lead: 'instagram', instagram_usuario: '@lucia.vlc', campana_instagram: 'Compradores Valencia · Octubre', estado_cualificacion: 'cualificado', puntuacion_lead: 85, contacto_autorizado: 'confirmado' },
+      'm-l2': { operacion_busca: 'alquilar', tipo_busca: 'piso', zona: 'Benimaclet', presupuesto_max: 1100, habitaciones_min: 3, financiacion: 'no_necesita', plazo: 'mes', siguiente_paso: 'Enviar dos opciones que encajen', proximo_contacto: rel(0), prioridad_comercial: 'media', fuente_lead: 'instagram', instagram_usuario: '@hugo.busca.piso', campana_instagram: 'Alquiler Valencia', estado_cualificacion: 'pendiente_datos', puntuacion_lead: 45, contacto_autorizado: 'pendiente' },
       'm-l3': { operacion_busca: 'vender', tipo_busca: 'atico', zona: 'Centro', plazo: 'semestre', siguiente_paso: 'Concertar valoración del inmueble', proximo_contacto: rel(2), prioridad_comercial: 'media' },
       'm-l4': { operacion_busca: 'comprar', tipo_busca: 'casa', zona: 'Godella, Rocafort', presupuesto_max: 450000, habitaciones_min: 4, financiacion: 'en_tramite', plazo: 'mes', siguiente_paso: 'Confirmar estado de la financiación', proximo_contacto: rel(1), prioridad_comercial: 'alta' },
       'm-l6': { operacion_busca: 'comprar', financiacion: 'preaprobada' },
