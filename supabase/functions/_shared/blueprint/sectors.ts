@@ -113,7 +113,7 @@ export const SECTORS: SectorDef[] = [
   },
   {
     key: 'inmobiliaria', kind: 'crm', name: 'Inmobiliaria', icon: 'Building2',
-    pitch: 'Cartera de inmuebles con referencia, m², certificado y exclusiva; demandantes con zona, presupuesto y financiación; visitas con su resultado.',
+    pitch: 'CRM para equipos inmobiliarios: cualifica compradores, registra el resultado de cada visita y deja siempre visible el siguiente paso y su fecha.',
     modules: ['panel', 'analisis', 'leads', 'inmuebles', 'visitas', 'embudo', 'clientes', 'documentos'],
     fields: {
       lead: [
@@ -124,18 +124,28 @@ export const SECTORS: SectorDef[] = [
         { key: 'habitaciones_min', label: 'Habitaciones mínimas', type: 'number' },
         { key: 'financiacion', label: 'Financiación', type: 'select', options: opts(['no_necesita', 'No la necesita', 'green'], ['preaprobada', 'Hipoteca preaprobada', 'blue'], ['en_tramite', 'En trámite', 'amber'], ['sin_mirar', 'Sin mirar', 'gray']) },
         { key: 'plazo', label: 'Plazo', type: 'select', options: PLAZO },
+        { key: 'siguiente_paso', label: 'Siguiente paso comercial', type: 'text', help: 'La acción concreta que debe ocurrir para avanzar este lead.' },
+        { key: 'proximo_contacto', label: 'Próximo seguimiento', type: 'date', help: 'La vista Hoy lo señalará cuando toque o se retrase.' },
+        { key: 'prioridad_comercial', label: 'Prioridad comercial', type: 'select', options: opts(['alta', 'Alta', 'red'], ['media', 'Media', 'amber'], ['baja', 'Baja', 'gray']) },
       ],
       oportunidad: [
         { key: 'inmueble', label: 'Inmueble', type: 'relation', relation: 'inmueble' },
         { key: 'tipo_operacion', label: 'Operación', type: 'select', options: opts(['venta', 'Venta', 'blue'], ['alquiler', 'Alquiler', 'teal']) },
         { key: 'comision', label: 'Comisión', type: 'percent' },
+        { key: 'siguiente_paso', label: 'Siguiente paso comercial', type: 'text', help: 'La acción concreta pendiente para avanzar hacia el cierre.' },
+        { key: 'proximo_contacto', label: 'Próximo seguimiento', type: 'date' },
+        { key: 'motivo_perdida', label: 'Motivo de pérdida', type: 'select', options: opts(['precio', 'Precio', 'amber'], ['financiacion', 'Financiación', 'red'], ['eligio_otro', 'Eligió otra propiedad/agencia', 'purple'], ['sin_respuesta', 'Dejó de responder', 'gray'], ['otro', 'Otro', 'blue']) },
+      ],
+      visita: [
+        { key: 'siguiente_paso', label: 'Siguiente paso tras la visita', type: 'text', help: 'Ej.: enviar documentación, llamar al propietario o preparar oferta.' },
+        { key: 'proximo_contacto', label: 'Seguimiento tras la visita', type: 'date' },
       ],
       cliente: [
         { key: 'rol', label: 'Es', type: 'select', options: opts(['comprador', 'Comprador', 'blue'], ['propietario', 'Propietario', 'pink'], ['inquilino', 'Inquilino', 'teal'], ['arrendador', 'Arrendador', 'purple']) },
       ],
     },
     columns: {
-      leads: ['operacion_busca', 'zona', 'presupuesto_max', 'financiacion', 'cita'],
+      leads: ['operacion_busca', 'zona', 'presupuesto_max', 'financiacion', 'proximo_contacto', 'prioridad_comercial'],
       clientes: ['nombre', 'telefono', 'email', 'rol'],
     },
     samples: {
