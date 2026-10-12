@@ -64,13 +64,14 @@ export const VIEW_TYPES: ViewType[] = ['table', 'kanban', 'calendar', 'dashboard
 // launch: turns each line of a long text (the steps of a process) into a
 // record of another entity (a task), linked back to this one.
 // webhook: sends this record to the URL in one of its fields (to test an automation).
-export type ActionKind = 'call' | 'whatsapp' | 'email' | 'move' | 'schedule' | 'launch' | 'webhook';
-export const ACTION_KINDS: ActionKind[] = ['call', 'whatsapp', 'email', 'move', 'schedule', 'launch', 'webhook'];
+// link: opens the web address in one of its url fields (the Instagram chat, a listing…).
+export type ActionKind = 'call' | 'whatsapp' | 'email' | 'move' | 'schedule' | 'launch' | 'webhook' | 'link';
+export const ACTION_KINDS: ActionKind[] = ['call', 'whatsapp', 'email', 'move', 'schedule', 'launch', 'webhook', 'link'];
 
 export interface ViewAction {
   kind: ActionKind;
   label: string;
-  field?: string;    // call/whatsapp: phone; email: email; schedule: datetime; launch: longtext (one step per line); webhook: url
+  field?: string;    // call/whatsapp: phone; email: email; schedule: datetime; launch: longtext (one step per line); webhook/link: url
   to?: string;       // move: stage to set; schedule/launch: stage to set afterwards (optional)
   when?: string[];   // stage values where the action is offered
   entity?: string;   // launch: entity the steps become (needs a relation back to this one)
@@ -131,6 +132,65 @@ export interface View {
   imageField?: string;  // cards: url field with the photo
 }
 
+// The Instagram assistant («bot»). It lives in the blueprint, so it changes
+// like everything else: as a proposal you see before applying, with history.
+// The engine that runs it is bot.ts (pure: the browser simulator and the
+// server webhook run exactly the same code).
+// Answers are saved in a field of the contact (contacto_inmo) or of the
+// conversation (conversacion); rules turn them into a 0–100 score.
+export type BotTarget = 'contacto_inmo' | 'conversacion';
+export const BOT_TARGETS: BotTarget[] = ['contacto_inmo', 'conversacion'];
+
+export interface BotChoice {
+  label: string;   // the quick-reply button (Instagram allows 20 characters)
+  value: string;   // what is saved: an option value for selects, a number for amounts, else the text
+}
+
+export interface BotQuestion {
+  key: string;          // stable id of the question (letters, numbers, _)
+  text: string;
+  entity: BotTarget;
+  field: string;
+  options?: BotChoice[];
+  optional?: boolean;   // «prefiero no» moves on
+}
+
+// gte/lte compare numbers; eq compares the saved value; filled = has any answer.
+export type BotRuleOp = 'gte' | 'lte' | 'eq' | 'filled';
+export const BOT_RULE_OPS: BotRuleOp[] = ['gte', 'lte', 'eq', 'filled'];
+export interface BotRule {
+  entity: BotTarget;
+  field: string;
+  op: BotRuleOp;
+  value?: string | number;
+  points: number;       // −100…100
+}
+
+// agenda: offers free slots of the contacts' availability and books a cita_inmo.
+// reserva: asks dates and guests, checks which tourist flats are free and
+// leaves a «pendiente» booking for a person to confirm (it never charges).
+// humano: thanks and hands over to the team.
+export type BotFinishMode = 'agenda' | 'reserva' | 'humano';
+export const BOT_FINISH_MODES: BotFinishMode[] = ['agenda', 'reserva', 'humano'];
+export type BotTemplate = 'compradores' | 'vendedores' | 'reservas';
+
+export interface BotConfig {
+  enabled: boolean;
+  template?: BotTemplate;   // the template it started from
+  auto?: boolean;           // untouched template: it adapts to the pieces you add
+  keywords: string[];       // words that start it from a comment («INFO», «PISO»…)
+  anyDm: boolean;           // also answer a new direct message without a keyword
+  commentReply?: string;    // public answer under the comment («¡Te escribo por privado!»)
+  welcome: string;          // {nombre} and {negocio} are filled in
+  questions: BotQuestion[];
+  rules: BotRule[];
+  hot: number;              // score ≥ hot → caliente
+  warm: number;             // score ≥ warm → templado; below → frío
+  qualify: number;          // score ≥ qualify → the finish; below → a person follows up
+  finish: { mode: BotFinishMode; citaTipo?: string; text?: string };
+  goodbye: string;
+}
+
 export interface Blueprint {
   version: 1;
   name: string;
@@ -139,6 +199,7 @@ export interface Blueprint {
   modules?: string[]; // module cards in use (see modules.ts)
   sector?: string;    // business template whose extra fields it carries (see sectors.ts)
   logo?: string;      // the app's own logo (small PNG/JPEG/WebP data URL); none = the StateHubs mark
+  bot?: BotConfig;    // the Instagram assistant (piece «Leads de Instagram»)
   entities: Entity[];
   views: View[];      // navigation order = array order
 }

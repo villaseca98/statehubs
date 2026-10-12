@@ -1,6 +1,6 @@
 import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import { cardProposal } from '@shared/blueprint/modules.ts';
-import type { CrmApp, CrmMessage, CrmProposal, CrmVersion, GoogleStatus, IcalSyncResult, crmApi } from './api';
+import type { CrmApp, CrmMessage, CrmProposal, CrmVersion, GoogleStatus, IcalSyncResult, InstagramStatus, crmApi } from './api';
 import { localAgent } from './localAgent';
 
 // Guest mode: the same API as crmApi, kept in this browser (localStorage).
@@ -150,4 +150,9 @@ export const localCrmApi: typeof crmApi = {
   googleDisconnect: needsAccount,
   googleBusy: async () => [],
   googlePush: needsAccount,
+  // Instagram talks to our server, never to a browser: in guest mode only the simulator works.
+  instagram: async (): Promise<InstagramStatus> => ({
+    connected: false,
+    mensaje: 'Conectar tu Instagram necesita una cuenta de StateHubs: los mensajes llegan a nuestro servidor. En modo prueba puedes probar el asistente en el simulador.',
+  }),
 };

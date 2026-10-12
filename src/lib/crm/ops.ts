@@ -23,7 +23,7 @@ export interface OpsLine {
   done?: boolean;
 }
 
-export type AlertKind = 'solape' | 'sin_limpieza' | 'incidencia' | 'cobro' | 'seguimiento';
+export type AlertKind = 'solape' | 'sin_limpieza' | 'incidencia' | 'cobro' | 'seguimiento' | 'confirmar';
 export interface OpsAlert {
   id: string;
   kind: AlertKind;
@@ -34,7 +34,11 @@ export interface OpsAlert {
 
 export interface FunnelStage { value: string; label: string; color?: SelectOption['color']; count: number; amount: number }
 
+// What the Instagram assistant did overnight (from 20:00 yesterday until 09:00 today).
+export interface NightInstagram { leads: number; qualified: number; booked: number; reserved: number; human: number; top: AppRecord[] }
+
 export interface Ops {
+  instagram?: NightInstagram;
   occupancy?: { busy: number; total: number };
   income?: { month: string; gross: number; net: number; bookings: number };
   pipeline?: { open: number; count: number; commission: number };
@@ -58,8 +62,27 @@ const option = (e: Entity | undefined, key: string, value: unknown) => field(e, 
 
 // A booking that holds the flat (a cancelled one doesn't; an owner's block does).
 export const holdsFlat = (r: AppRecord) => r.data.estado !== 'cancelada';
-// A booking with guests in it (not cancelled, not a block).
-export const hasGuests = (r: AppRecord) => r.data.estado !== 'cancelada' && r.data.estado !== 'bloqueo';
+// A booking with guests in it (not cancelled, not a block, not waiting to be confirmed).
+export const hasGuests = (r: AppRecord) => r.data.estado !== 'cancelada' && r.data.estado !== 'bloqueo' && r.data.estado !== 'pendiente';
+// The states of a conversation that mean the assistant got somewhere.
+const QUALIFIED = new Set(['cualificado', 'agendado', 'reservado']);
+
+/** Conversations that started last night (20:00 yesterday → 09:00 today), best first. */
+export function nightInstagram(conversations: AppRecord[], now = new Date()): NightInstagram {
+  const today = dayOf(now);
+  const from = `${addDays(today, -1)}T20:00`;
+  const to = `${today}T09:00`;
+  const rs = conversations.filter((r) => { const t = str(r.data.inicio || r.data.ultima_actividad).slice(0, 16); return t >= from && t < to; });
+  const rank: Record<string, number> = { agendado: 0, reservado: 1, cualificado: 2, humano: 3, en_curso: 4, descartado: 5 };
+  return {
+    leads: rs.length,
+    qualified: rs.filter((r) => QUALIFIED.has(str(r.data.estado))).length,
+    booked: rs.filter((r) => r.data.estado === 'agendado').length,
+    reserved: rs.filter((r) => r.data.estado === 'reservado').length,
+    human: rs.filter((r) => r.data.estado === 'humano').length,
+    top: [...rs].sort((a, b) => (rank[str(a.data.estado)] ?? 9) - (rank[str(b.data.estado)] ?? 9) || num(b.data.puntuacion) - num(a.data.puntuacion)).slice(0, 4),
+  };
+}
 
 /** Ingreso neto de una reserva: importe − comisión del canal − gastos. */
 export const netOf = (r: AppRecord) => num(r.data.importe) - num(r.data.comision) - num(r.data.gastos);
@@ -122,6 +145,7 @@ export function computeOps(bp: Blueprint, records: AppRecord[], now = new Date()
   const contactos = of('contacto_inmo');
   const inmuebles = of('inmueble');
   const out: Ops = { today: [], alerts: [], week: [], featured: [] };
+  if (ent('conversacion')) out.instagram = nightInstagram(of('conversacion'), now);
 
   // ---- KPI ----
   if (E.reserva && E.inmueble && field(E.inmueble, 'operacion')) {
@@ -200,6 +224,11 @@ export function computeOps(bp: Blueprint, records: AppRecord[], now = new Date()
       if (!isDay(r.data.entrada) || str(r.data.entrada).slice(0, 10) > today || (r.data.pago !== 'pendiente' && r.data.pago !== 'parcial')) continue;
       out.alerts.push({ id: `cobro:${r.id}`, kind: 'cobro', record: r, title: `Cobro ${r.data.pago === 'parcial' ? 'parcial' : 'pendiente'}: ${titleOfRecord(E.reserva, r.data)}`, detail: [num(r.data.importe) ? `${num(r.data.importe).toLocaleString('es-ES')} €` : '', name(r.data.alojamiento)].filter(Boolean).join(' · ') });
     }
+  }
+  // Bookings someone asked for (by Instagram or by hand) that nobody has confirmed yet.
+  for (const r of reservas.filter((x) => x.data.estado === 'pendiente')) {
+    if (isDay(r.data.salida) && str(r.data.salida).slice(0, 10) < today) continue;
+    out.alerts.push({ id: `confirmar:${r.id}`, kind: 'confirmar', record: r, title: `Reserva por confirmar: ${titleOfRecord(E.reserva, r.data)}`, detail: [name(r.data.alojamiento), isDay(r.data.entrada) ? `llega el ${Number(str(r.data.entrada).slice(8, 10))}/${Number(str(r.data.entrada).slice(5, 7))}` : '', num(r.data.importe) ? `${num(r.data.importe).toLocaleString('es-ES')} €` : ''].filter(Boolean).join(' · ') });
   }
   for (const r of contactos) {
     const when = str(r.data.seguimiento);

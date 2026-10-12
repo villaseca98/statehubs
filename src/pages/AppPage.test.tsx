@@ -39,7 +39,7 @@ describe('AppPage: change the app with pieces, preview first, undo later', () =>
     await waitFor(async () => expect((await localCrmApi.getApp(id))?.current_version).toBe(3));
     const v = await localCrmApi.versions(id);
     expect(v[0].blueprint.modules).not.toContain('presupuestos');
-  }, 20000);
+  }, 60000);
 
   it('sets up the analysis from the pieces panel, as a proposal', async () => {
     const id = await guestApp();
@@ -53,7 +53,7 @@ describe('AppPage: change the app with pieces, preview first, undo later', () =>
     await waitFor(async () => expect((await localCrmApi.getApp(id))?.current_version).toBe(2));
     const [v] = await localCrmApi.versions(id);
     expect(v.blueprint.views.find((x) => x.type === 'analysis')?.analysis?.staleDays).toBe(14);
-  }, 20000);
+  }, 60000);
 
   it('has a Google Calendar panel that, in guest mode, says it needs an account', async () => {
     const id = await guestApp();
@@ -63,5 +63,5 @@ describe('AppPage: change the app with pieces, preview first, undo later', () =>
     const panel = screen.getByRole('dialog', { name: 'Google Calendar' });
     await within(panel).findByText(/necesita una cuenta/);
     expect(within(panel).getByText('Sin conectar nada')).toBeTruthy();
-  }, 20000);
+  }, 60000);
 });

@@ -1,5 +1,6 @@
-import { ACTION_KINDS, ANALYSIS_LENSES, FIELD_TYPES, OPTION_COLORS, VIEW_TYPES } from './types.ts';
-import type { Availability, Blueprint, Entity, Field, View } from './types.ts';
+import { ACTION_KINDS, ANALYSIS_LENSES, BOT_FINISH_MODES, BOT_RULE_OPS, BOT_TARGETS, FIELD_TYPES, OPTION_COLORS, VIEW_TYPES } from './types.ts';
+import type { Availability, Blueprint, BotConfig, Entity, Field, View } from './types.ts';
+import { BOT_FIELD_TYPES, BOT_RESERVED, agendaReady, norm, reservaReady } from './bot.ts';
 
 const KEY = /^[a-z][a-z0-9_]{0,39}$/;
 const LOGO = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
@@ -109,7 +110,90 @@ export function validateBlueprint(bp: unknown): string[] {
     }
     if ((v.type === 'timeline' || v.type === 'cards') && v.groupBy && fieldOf(ent, v.groupBy)?.type !== 'select') err(`Vista ${v.key}: groupBy debe ser un campo select de ${ent}.`);
   }
+  if (b.bot !== undefined) checkBot(b, entities, err);
   return errors;
+}
+
+const NUMBER_TYPES = new Set(['number', 'money', 'percent']);
+const isText = (v: unknown, min: number, max: number) => typeof v === 'string' && v.trim().length >= min && v.length <= max;
+const isInt = (v: unknown, min: number, max: number) => Number.isInteger(v) && (v as number) >= min && (v as number) <= max;
+
+// The Instagram assistant. Its shape is always checked; what it points at only
+// while it is switched on, so taking the piece away keeps it, switched off.
+function checkBot(b: Blueprint, entities: Map<string, Entity>, err: (m: string) => void) {
+  const bot = b.bot as BotConfig;
+  const W = 'Asistente de Instagram';
+  if (!bot || typeof bot !== 'object') { err(`${W}: bot debe ser un objeto.`); return; }
+  if (typeof bot.enabled !== 'boolean') err(`${W}: enabled es true o false.`);
+  if (typeof bot.anyDm !== 'boolean') err(`${W}: anyDm es true o false.`);
+  if (bot.template !== undefined && !['compradores', 'vendedores', 'reservas'].includes(bot.template)) err(`${W}: template no existe.`);
+  if (bot.auto !== undefined && typeof bot.auto !== 'boolean') err(`${W}: auto es true o false.`);
+  if (!Array.isArray(bot.keywords) || bot.keywords.length > 20) err(`${W}: keywords es una lista de hasta 20 palabras.`);
+  else {
+    const seen = new Set<string>();
+    for (const k of bot.keywords) {
+      if (!isText(k, 2, 30)) { err(`${W}: cada palabra clave tiene entre 2 y 30 letras.`); continue; }
+      if (seen.has(norm(k))) err(`${W}: palabra clave repetida «${k}».`);
+      seen.add(norm(k));
+    }
+  }
+  if (bot.commentReply !== undefined && !isText(bot.commentReply, 0, 300)) err(`${W}: la respuesta al comentario tiene como mucho 300 caracteres.`);
+  if (!isText(bot.welcome, 1, 600)) err(`${W}: el mensaje de bienvenida es obligatorio (máx. 600 caracteres).`);
+  if (!isText(bot.goodbye ?? '', 0, 400)) err(`${W}: la despedida tiene como mucho 400 caracteres.`);
+  for (const k of ['hot', 'warm', 'qualify'] as const) if (!isInt(bot[k], 0, 100)) err(`${W}: ${k} es un número de 0 a 100.`);
+  if (isInt(bot.hot, 0, 100) && isInt(bot.warm, 0, 100) && bot.warm > bot.hot) err(`${W}: «templado desde» no puede ser mayor que «caliente desde».`);
+  if (!bot.finish || !BOT_FINISH_MODES.includes(bot.finish.mode)) err(`${W}: finish.mode es ${BOT_FINISH_MODES.join(', ')}.`);
+  else if (bot.finish.text !== undefined && !isText(bot.finish.text, 0, 400)) err(`${W}: el mensaje final tiene como mucho 400 caracteres.`);
+  if (!Array.isArray(bot.questions) || bot.questions.length > 10) { err(`${W}: questions es una lista de hasta 10 preguntas.`); return; }
+  if (!Array.isArray(bot.rules) || bot.rules.length > 15) { err(`${W}: rules es una lista de hasta 15 reglas.`); return; }
+  if (!bot.enabled) return;
+
+  if (!entities.has('conversacion') || !entities.has('contacto_inmo')) { err(`${W}: necesita la pieza «Leads de Instagram» (conversaciones y contactos).`); return; }
+  const target = (t: unknown) => (BOT_TARGETS.includes(t as never) ? entities.get(t as string) : undefined);
+  const keys = new Set<string>();
+  bot.questions.forEach((q, i) => {
+    const where = `${W}, pregunta ${i + 1}`;
+    if (!q || typeof q !== 'object') { err(`${where}: está vacía.`); return; }
+    if (!KEY.test(q.key ?? '')) err(`${where}: key no válida.`);
+    else if (keys.has(q.key)) err(`${where}: key repetida ${q.key}.`);
+    keys.add(q.key);
+    if (!isText(q.text, 1, 300)) err(`${where}: el texto es obligatorio (máx. 300 caracteres).`);
+    const e = target(q.entity);
+    if (!e) { err(`${where}: entity es ${BOT_TARGETS.join(' o ')}.`); return; }
+    const f = e.fields.find((x) => x.key === q.field);
+    if (!f) { err(`${where}: «${q.field}» no es un campo de ${e.labelPlural}.`); return; }
+    if (!BOT_FIELD_TYPES.includes(f.type)) err(`${where}: no puede guardar en «${f.label}» (${f.type}).`);
+    if (BOT_RESERVED[q.entity].includes(f.key)) err(`${where}: «${f.label}» lo rellena el asistente solo.`);
+    if (q.options !== undefined) {
+      if (!Array.isArray(q.options) || q.options.length > 8) { err(`${where}: hasta 8 respuestas rápidas.`); return; }
+      const labels = new Set<string>();
+      for (const o of q.options) {
+        if (!isText(o?.label, 1, 20)) err(`${where}: cada respuesta rápida tiene entre 1 y 20 caracteres (lo pide Instagram).`);
+        else if (labels.has(norm(o.label))) err(`${where}: respuesta rápida repetida «${o.label}».`);
+        labels.add(norm(o?.label ?? ''));
+        if (!isText(o?.value, 1, 200)) err(`${where}: cada respuesta rápida necesita value.`);
+        else if (f.type === 'select' && !f.options?.some((x) => x.value === o.value)) err(`${where}: «${o.value}» no es una opción de «${f.label}».`);
+        else if (NUMBER_TYPES.has(f.type) && !Number.isFinite(Number(o.value))) err(`${where}: «${o.label}» necesita un número en value.`);
+      }
+    }
+  });
+  bot.rules.forEach((r, i) => {
+    const where = `${W}, regla ${i + 1}`;
+    const e = target(r?.entity);
+    const f = e?.fields.find((x) => x.key === r.field);
+    if (!e || !f) { err(`${where}: el campo no existe.`); return; }
+    if (!BOT_RULE_OPS.includes(r.op)) err(`${where}: op es ${BOT_RULE_OPS.join(', ')}.`);
+    if ((r.op === 'gte' || r.op === 'lte') && (!NUMBER_TYPES.has(f.type) || !Number.isFinite(Number(r.value)))) err(`${where}: «mayor o menor que» necesita un campo numérico y un número.`);
+    if (r.op === 'eq' && (r.value === undefined || r.value === '')) err(`${where}: «es» necesita un valor.`);
+    if (r.op === 'eq' && f.type === 'select' && !f.options?.some((o) => o.value === String(r.value))) err(`${where}: «${r.value}» no es una opción de «${f.label}».`);
+    if (!isInt(r.points, -100, 100)) err(`${where}: los puntos van de −100 a 100.`);
+  });
+  if (bot.finish?.mode === 'agenda') {
+    if (!agendaReady(b)) err(`${W}: para dar cita hace falta la Agenda y horario en la lista de Contactos.`);
+    const tipo = entities.get('cita_inmo')?.fields.find((f) => f.key === 'tipo');
+    if (bot.finish.citaTipo && tipo && !tipo.options?.some((o) => o.value === bot.finish.citaTipo)) err(`${W}: el tipo de cita «${bot.finish.citaTipo}» no existe.`);
+  }
+  if (bot.finish?.mode === 'reserva' && !reservaReady(b)) err(`${W}: para guardar reservas hacen falta Inmuebles y Reservas con el estado «pendiente».`);
 }
 
 function checkOptions(entity: string, f: Field, err: (m: string) => void) {
@@ -126,7 +210,7 @@ function checkOptions(entity: string, f: Field, err: (m: string) => void) {
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 const minutes = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
-const ACTION_FIELD: Record<string, string[]> = { call: ['phone'], whatsapp: ['phone'], email: ['email'], schedule: ['datetime'], launch: ['longtext'], webhook: ['url'] };
+const ACTION_FIELD: Record<string, string[]> = { call: ['phone'], whatsapp: ['phone'], email: ['email'], schedule: ['datetime'], launch: ['longtext'], webhook: ['url'], link: ['url'] };
 
 function checkWorklist(v: View, e: Entity, entities: Map<string, Entity>, err: (m: string) => void) {
   const where = `Vista ${v.key}`;

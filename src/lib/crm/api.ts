@@ -19,6 +19,9 @@ export const GOOGLE_NOT_CONFIGURED = 'Falta configurar Google en el servidor';
 export interface GoogleStatus { available: boolean; configured: boolean; connected: boolean; email?: string; mensaje?: string }
 // What a push did to the event of a record.
 export interface GooglePushResult { estado: 'creado' | 'actualizado' | 'quitado' | 'sin_fecha'; enlace?: string }
+// The Instagram account behind the assistant (crm-instagram). The token never leaves the server.
+export interface InstagramStatus { connected: boolean; username?: string | null; expires_at?: string | null; configured?: boolean; url?: string; mensaje?: string }
+export type InstagramAction = 'status' | 'connect' | 'disconnect';
 export interface CrmProposal {
   id: string; base_version: number | null; blueprint: Blueprint; summary: string; changes: Change[];
   samples: { entity: string; data: RecordData; id?: string }[]; status: 'pending' | 'applied' | 'discarded'; created_at: string;
@@ -63,6 +66,8 @@ export const crmApi = {
   googleDisconnect: () => invokeFunction<GoogleStatus>('crm-google', { action: 'disconnect' }),
   googleBusy: async (from: string, to: string) => (await invokeFunction<{ busy: BusyInterval[] }>('crm-google', { action: 'busy', from, to })).busy,
   googlePush: (appId: string, recordId: string) => invokeFunction<GooglePushResult>('crm-google', { action: 'push', app_id: appId, record_id: recordId }),
+  // Connects the Instagram account (OAuth on the server) or says how it is.
+  instagram: (appId: string, action: InstagramAction) => invokeFunction<InstagramStatus>('crm-instagram', { app_id: appId, action, origin: window.location.origin }),
 };
 
 function invokeAgent(body: Record<string, unknown>): Promise<{ message: CrmMessage; proposal: CrmProposal | null }> {

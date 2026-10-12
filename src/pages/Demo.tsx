@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Home } from 'lucide-react';
+import { ArrowRight, Home, MessagesSquare } from 'lucide-react';
 import { composePack, PACKS, sampleRecordsFor } from '@shared/blueprint/modules.ts';
 import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import { Workspace } from '@/components/crm/Workspace';
+import { InstagramSetup } from '@/components/crm/InstagramSetup';
 
 // Public demo: no account, everything in memory. The same agency three ways
 // (sales, tourist rentals, both), every record marked as an example.
@@ -18,6 +19,7 @@ export default function Demo() {
   const [key, setKey] = useState(APPS[0].key);
   const app = APPS.find((a) => a.key === key)!;
   const [records, setRecords] = useState<AppRecord[]>(app.records);
+  const [instagram, setInstagram] = useState(false);
 
   useEffect(() => { document.title = 'Demo · StateHubs'; }, []);
   useEffect(() => { setRecords(app.records); }, [app]);
@@ -46,8 +48,10 @@ export default function Demo() {
       <Workspace key={app.key} blueprint={app.blueprint} records={records} banner={bar} className="h-full"
         onCreate={create} onUpdate={update} onDelete={remove}
         tools={[
+          { key: 'instagram', label: 'Instagram', icon: MessagesSquare, onClick: () => setInstagram(true), active: instagram },
           { key: 'inicio', label: 'Volver a la portada', icon: Home, onClick: () => { window.location.href = '/'; } },
         ]} />
+      {instagram && <InstagramSetup blueprint={app.blueprint} live={app.blueprint} records={records} onCreate={create} onUpdate={update} onClose={() => setInstagram(false)} guest />}
     </div>
   );
 }

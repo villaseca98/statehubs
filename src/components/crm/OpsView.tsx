@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { AlertTriangle, ArrowRight, ArrowUpRight, BedDouble, CalendarDays, CheckCircle2, Coins, Flame, KeyRound, LogIn, LogOut, MessageCircle, Phone, Sparkles, Wallet } from 'lucide-react';
+import { AlertTriangle, ArrowRight, ArrowUpRight, BedDouble, CalendarDays, CheckCircle2, Coins, Flame, KeyRound, LogIn, LogOut, MessageCircle, MessagesSquare, Moon, Phone, Sparkles, Wallet } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { AppRecord, Blueprint } from '@shared/blueprint/types.ts';
 import { computeOps } from '@/lib/crm/ops';
-import type { AlertKind, OpsKind, OpsLine } from '@/lib/crm/ops';
+import type { AlertKind, NightInstagram, OpsKind, OpsLine } from '@/lib/crm/ops';
 import { itemsOn, matchesFor, monthOccupancy, monthlySeries, weekDays } from '@/lib/crm/estate';
 import type { DayItem, MonthPoint } from '@/lib/crm/estate';
 import { dayOf } from '@/lib/crm/today';
@@ -37,6 +37,7 @@ const ALERT: Record<AlertKind, { icon: LucideIcon; color: string }> = {
   incidencia: { icon: AlertTriangle, color: '#b42318' },
   cobro: { icon: Coins, color: '#9a6a07' },
   seguimiento: { icon: Flame, color: '#c2410c' },
+  confirmar: { icon: CalendarDays, color: '#a15c07' },
 };
 const DAY_KIND: Record<DayItem['kind'], string> = { cita: 'Visita o cita', llegada: 'Llegada', salida: 'Salida', servicio: 'Servicio' };
 
@@ -266,6 +267,8 @@ export function OpsView({ blueprint, records, onOpen, now }: { blueprint: Bluepr
           </span>
         )}
       </header>
+
+      {ops.instagram && <NightCard night={ops.instagram} blueprint={blueprint} onOpen={onOpen} />}
 
       <section aria-label="Cifras del día" className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {ops.occupancy && (
@@ -525,5 +528,47 @@ export function OpsView({ blueprint, records, onOpen, now }: { blueprint: Bluepr
         </div>
       )}
     </div>
+  );
+}
+
+// «Esta noche por Instagram»: what the assistant left done while everyone slept.
+function NightCard({ night, blueprint, onOpen }: { night: NightInstagram; blueprint: Blueprint; onOpen: (r: AppRecord) => void }) {
+  const conv = blueprint.entities.find((e) => e.key === 'conversacion');
+  const estado = conv?.fields.find((f) => f.key === 'estado');
+  const n = (k: number, one: string, many: string) => `${k} ${k === 1 ? one : many}`;
+  const parts = [n(night.qualified, 'cualificado', 'cualificados'), n(night.booked, 'agendado', 'agendados'), ...(night.reserved ? [n(night.reserved, 'reserva', 'reservas')] : [])];
+  return (
+    <section aria-label="Esta noche por Instagram" className="relative overflow-hidden" style={{ ...card, padding: '16px 16px 14px' }}>
+      <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: 'linear-gradient(180deg, var(--crm-primary), var(--crm-accent))' }} />
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-1">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full" style={{ background: 'var(--crm-primary)', color: 'var(--crm-accent)' }}><Moon className="h-[18px] w-[18px]" /></span>
+        <h2 className="min-w-0 flex-1 text-[1.08em] font-semibold leading-snug">
+          {night.leads
+            ? <>Esta noche por Instagram: {n(night.leads, 'lead', 'leads')}, {parts.length > 1 ? `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}` : parts[0]}.</>
+            : 'Esta noche no ha entrado nadie por Instagram.'}
+        </h2>
+        {night.human > 0 && <span className="rounded-full px-2 py-0.5 text-[0.82em] font-medium" style={chipStyle('amber', false)}>{n(night.human, 'espera', 'esperan')} a una persona</span>}
+      </div>
+      {night.top.length > 0 && (
+        <ul className="mt-3 grid gap-1.5 sm:grid-cols-2">
+          {night.top.map((r) => {
+            const o = estado?.options?.find((x) => x.value === r.data.estado);
+            const user = String(r.data.usuario ?? '');
+            return (
+              <li key={r.id} className="min-w-0">
+                <button onClick={() => onOpen(r)} className="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition hover:bg-[color:var(--crm-bg)]">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[0.85em] font-semibold" style={{ background: 'var(--crm-soft)', color: 'var(--crm-primary)' }}>{(String(r.data.nombre || user.slice(1)) || '?').charAt(0).toUpperCase()}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2"><span className="truncate font-medium">{user}</span>{o && <span className="shrink-0 rounded-full px-1.5 text-[0.78em] font-medium" style={chipStyle(o.color, false)}>{o.label}</span>}</span>
+                    <span className="block truncate text-[0.86em]" style={{ color: 'var(--crm-muted)' }}>{String(r.data.resumen ?? '')}</span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <p className="mt-2 flex items-center gap-1.5 pl-1 text-[0.82em]" style={{ color: 'var(--crm-muted)' }}><MessagesSquare className="h-3.5 w-3.5" /> Las ves todas en la Bandeja de Instagram.</p>
+    </section>
   );
 }

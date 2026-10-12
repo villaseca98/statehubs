@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { composeApp, composePack } from '@shared/blueprint/modules.ts';
 import type { AppRecord } from '@shared/blueprint/types.ts';
-import { computeOps, findOverlaps, monthIncome, netOf, occupancy } from './ops';
+import { computeOps, findOverlaps, monthIncome, netOf, nightInstagram, occupancy } from './ops';
+import { sampleRecordsFor } from '@shared/blueprint/modules.ts';
 import { dayOf } from './today';
 
 const now = new Date('2026-10-12T09:00:00');
@@ -108,5 +109,33 @@ describe('Centro de operaciones: cálculos', () => {
     expect(ops.funnel).toBeUndefined();
     expect(ops.hot).toBeUndefined();
     expect(ops.alerts).toEqual([]);
+  });
+
+  it('counts last night on Instagram: from 20:00 yesterday to 09:00 today, best first', () => {
+    const c = (id: string, inicio: string, estado: string, puntuacion = 0) => rec(id, 'conversacion', { usuario: `@${id}`, inicio, estado, puntuacion });
+    const night = nightInstagram([
+      c('a', at(-1, '21:30'), 'agendado', 90),
+      c('b', at(0, '01:10'), 'reservado', 80),
+      c('c', at(0, '02:00'), 'cualificado', 60),
+      c('d', at(-1, '23:00'), 'humano'),
+      c('e', at(0, '03:00'), 'en_curso'),
+      c('f', at(-1, '19:59'), 'agendado'),   // before the night
+      c('g', at(0, '09:00'), 'agendado'),    // this morning, after it
+      c('h', at(-2, '23:00'), 'agendado'),   // the night before
+    ], now);
+    expect(night).toMatchObject({ leads: 5, qualified: 3, booked: 1, reserved: 1, human: 1 });
+    expect(night.top.map((r) => r.id)).toEqual(['a', 'b', 'c', 'd']);
+  });
+
+  it('the operations centre tells the night and asks to confirm bookings nobody has confirmed', () => {
+    const bp = composePack('ambos', 'Agencia');
+    const ops = computeOps(bp, sampleRecordsFor(bp), new Date());
+    expect(ops.instagram).toMatchObject({ leads: 12, qualified: 7, booked: 4, reserved: 2 });
+    expect(ops.alerts.filter((a) => a.kind === 'confirmar').map((a) => a.record.data.huesped)).toEqual(['Sophie Martin']);
+    // A booking waiting to be confirmed holds the flat but isn't income yet.
+    const pending = res('p', 'f1', 0, 2, { estado: 'pendiente', importe: 300 });
+    expect(monthIncome([pending], at(0).slice(0, 7)).gross).toBe(0);
+    expect(findOverlaps([pending, res('q', 'f1', 1, 3)])).toHaveLength(1);
+    expect(computeOps(composeApp('crm', 'X', ['leads']), [], now).instagram).toBeUndefined();
   });
 });
