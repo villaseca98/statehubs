@@ -13,6 +13,8 @@ export interface LookColors {
   navBg: string;
   navText: string;
   navActive: string;
+  soft: string;    // tinted background for chips, active rows and progress tracks
+  accent: string;  // the second colour of charts (a soft lime)
 }
 
 export interface Look {
@@ -23,9 +25,23 @@ export interface Look {
 
 export const LOOK: Look = {
   density: 'comfortable',
-  radius: 14,
+  radius: 18,
+  // Forest green on warm cream: the look of a real-estate brand, not of a tool.
   colors: {
-    bg: '#f4f7f1', surface: '#ffffff', border: '#e0e8de', text: '#1c2d23', muted: '#6b7b70',
-    primary: '#557b5d', primaryText: '#ffffff', navBg: '#173b2b', navText: '#c9d8cc', navActive: '#ffffff',
+    bg: '#f3f1eb', surface: '#ffffff', border: '#e7e3d9', text: '#15231b', muted: '#6b746d',
+    primary: '#1f5c45', primaryText: '#ffffff', navBg: '#ffffff', navText: '#4b554e', navActive: '#1f5c45',
+    soft: '#e8f1ec', accent: '#e4ec7c',
   },
 };
+
+// The same look at night: deep green-black, raised surfaces, soft borders
+// and text that reads without glare.
+export const LOOK_DARK: LookColors = {
+  bg: '#0c1410', surface: '#141f19', border: '#243229', text: '#e9eee9', muted: '#9ca89f',
+  primary: '#3f9e78', primaryText: '#ffffff', navBg: '#101a14', navText: '#b3beb6', navActive: '#ffffff',
+  soft: '#1b2c23', accent: '#d5df63',
+};
+
+// The brand colours of the logo («Capas de estado»): a red-to-pink gradient.
+// `red` is the solid version used for buttons; `light` reads well on dark.
+export const BRAND = { from: '#ff5a36', to: '#ff2d87', red: '#e5304a', light: '#ff7a8c', ink: '#0b1020' } as const;

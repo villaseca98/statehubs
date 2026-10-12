@@ -1,27 +1,22 @@
-import { DEMO_APPS } from '@shared/blueprint/samples.ts';
-import type { DemoApp } from '@shared/blueprint/samples.ts';
-import { MODULES, addModule, cardProposal, removeModule } from '@shared/blueprint/modules.ts';
-import { diffBlueprints } from '@shared/blueprint/diff.ts';
+import { MODULES, PACKS, addModule, cardProposal, composePack, removeModule } from '@shared/blueprint/modules.ts';
+import type { PackKey } from '@shared/blueprint/modules.ts';
 import type { Blueprint } from '@shared/blueprint/types.ts';
 import type { Proposal } from '@shared/blueprint/agent.ts';
 
 // Stand-in for the AI in guest mode (no account, no server). It starts from
-// the closest ready-made app and can put pieces on or take them off by name
-// («añade facturas», «quita soporte»); anything else needs the real
-// assistant, and it says so plainly instead of pretending.
+// the agency pack that fits what the person tells it and can put pieces on
+// or take them off by name («añade documentación», «quita equipo»); anything
+// else needs the real assistant, and it says so plainly instead of pretending.
 
-const SECTORS: [string, RegExp][] = [
-  ['inmobiliaria', /inmobil|piso|vivienda|alquiler|inmueble|comprador/i],
-  ['clinica', /cl[ií]nica|paciente|dental|fisio|m[eé]dic|cita|consulta|est[eé]tica|veterin/i],
-  ['distribucion', /pedido|almac[eé]n|stock|factur|distribu|erp|inventario|proveedor|producto/i],
-  ['agencia', /agencia|proyecto|marketing|dise[nñ]o|consultor|horas|cliente/i],
-];
+const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const TOURIST = /turistic|airbnb|booking|vacacional|apartamento|huesped|reserva|limpieza/;
+const SALES = /vend|compr|capta|venta|traspaso|inversor|hipoteca|alquiler de larga|larga estancia/;
 
-const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-
-export function pickTemplate(message: string): DemoApp {
-  const hit = SECTORS.find(([, re]) => re.test(message));
-  return DEMO_APPS.find((a) => a.key === hit?.[0]) ?? DEMO_APPS[0];
+export function pickPack(message: string): PackKey {
+  const m = norm(message);
+  const tourist = TOURIST.test(m);
+  const sales = SALES.test(m);
+  return tourist && !sales ? 'turistico' : sales && !tourist ? 'compraventa' : 'ambos';
 }
 
 export function findModule(message: string) {
@@ -31,16 +26,12 @@ export function findModule(message: string) {
 
 export function localAgent(message: string, current: Blueprint | null): { reply: string; proposal: Proposal | null } {
   if (!current) {
-    const t = pickTemplate(message);
-    const blueprint: Blueprint = JSON.parse(JSON.stringify(t.blueprint));
+    const pack = PACKS.find((p) => p.key === pickPack(message))!;
+    const made = cardProposal(null, composePack(pack.key, 'Mi inmobiliaria'), () => `local-r-${Math.random().toString(36).slice(2)}`);
+    if ('errors' in made) return { reply: `No he podido prepararlo: ${made.errors[0]}`, proposal: null };
     return {
-      reply: `Modo prueba: te preparo la plantilla de ${t.sector.toLowerCase()} como punto de partida. ${t.pitch}`,
-      proposal: {
-        summary: `Plantilla de ${t.sector.toLowerCase()}`,
-        blueprint,
-        changes: diffBlueprints(null, blueprint),
-        samples: t.records.map((r) => ({ entity: r.entity, data: r.data, id: r.id })) as Proposal['samples'],
-      },
+      reply: `Modo prueba: te preparo StateHubs para ${pack.name.toLowerCase()} como punto de partida, con datos de ejemplo. ${pack.pitch}`,
+      proposal: { ...made.proposal, summary: `StateHubs para ${pack.name.toLowerCase()}` },
     };
   }
   const mod = findModule(message);

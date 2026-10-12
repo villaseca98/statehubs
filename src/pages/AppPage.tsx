@@ -1,33 +1,46 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Box, Check, Eye, History, Home, Loader2, Minus, Pencil, Plus, Puzzle, Send, Sparkles, X } from 'lucide-react';
+import { CalendarCheck, Check, Eye, History, Home, Loader2, MessagesSquare, Minus, Pencil, Plus, Puzzle, Send, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 import { useToast } from '@/lib/toast';
-import { crmApi } from '@/lib/crm/api';
-import type { CrmApp, CrmMessage, CrmProposal, CrmVersion } from '@/lib/crm/api';
+import { crmApi, GOOGLE_NOT_CONFIGURED } from '@/lib/crm/api';
+import type { CrmApp, CrmMessage, CrmProposal, CrmVersion, GooglePushResult, GoogleStatus } from '@/lib/crm/api';
 import { isLocalApp, localCrmApi } from '@/lib/crm/localApi';
 import { resultPatch, runAutomations } from '@/lib/crm/automations';
 import { Workspace } from '@/components/crm/Workspace';
+import { GoogleCalendarPanel } from '@/components/crm/GoogleCalendarPanel';
+import { GoogleCalendarContext } from '@/components/crm/googleCalendarContext';
+import type { GoogleCalendarActions } from '@/components/crm/googleCalendarContext';
+import { patchMovesAppointment } from '@/lib/crm/calendar';
 import type { Tool } from '@/components/crm/Workspace';
 import { ModuleCards } from '@/components/crm/ModuleCards';
 import { AnalysisSetup } from '@/components/crm/AnalysisSetup';
-import { Presentation3D } from '@/components/crm/Presentation3D';
+import { InstagramSetup } from '@/components/crm/InstagramSetup';
+import type { InstagramAction } from '@/lib/crm/api';
+import { LogoSetup } from '@/components/brand/LogoSetup';
 import { makeTitleLookup } from '@/components/crm/theme';
-import { addModule, modulesFor, otherModules, removeModule } from '@shared/blueprint/modules.ts';
+import { addModule, agencyModules, extraModules, removeModule } from '@shared/blueprint/modules.ts';
 import { AUTOMATION_ENTITY } from '@shared/blueprint/automations.ts';
 import type { HookEvent } from '@shared/blueprint/automations.ts';
 import { DEFAULT_ANALYSIS, withAnalysis } from '@shared/blueprint/analysis.ts';
 import type { AnalysisConfig, AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import type { Change } from '@shared/blueprint/diff.ts';
+import { syncSummaryText } from '@shared/blueprint/ical.ts';
+import type { BusyInterval } from '@shared/blueprint/slots.ts';
 
 // One app, open: the workspace for daily work, and three side panels to
 // change it (pieces, the AI, history). Every change arrives as a proposal you
 // can preview over your own data, apply, discard or undo later.
 
-type Panel = 'piezas' | 'ia' | 'historial' | null;
+type Panel = 'piezas' | 'ia' | 'historial' | 'google' | 'instagram' | null;
 const CHANGE_ICON = { add: Plus, remove: Minus, change: Pencil };
 const CHANGE_COLOR = { add: 'text-emerald-600', remove: 'text-red-600', change: 'text-amber-600' };
+// How far ahead the busy hours of Google Calendar are read (booking shows the next working days).
+const BUSY_DAYS = 21;
+const GOOGLE_DONE: Record<GooglePushResult['estado'], string | null> = {
+  creado: 'Cita guardada en tu Google Calendar', actualizado: 'Cita movida en tu Google Calendar', quitado: 'Cita quitada de tu Google Calendar', sin_fecha: null,
+};
 
 function ChangeList({ changes }: { changes: Change[] }) {
   return (
@@ -79,12 +92,15 @@ export default function AppPage() {
   const [applying, setApplying] = useState(false);
   const [preview, setPreview] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
-  const [show3d, setShow3d] = useState(false);
   const [draft, setDraft] = useState('');
+  const [google, setGoogle] = useState<GoogleStatus | null>(null);
+  const [googleBusy, setGoogleBusy] = useState<BusyInterval[]>([]);
+  const [googleWorking, setGoogleWorking] = useState(false);
   const sentFirst = useRef(false);
   const chatEnd = useRef<HTMLDivElement>(null);
 
   const fail = useCallback((e: unknown) => toast({ title: 'Algo ha fallado', description: (e as Error).message, error: true }), [toast]);
+  const instagramAccount = useCallback((action: InstagramAction) => api.instagram(appId, action), [api, appId]);
 
   const load = useCallback(async () => {
     const [a, v, m, p, r] = await Promise.all([api.getApp(appId), api.versions(appId), api.messages(appId), api.pendingProposal(appId), api.records(appId)]);
@@ -99,6 +115,13 @@ export default function AppPage() {
       setLoading(false);
       if (!a) return;
       document.title = `${a.name} · StateHubs`;
+      // Back from connecting Instagram (crm-instagram sends ?instagram=conectado|cancelado|error).
+      const ig = new URLSearchParams(location.search).get('instagram');
+      if (ig) {
+        navigate(location.pathname, { replace: true, state: location.state });
+        setPanel('instagram');
+        toast(ig === 'conectado' ? { title: 'Instagram conectado', description: 'El asistente ya contesta a tu cuenta.' } : { title: 'Instagram no se ha conectado', description: ig === 'cancelado' ? 'Has cancelado en Instagram.' : 'Prueba otra vez; si sigue fallando, revisa que la cuenta sea profesional.', error: ig !== 'cancelado' });
+      }
       const first = (location.state as { firstMessage?: string } | null)?.firstMessage;
       if (first && m.length === 0 && !sentFirst.current) {
         sentFirst.current = true;
@@ -112,8 +135,32 @@ export default function AppPage() {
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, thinking, panel]);
 
+  // Google Calendar: where the connection stands, and the way back from Google's consent screen.
+  const googleUnreachable = (e: unknown): GoogleStatus => ({ available: true, configured: false, connected: false, mensaje: `${GOOGLE_NOT_CONFIGURED}: la función crm-google no responde (${(e as Error).message}).` });
+  useEffect(() => {
+    if (!local && (authLoading || !user)) return;
+    const q = new URLSearchParams(location.search);
+    const code = q.get('google_code'), state = q.get('google_state'), cancelled = q.get('google_error');
+    if (code || cancelled) navigate(location.pathname, { replace: true });
+    if (code && state) {
+      setPanel('google');
+      api.googleFinish(code, state).then((s) => { setGoogle(s); toast({ title: 'Google Calendar conectado', description: s.email ? `Con ${s.email}.` : undefined }); },
+        (e) => { fail(e); api.googleStatus().then(setGoogle, (x) => setGoogle(googleUnreachable(x))); });
+      return;
+    }
+    if (cancelled) { setPanel('google'); toast({ title: 'No se ha conectado Google Calendar', description: cancelled === 'cancelado' ? 'Has cancelado el permiso.' : 'Google no ha dado el permiso.', error: true }); }
+    api.googleStatus().then(setGoogle, (e) => setGoogle(googleUnreachable(e)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user, appId]);
+
+  const refreshBusy = useCallback(() => {
+    const from = new Date();
+    const to = new Date(from.getTime() + BUSY_DAYS * 86_400_000);
+    api.googleBusy(from.toISOString(), to.toISOString()).then(setGoogleBusy, () => setGoogleBusy([]));
+  }, [api]);
+  useEffect(() => { if (google?.connected) refreshBusy(); else setGoogleBusy([]); }, [google?.connected, refreshBusy]);
+
   const current = versions.find((v) => v.version === app?.current_version) ?? null;
-  const kind = current?.blueprint.kind ?? proposal?.blueprint.kind ?? 'crm';
   const previewRecords = useMemo<AppRecord[]>(() => {
     if (!proposal) return records;
     return [...records, ...proposal.samples.map((s, i) => ({ id: s.id ?? `muestra-${i}`, entity: s.entity, data: s.data, is_sample: true }))];
@@ -142,6 +189,14 @@ export default function AppPage() {
     const base = proposal?.blueprint ?? current?.blueprint;
     if (!base || thinking) return;
     await proposeBlueprint(base.modules?.includes(key) ? removeModule(base, key) : addModule(base, key));
+  }
+
+  async function setLogo(logo: string | undefined) {
+    const base = proposal?.blueprint ?? current?.blueprint;
+    if (!base || thinking) return;
+    const next = { ...base };
+    if (logo) next.logo = logo; else delete next.logo;
+    await proposeBlueprint(next);
   }
 
   async function setAnalysis(config: AnalysisConfig) {
@@ -213,6 +268,7 @@ export default function AppPage() {
       const r = await api.createRecord(appId, entity, data);
       setRecords((rs) => [...rs, r]);
       if (hasTitle(entity, data)) automateQuietly(r, 'alta', null); else pendingNew.current.add(r.id);
+      if (google?.connected && current && patchMovesAppointment(current.blueprint, entity, data)) pushQuietly(r);
       return r;
     } catch (e) { fail(e); }
   };
@@ -222,6 +278,7 @@ export default function AppPage() {
     const data = { ...prev.data, ...patch };
     setRecords((rs) => rs.map((r) => (r.id === id ? { ...r, data } : r)));
     api.updateRecord(id, data).then(() => {
+      if (google?.connected && current && patchMovesAppointment(current.blueprint, prev.entity, patch)) pushQuietly({ ...prev, data });
       if (!pendingNew.current.has(id)) automateQuietly({ ...prev, data }, 'cambio', prev.data);
       else if (hasTitle(prev.entity, data)) { pendingNew.current.delete(id); automateQuietly({ ...prev, data }, 'alta', null); }
     }, (e) => { fail(e); setRecords((rs) => rs.map((r) => (r.id === id ? prev : r))); });
@@ -231,11 +288,38 @@ export default function AppPage() {
     setRecords((rs) => rs.filter((r) => r.id !== id));
     api.deleteRecord(id).catch((e) => { fail(e); setRecords(prev); });
   };
+  // Airbnb/Booking calendars (iCal), read on the server; guest mode says it needs an account.
+  const syncIcal = async () => {
+    const res = await api.syncIcal(appId);
+    if (res.nuevas + res.actualizadas + res.canceladas > 0) setRecords(await api.records(appId));
+    return syncSummaryText(res);
+  };
   const testWebhook = async (r: AppRecord) => (await automate(r, 'prueba', null)).join(' · ') || 'No hay nada que probar.';
   const clearSamples = async () => {
     if (!window.confirm('¿Quitar todos los datos de ejemplo? Tus datos reales no se tocan.')) return;
     try { await api.clearSamples(appId); setRecords(await api.records(appId)); } catch (e) { fail(e); }
   };
+
+  const connectGoogle = async () => {
+    setGoogleWorking(true);
+    try { window.location.assign((await api.googleConnect(`${window.location.origin}/app/${appId}`)).url); } catch (e) { fail(e); setGoogleWorking(false); }
+  };
+  const disconnectGoogle = async () => {
+    if (!window.confirm('¿Desconectar tu Google Calendar? Los eventos que ya están en tu calendario se quedan.')) return;
+    setGoogleWorking(true);
+    try { setGoogle(await api.googleDisconnect()); toast({ title: 'Google Calendar desconectado' }); } catch (e) { fail(e); } finally { setGoogleWorking(false); }
+  };
+  const pushToGoogle = async (r: AppRecord) => {
+    const res = await api.googlePush(appId, r.id);
+    refreshBusy();
+    return res;
+  };
+  // Agendar o mover una cita la lleva sola al calendario; si falla, se dice.
+  const pushQuietly = (r: AppRecord) => {
+    pushToGoogle(r).then((res) => { const t = GOOGLE_DONE[res.estado]; if (t) toast({ title: t }); },
+      (e) => toast({ title: 'No se pudo guardar en Google Calendar', description: (e as Error).message, error: true }));
+  };
+  const googleActions: GoogleCalendarActions | null = google?.connected && !previewing ? { connected: true, busy: googleBusy, push: pushToGoogle } : null;
 
   if (loading) return <div className="flex h-screen items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
   if (!app) return <div className="flex h-screen flex-col items-center justify-center gap-3"><p>No encontramos esta aplicación.</p><Link to="/" className="text-primary underline">Volver</Link></div>;
@@ -243,9 +327,10 @@ export default function AppPage() {
   const hasSamples = records.some((r) => r.is_sample);
   const tools: Tool[] = [
     { key: 'piezas', label: 'Piezas', icon: Puzzle, onClick: () => setPanel('piezas'), active: panel === 'piezas' },
+    { key: 'instagram', label: 'Instagram', icon: MessagesSquare, onClick: () => setPanel('instagram'), active: panel === 'instagram' },
     { key: 'ia', label: 'Pedírselo a la IA', icon: Sparkles, onClick: () => setPanel('ia'), active: panel === 'ia' },
     { key: 'historial', label: 'Historial', icon: History, onClick: () => setPanel('historial'), badge: versions.length || undefined, active: panel === 'historial' },
-    { key: '3d', label: 'Verlo en 3D', icon: Box, onClick: () => setShow3d(true) },
+    { key: 'google', label: 'Google Calendar', icon: CalendarCheck, onClick: () => setPanel('google'), badge: google?.connected ? '✓' : undefined, active: panel === 'google' },
     { key: 'inicio', label: 'Todas mis apps', icon: Home, onClick: () => navigate('/') },
   ];
 
@@ -264,11 +349,14 @@ export default function AppPage() {
   return (
     <div className="h-[100dvh]">
       {showing ? (
-        <Workspace key={showing.name} blueprint={showing} records={previewing ? previewRecords : records} tools={tools} banner={proposalBar} className="h-full"
+        <GoogleCalendarContext.Provider value={googleActions}>
+        <Workspace key={showing.name} appId={appId} blueprint={showing} records={previewing ? previewRecords : records} tools={tools} banner={proposalBar} className="h-full"
           onCreate={previewing ? () => undefined : createRecord}
           onUpdate={previewing ? () => undefined : updateRecord}
           onDelete={previewing ? () => undefined : deleteRecord}
-          onWebhook={previewing ? undefined : testWebhook} />
+          onWebhook={previewing ? undefined : testWebhook}
+          onSyncIcal={previewing ? undefined : syncIcal} />
+        </GoogleCalendarContext.Provider>
       ) : (
         <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
           <Sparkles className="h-8 w-8 text-primary" />
@@ -282,13 +370,14 @@ export default function AppPage() {
           footer={hasSamples && <div className="border-t p-3"><button onClick={clearSamples} className="w-full rounded-lg border px-3 py-2 text-sm">Quitar los datos de ejemplo</button></div>}>
           <p className="mb-3 text-sm text-muted-foreground">Toca una pieza para ponerla o quitarla. Primero ves cómo queda; quitarla no borra lo que habías apuntado.</p>
           {thinking && <p className="mb-2 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Preparando la propuesta…</p>}
-          <ModuleCards compact disabled={thinking} modules={modulesFor(kind)} selected={(proposal?.blueprint ?? current.blueprint).modules ?? []} onToggle={toggleModule} />
-          {otherModules(kind).length > 0 && (
-            <details className="mt-4">
-              <summary className="cursor-pointer text-sm font-medium">Más piezas, de {kind === 'crm' ? 'ERP' : 'CRM'}</summary>
-              <div className="mt-3"><ModuleCards compact disabled={thinking} modules={otherModules(kind)} selected={(proposal?.blueprint ?? current.blueprint).modules ?? []} onToggle={toggleModule} /></div>
-            </details>
-          )}
+          <ModuleCards compact disabled={thinking} modules={agencyModules()} selected={(proposal?.blueprint ?? current.blueprint).modules ?? []} onToggle={toggleModule} />
+          <details className="mt-4">
+            <summary className="cursor-pointer text-sm font-medium">Más piezas</summary>
+            <div className="mt-3"><ModuleCards compact disabled={thinking} modules={extraModules()} selected={(proposal?.blueprint ?? current.blueprint).modules ?? []} onToggle={toggleModule} /></div>
+          </details>
+          <div className="mt-5">
+            <LogoSetup name={(proposal?.blueprint ?? current.blueprint).name} logo={(proposal?.blueprint ?? current.blueprint).logo} disabled={thinking} onChange={setLogo} />
+          </div>
           {analysisView && (
             <div className="mt-5">
               <AnalysisSetup blueprint={proposal?.blueprint ?? current.blueprint} value={analysisView.analysis ?? DEFAULT_ANALYSIS} onChange={setAnalysis} />
@@ -342,6 +431,18 @@ export default function AppPage() {
         </SidePanel>
       )}
 
+      {panel === 'google' && (
+        <SidePanel title="Google Calendar" onClose={() => setPanel(null)}>
+          <GoogleCalendarPanel status={google} working={googleWorking} busyCount={googleBusy.length} onConnect={connectGoogle} onDisconnect={disconnectGoogle} />
+        </SidePanel>
+      )}
+      {panel === 'instagram' && current && (
+        <InstagramSetup blueprint={proposal?.blueprint ?? current.blueprint} live={current.blueprint} records={records}
+          onCreate={createRecord} onUpdate={updateRecord} onPropose={proposeBlueprint} onAddPiece={() => void toggleModule('instagram')}
+          onClose={() => setPanel(null)} account={local ? null : instagramAccount} guest={local} busy={thinking}
+          pending={proposal ? { summary: proposal.summary, changes: proposal.changes, applying, onApply: apply, onDiscard: discard } : null} />
+      )}
+
       {panel === 'historial' && (
         <SidePanel title="Historial" onClose={() => setPanel(null)}>
           <p className="mb-3 text-sm text-muted-foreground">Cada cambio aplicado es una versión. Volver a una antigua crea otra nueva: nunca se pierde nada.</p>
@@ -360,7 +461,6 @@ export default function AppPage() {
         </SidePanel>
       )}
 
-      {show3d && showing && <Presentation3D blueprint={showing} records={previewing ? previewRecords : records} onClose={() => setShow3d(false)} />}
     </div>
   );
 }

@@ -2,12 +2,14 @@ import { Check, Trash2, X, ArrowLeft } from 'lucide-react';
 import type { AppRecord, Blueprint, Field, RecordData } from '@shared/blueprint/types.ts';
 import { chipStyle, titleOfRecord, stageField, isNumeric } from './theme';
 import { Cell } from './views';
+import { RecordCalendar } from './RecordCalendar';
 
 interface Props {
   blueprint: Blueprint;
   record: AppRecord;
   records: AppRecord[];
   groupBy?: string;
+  dark?: boolean;
   titleOf: (id: string) => string | undefined;
   onUpdate: (id: string, data: RecordData) => void;
   onDelete: (id: string) => void;
@@ -78,9 +80,8 @@ export function StagePath({ field, value, dark, onPick }: { field: Field; value:
   );
 }
 
-export function RecordPanel({ blueprint, record, records, groupBy, titleOf, onUpdate, onDelete, onClose }: Props) {
+export function RecordPanel({ blueprint, record, records, groupBy, dark = false, titleOf, onUpdate, onDelete, onClose }: Props) {
   const entity = blueprint.entities.find((e) => e.key === record.entity)!;
-  const dark = false;
   const stage = stageField(entity, groupBy);
   const highlights = entity.fields.filter((f) => f.key !== entity.titleField && f.key !== stage?.key && (isNumeric(f) || f.type === 'select' || f.type === 'date' || f.type === 'datetime' || f.type === 'relation')).slice(0, 4);
   const set = (key: string) => (v: unknown) => onUpdate(record.id, { [key]: v });
@@ -120,6 +121,7 @@ export function RecordPanel({ blueprint, record, records, groupBy, titleOf, onUp
           </div>
         )}
         {stage && <div className="mb-5"><StagePath field={stage} value={record.data[stage.key]} dark={dark} onPick={set(stage.key)} /></div>}
+        <RecordCalendar key={record.id} blueprint={blueprint} record={record} records={records} />
 
         <div className={`grid gap-x-4 gap-y-3 ${page ? 'md:grid-cols-2' : ''}`} key={record.id}>
           {entity.fields.map((f) => (

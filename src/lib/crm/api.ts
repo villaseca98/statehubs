@@ -1,6 +1,8 @@
 import { server } from '@/lib/supabase';
 import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import type { Change } from '@shared/blueprint/diff.ts';
+import type { SyncSummary } from '@shared/blueprint/ical.ts';
+import type { BusyInterval } from '@shared/blueprint/slots.ts';
 
 // The generated Supabase types don't know the crm_* tables yet.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -9,6 +11,17 @@ const db = () => server() as any;
 export interface CrmApp { id: string; name: string; current_version: number | null; updated_at: string }
 export interface CrmVersion { version: number; summary: string; created_at: string; blueprint: Blueprint }
 export interface CrmMessage { id: string; role: 'user' | 'assistant'; content: string; proposal_id: string | null; created_at: string }
+// What a calendar sync did; `mensaje` replaces the counts when there was nothing to do.
+export type IcalSyncResult = SyncSummary & { mensaje?: string };
+// Google Calendar for the signed-in person. `configured` is false while the
+// server lacks the Google secrets; `available` is false in guest mode.
+export const GOOGLE_NOT_CONFIGURED = 'Falta configurar Google en el servidor';
+export interface GoogleStatus { available: boolean; configured: boolean; connected: boolean; email?: string; mensaje?: string }
+// What a push did to the event of a record.
+export interface GooglePushResult { estado: 'creado' | 'actualizado' | 'quitado' | 'sin_fecha'; enlace?: string }
+// The Instagram account behind the assistant (crm-instagram). The token never leaves the server.
+export interface InstagramStatus { connected: boolean; username?: string | null; expires_at?: string | null; configured?: boolean; url?: string; mensaje?: string }
+export type InstagramAction = 'status' | 'connect' | 'disconnect';
 export interface CrmProposal {
   id: string; base_version: number | null; blueprint: Blueprint; summary: string; changes: Change[];
   samples: { entity: string; data: RecordData; id?: string }[]; status: 'pending' | 'applied' | 'discarded'; created_at: string;
@@ -43,10 +56,26 @@ export const crmApi = {
   ask: (appId: string, message: string) => invokeAgent({ app_id: appId, message }),
   // Functions picked by hand (cards): the server validates the blueprint and makes the proposal, no AI.
   propose: (appId: string, blueprint: Blueprint) => invokeAgent({ app_id: appId, blueprint }) as Promise<{ message: CrmMessage; proposal: CrmProposal }>,
+  // Reads the Airbnb/Booking iCal link of each property on the server (crm-ical).
+  syncIcal: (appId: string) => invokeFunction<IcalSyncResult>('crm-ical', { app_id: appId }),
+  // Google Calendar (crm-google): connect with OAuth, create or move the event
+  // of a record, and read the busy hours so booking avoids them.
+  googleStatus: () => invokeFunction<GoogleStatus>('crm-google', { action: 'status' }),
+  googleConnect: (returnTo: string) => invokeFunction<{ url: string }>('crm-google', { action: 'start', return_to: returnTo }),
+  googleFinish: (code: string, state: string) => invokeFunction<GoogleStatus>('crm-google', { action: 'finish', code, state }),
+  googleDisconnect: () => invokeFunction<GoogleStatus>('crm-google', { action: 'disconnect' }),
+  googleBusy: async (from: string, to: string) => (await invokeFunction<{ busy: BusyInterval[] }>('crm-google', { action: 'busy', from, to })).busy,
+  googlePush: (appId: string, recordId: string) => invokeFunction<GooglePushResult>('crm-google', { action: 'push', app_id: appId, record_id: recordId }),
+  // Connects the Instagram account (OAuth on the server) or says how it is.
+  instagram: (appId: string, action: InstagramAction) => invokeFunction<InstagramStatus>('crm-instagram', { app_id: appId, action, origin: window.location.origin }),
 };
 
-async function invokeAgent(body: Record<string, unknown>): Promise<{ message: CrmMessage; proposal: CrmProposal | null }> {
-  const { data, error } = await server().functions.invoke('crm-agent', { body });
+function invokeAgent(body: Record<string, unknown>): Promise<{ message: CrmMessage; proposal: CrmProposal | null }> {
+  return invokeFunction('crm-agent', body);
+}
+
+async function invokeFunction<T>(name: string, body: Record<string, unknown>): Promise<T> {
+  const { data, error } = await server().functions.invoke(name, { body });
   if (error) {
     // supabase-js hides the JSON body of non-2xx answers in error.context.
     let text = error.message;

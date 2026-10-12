@@ -20,8 +20,10 @@ const base = (): Blueprint => {
 const full = (): Blueprint => clone(DEMO_APPS[0].blueprint);
 
 describe('look', () => {
-  it('is a single look with the house teal', () => {
-    expect(LOOK.colors.primary).toBe('#0f9fae');
+  it('is a single look: forest green on cream, with a lime accent', () => {
+    expect(LOOK.colors.primary).toBe('#1f5c45');
+    expect(LOOK.colors.bg).toBe('#f3f1eb');
+    expect(LOOK.colors.accent).toBe('#e4ec7c');
   });
 });
 
@@ -296,6 +298,12 @@ describe('buildSlots', () => {
     expect(days.map((d) => d.date)).toEqual(['2026-10-09', '2026-10-12']);
     expect(days[0].slots.map((s) => s.time)).toEqual(['10:00', '12:00']);
     expect(days[1].slots.map((s) => [s.time, s.taken])).toEqual([['09:00', false], ['10:00', true], ['12:00', false]]);
+  });
+
+  it('marks slots that overlap a Google Calendar busy interval', () => {
+    const busy = [{ from: '2026-10-12T09:30', to: '2026-10-12T10:15' }, { from: '2026-10-12T12:00', to: '2026-10-12T12:00' }, { from: '2026-10-12T13:00', to: '2026-10-12T14:00' }];
+    const [day] = buildSlots(a, [], new Date(2026, 9, 12, 8, 0), 1, busy);
+    expect(day.slots.map((s) => [s.time, s.taken, !!s.google])).toEqual([['09:00', true, true], ['10:00', true, true], ['12:00', false, false]]);
   });
 
   it('drops a day with nothing left', () => {

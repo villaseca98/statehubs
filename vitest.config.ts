@@ -8,6 +8,8 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
+    // The app screens render whole sample agencies in jsdom; give them room on a busy machine.
+    testTimeout: 30000,
     include: ["src/**/*.{test,spec}.{ts,tsx}", "supabase/functions/_shared/**/*.test.ts"],
   },
   resolve: {

@@ -9,20 +9,21 @@ import { ease, seg, showcaseLayers, win } from '@/components/crm/showcase';
 import type { ShowcaseMotion } from '@/components/crm/showcase';
 import { composeApp, modulesFor, sampleRecordsFor, STARTER } from '@shared/blueprint/modules.ts';
 import { DEMO_APPS } from '@shared/blueprint/samples.ts';
-import { LOOK } from '@shared/blueprint/look.ts';
+import { BRAND, LOOK } from '@shared/blueprint/look.ts';
+import { LogoMark } from '@/components/brand/Logo';
 import { computeToday } from '@/lib/crm/today';
 import type { AppRecord, Blueprint } from '@shared/blueprint/types.ts';
 
 // Vertical ads (1080×1920) for StateHubs, made with the same 3D engine the
-// customers get ("Verlo en 3D"), from real apps the builder produces.
+// landing uses, from real apps the builder produces.
 // /reels lists them, /reels/:key plays one on a loop. For export, open it
 // with ?capture=1 and drive the clock with window.__reel.set(seconds).
 
 const CW = 1080;
 const CH = 1920;
 const APP = { width: 1180, height: 760 };
-const TEAL = '#0f9fae';
-const TEAL_LIGHT = '#5fd3dd';
+const TEAL = BRAND.red;
+const TEAL_LIGHT = BRAND.light;
 
 interface AppSource { blueprint: Blueprint; records: AppRecord[] }
 interface Beat { from: number; to: number; title: ReactNode; sub?: ReactNode; focus?: string }
@@ -165,12 +166,8 @@ const REELS: ReelDef[] = [
 function Wordmark({ size = 44 }: { size?: number }) {
   return (
     <span className="inline-flex items-center font-bold tracking-tight text-white" style={{ fontSize: size, gap: size * 0.32 }}>
-      <svg width={size * 1.05} height={size * 1.05} viewBox="0 0 40 40" aria-hidden>
-        <rect x="6" y="20" width="28" height="13" rx="4" fill={TEAL} opacity=".45" />
-        <rect x="6" y="13" width="28" height="13" rx="4" fill={TEAL} opacity=".7" />
-        <rect x="6" y="6" width="28" height="13" rx="4" fill={TEAL_LIGHT} />
-      </svg>
-      <span>State<span style={{ color: TEAL_LIGHT }}>Hubs</span></span>
+      <LogoMark size={size * 1.15} />
+      <span>state<span style={{ background: `linear-gradient(90deg, ${BRAND.from}, ${BRAND.to})`, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>hubs</span></span>
     </span>
   );
 }
@@ -406,7 +403,7 @@ export default function Reels() {
       <div className="mx-auto max-w-3xl">
         <Wordmark size={32} />
         <h1 className="mt-6 text-3xl font-bold">Reels</h1>
-        <p className="mt-2 text-white/60">Anuncios verticales hechos con el mismo motor 3D que usan los clientes en «Verlo en 3D».</p>
+        <p className="mt-2 text-white/60">Anuncios verticales hechos con el mismo motor 3D de la portada.</p>
         <ul className="mt-8 grid gap-3 sm:grid-cols-2">
           {REELS.map((r) => (
             <li key={r.key}>

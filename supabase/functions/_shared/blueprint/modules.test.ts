@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addModule, cardProposal, composeApp, MODULES, modulesFor, modulesSummary, removeModule, sampleRecordsFor, STARTER } from './modules.ts';
+import { addModule, cardProposal, composeApp, composePack, MODULES, modulesFor, modulesSummary, PACKS, removeModule, sampleRecordsFor, STARTER } from './modules.ts';
 import { validateBlueprint } from './validate.ts';
 
 let n = 0;
@@ -7,9 +7,9 @@ const newId = () => `id-${++n}`;
 
 describe('modules (cards)', () => {
   it('every module alone, every kind fully loaded and the starters are valid', () => {
-    const READERS = ['panel', 'analisis'];
+    const READERS = ['panel', 'analisis', 'centro'];
     for (const m of MODULES.filter((x) => !READERS.includes(x.key))) expect(validateBlueprint(composeApp(m.kinds[0], 'X', [m.key])), m.key).toEqual([]);
-    // Figures or analysis alone have nothing to read: refused, and the UI doesn't offer to create it.
+    // Figures, analysis or the operations centre alone have nothing to read: refused, and the UI doesn't offer to create it.
     for (const k of READERS) expect(validateBlueprint(composeApp('crm', 'X', [k]))).not.toEqual([]);
     for (const kind of ['crm', 'erp'] as const) {
       expect(validateBlueprint(composeApp(kind, 'X', modulesFor(kind).map((m) => m.key)))).toEqual([]);
@@ -20,7 +20,7 @@ describe('modules (cards)', () => {
 
   it('every pair of modules is valid, added in either order', () => {
     for (const a of MODULES) for (const b of MODULES) {
-      if (['panel', 'analisis'].includes(a.key) && ['panel', 'analisis'].includes(b.key)) continue;
+      if (['panel', 'analisis', 'centro'].includes(a.key) && ['panel', 'analisis', 'centro'].includes(b.key)) continue;
       expect(validateBlueprint(composeApp('crm', 'X', [a.key, b.key])), `${a.key}+${b.key}`).toEqual([]);
     }
   });
@@ -91,5 +91,39 @@ describe('modules (cards)', () => {
     expect(validateBlueprint(broken).join()).toMatch(/necesita en entity/);
     launch.entity = 'tarea'; launch.field = 'nombre';
     expect(validateBlueprint(broken).join()).toMatch(/longtext/);
+  });
+});
+
+describe('inmobiliaria y alquiler turístico', () => {
+  it('each pack is one valid app with its screens and demo data that links up', () => {
+    for (const p of PACKS) {
+      const bp = composePack(p.key, 'Agencia');
+      expect(validateBlueprint(bp), p.key).toEqual([]);
+      expect(bp.views[0].type, p.key).toBe('ops');
+      const rows = sampleRecordsFor(bp);
+      const ids = new Set(rows.map((r) => r.id));
+      for (const r of rows) {
+        const e = bp.entities.find((x) => x.key === r.entity)!;
+        for (const f of e.fields) if (f.type === 'relation' && r.data[f.key] != null) expect(ids.has(String(r.data[f.key])), `${p.key} ${r.id}.${f.key}`).toBe(true);
+      }
+    }
+    const tour = composePack('turistico', 'Pisos');
+    expect(tour.views.map((v) => v.type)).toContain('timeline');
+    expect(tour.entities.map((e) => e.key)).not.toContain('operacion');
+    const sales = composePack('compraventa', 'Agencia');
+    expect(sales.entities.map((e) => e.key)).not.toContain('reserva');
+    // Tourist flats only show up where there are bookings.
+    expect(sampleRecordsFor(sales).filter((r) => r.entity === 'inmueble' && r.data.operacion === 'turistico')).toEqual([]);
+  });
+
+  it('timeline and cards need the right fields', () => {
+    const bp = composePack('ambos', 'Agencia');
+    const timeline = bp.views.find((v) => v.type === 'timeline')!;
+    timeline.rowField = 'huesped';
+    const cards = bp.views.find((v) => v.type === 'cards')!;
+    cards.imageField = 'precio';
+    const errors = validateBlueprint(bp).join(' ');
+    expect(errors).toMatch(/rowField/);
+    expect(errors).toMatch(/imageField/);
   });
 });
