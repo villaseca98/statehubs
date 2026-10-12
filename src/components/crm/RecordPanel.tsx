@@ -19,7 +19,7 @@ interface Props {
   onClose: () => void;
 }
 
-const input = 'w-full rounded px-2 py-1.5 outline-none focus:ring-2';
+const input = 'w-full min-w-0 min-h-[44px] rounded px-3 py-2 outline-none focus-visible:ring-2';
 const inputStyle = { background: 'var(--crm-bg)', border: '1px solid var(--crm-border)', color: 'var(--crm-text)', borderRadius: 'calc(var(--crm-radius) * 0.75)' };
 
 function FieldInput({ field, value, records, titleOf, onChange }: { field: Field; value: unknown; records: AppRecord[]; titleOf: Props['titleOf']; onChange: (v: unknown) => void }) {
@@ -28,7 +28,7 @@ function FieldInput({ field, value, records, titleOf, onChange }: { field: Field
     case 'longtext':
       return <textarea className={input} style={inputStyle} rows={3} defaultValue={str} onBlur={(e) => e.target.value !== str && onChange(e.target.value)} />;
     case 'boolean':
-      return <input type="checkbox" className="h-4 w-4" style={{ accentColor: 'var(--crm-primary)' }} checked={!!value} onChange={(e) => onChange(e.target.checked)} />;
+      return <input type="checkbox" className="h-5 w-5" style={{ accentColor: 'var(--crm-primary)' }} checked={!!value} onChange={(e) => onChange(e.target.checked)} />;
     case 'select':
       return (
         <select className={input} style={inputStyle} value={str} onChange={(e) => onChange(e.target.value || null)}>
@@ -92,7 +92,7 @@ export function RecordPanel({ blueprint, appId, record, records, groupBy, dark =
   const page = false;
 
   return (
-    <div className="flex h-full flex-col" style={{ background: 'var(--crm-surface)', color: 'var(--crm-text)' }}>
+    <div className="flex h-full min-w-0 flex-col" style={{ background: 'var(--crm-surface)', color: 'var(--crm-text)' }}>
       <div className="flex items-start justify-between gap-3" style={{ padding: 'var(--crm-pad)', borderBottom: '1px solid var(--crm-border)' }}>
         <div className="min-w-0">
           {page && (
@@ -105,7 +105,7 @@ export function RecordPanel({ blueprint, appId, record, records, groupBy, dark =
           {record.is_sample && <span className="mt-1 inline-block rounded px-1.5 text-[0.8em]" style={chipStyle('amber', dark)}>Dato de ejemplo</span>}
         </div>
         <div className="flex shrink-0 gap-1">
-          <button aria-label="Borrar" title="Borrar" onClick={() => { if (window.confirm(`¿Borrar «${titleOfRecord(entity, record.data)}»?`)) onDelete(record.id); }} className="rounded p-1.5" style={{ color: 'var(--crm-muted)' }}>
+          <button aria-label="Borrar" title="Borrar" onClick={() => { if (window.confirm(`¿Borrar «${titleOfRecord(entity, record.data)}»?`)) onDelete(record.id); }} className="sh-touch rounded p-2" style={{ color: 'var(--crm-muted)' }}>
             <Trash2 className="h-4 w-4" />
           </button>
           {!page && <button aria-label="Cerrar" onClick={onClose} className="rounded p-1.5" style={{ color: 'var(--crm-muted)' }}><X className="h-4 w-4" /></button>}
