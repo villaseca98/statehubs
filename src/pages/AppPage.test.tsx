@@ -53,4 +53,14 @@ describe('AppPage: change the app with pieces, preview first, undo later', () =>
     const [v] = await localCrmApi.versions(id);
     expect(v.blueprint.views.find((x) => x.type === 'analysis')?.analysis?.staleDays).toBe(14);
   }, 20000);
+
+  it('has a Google Calendar panel that, in guest mode, says it needs an account', async () => {
+    const id = await guestApp();
+    render(<Toaster><MemoryRouter initialEntries={[`/app/${id}`]}><Routes><Route path="/app/:appId" element={<AppPage />} /></Routes></MemoryRouter></Toaster>);
+    await screen.findByRole('heading', { level: 1, name: 'Hoy' });
+    fireEvent.click(screen.getAllByRole('button', { name: /^Google Calendar/ })[0]);
+    const panel = screen.getByRole('dialog', { name: 'Google Calendar' });
+    await within(panel).findByText(/necesita una cuenta/);
+    expect(within(panel).getByText('Sin conectar nada')).toBeTruthy();
+  }, 20000);
 });

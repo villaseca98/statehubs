@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Check, Eye, History, Home, Loader2, Minus, Pencil, Plus, Puzzle, Send, Sparkles, X } from 'lucide-react';
+import { CalendarCheck, Check, Eye, History, Home, Loader2, Minus, Pencil, Plus, Puzzle, Send, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 import { useToast } from '@/lib/toast';
-import { crmApi } from '@/lib/crm/api';
-import type { CrmApp, CrmMessage, CrmProposal, CrmVersion } from '@/lib/crm/api';
+import { crmApi, GOOGLE_NOT_CONFIGURED } from '@/lib/crm/api';
+import type { CrmApp, CrmMessage, CrmProposal, CrmVersion, GooglePushResult, GoogleStatus } from '@/lib/crm/api';
 import { isLocalApp, localCrmApi } from '@/lib/crm/localApi';
 import { resultPatch, runAutomations } from '@/lib/crm/automations';
 import { Workspace } from '@/components/crm/Workspace';
+import { GoogleCalendarPanel } from '@/components/crm/GoogleCalendarPanel';
+import { GoogleCalendarContext } from '@/components/crm/googleCalendarContext';
+import type { GoogleCalendarActions } from '@/components/crm/googleCalendarContext';
+import { patchMovesAppointment } from '@/lib/crm/calendar';
 import type { Tool } from '@/components/crm/Workspace';
 import { ModuleCards } from '@/components/crm/ModuleCards';
 import { AnalysisSetup } from '@/components/crm/AnalysisSetup';
@@ -21,14 +25,20 @@ import { DEFAULT_ANALYSIS, withAnalysis } from '@shared/blueprint/analysis.ts';
 import type { AnalysisConfig, AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import type { Change } from '@shared/blueprint/diff.ts';
 import { syncSummaryText } from '@shared/blueprint/ical.ts';
+import type { BusyInterval } from '@shared/blueprint/slots.ts';
 
 // One app, open: the workspace for daily work, and three side panels to
 // change it (pieces, the AI, history). Every change arrives as a proposal you
 // can preview over your own data, apply, discard or undo later.
 
-type Panel = 'piezas' | 'ia' | 'historial' | null;
+type Panel = 'piezas' | 'ia' | 'historial' | 'google' | null;
 const CHANGE_ICON = { add: Plus, remove: Minus, change: Pencil };
 const CHANGE_COLOR = { add: 'text-emerald-600', remove: 'text-red-600', change: 'text-amber-600' };
+// How far ahead the busy hours of Google Calendar are read (booking shows the next working days).
+const BUSY_DAYS = 21;
+const GOOGLE_DONE: Record<GooglePushResult['estado'], string | null> = {
+  creado: 'Cita guardada en tu Google Calendar', actualizado: 'Cita movida en tu Google Calendar', quitado: 'Cita quitada de tu Google Calendar', sin_fecha: null,
+};
 
 function ChangeList({ changes }: { changes: Change[] }) {
   return (
@@ -81,6 +91,9 @@ export default function AppPage() {
   const [preview, setPreview] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
   const [draft, setDraft] = useState('');
+  const [google, setGoogle] = useState<GoogleStatus | null>(null);
+  const [googleBusy, setGoogleBusy] = useState<BusyInterval[]>([]);
+  const [googleWorking, setGoogleWorking] = useState(false);
   const sentFirst = useRef(false);
   const chatEnd = useRef<HTMLDivElement>(null);
 
@@ -111,6 +124,31 @@ export default function AppPage() {
   }, [authLoading, user, appId]);
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, thinking, panel]);
+
+  // Google Calendar: where the connection stands, and the way back from Google's consent screen.
+  const googleUnreachable = (e: unknown): GoogleStatus => ({ available: true, configured: false, connected: false, mensaje: `${GOOGLE_NOT_CONFIGURED}: la función crm-google no responde (${(e as Error).message}).` });
+  useEffect(() => {
+    if (!local && (authLoading || !user)) return;
+    const q = new URLSearchParams(location.search);
+    const code = q.get('google_code'), state = q.get('google_state'), cancelled = q.get('google_error');
+    if (code || cancelled) navigate(location.pathname, { replace: true });
+    if (code && state) {
+      setPanel('google');
+      api.googleFinish(code, state).then((s) => { setGoogle(s); toast({ title: 'Google Calendar conectado', description: s.email ? `Con ${s.email}.` : undefined }); },
+        (e) => { fail(e); api.googleStatus().then(setGoogle, (x) => setGoogle(googleUnreachable(x))); });
+      return;
+    }
+    if (cancelled) { setPanel('google'); toast({ title: 'No se ha conectado Google Calendar', description: cancelled === 'cancelado' ? 'Has cancelado el permiso.' : 'Google no ha dado el permiso.', error: true }); }
+    api.googleStatus().then(setGoogle, (e) => setGoogle(googleUnreachable(e)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user, appId]);
+
+  const refreshBusy = useCallback(() => {
+    const from = new Date();
+    const to = new Date(from.getTime() + BUSY_DAYS * 86_400_000);
+    api.googleBusy(from.toISOString(), to.toISOString()).then(setGoogleBusy, () => setGoogleBusy([]));
+  }, [api]);
+  useEffect(() => { if (google?.connected) refreshBusy(); else setGoogleBusy([]); }, [google?.connected, refreshBusy]);
 
   const current = versions.find((v) => v.version === app?.current_version) ?? null;
   const previewRecords = useMemo<AppRecord[]>(() => {
@@ -220,6 +258,7 @@ export default function AppPage() {
       const r = await api.createRecord(appId, entity, data);
       setRecords((rs) => [...rs, r]);
       if (hasTitle(entity, data)) automateQuietly(r, 'alta', null); else pendingNew.current.add(r.id);
+      if (google?.connected && current && patchMovesAppointment(current.blueprint, entity, data)) pushQuietly(r);
       return r;
     } catch (e) { fail(e); }
   };
@@ -229,6 +268,7 @@ export default function AppPage() {
     const data = { ...prev.data, ...patch };
     setRecords((rs) => rs.map((r) => (r.id === id ? { ...r, data } : r)));
     api.updateRecord(id, data).then(() => {
+      if (google?.connected && current && patchMovesAppointment(current.blueprint, prev.entity, patch)) pushQuietly({ ...prev, data });
       if (!pendingNew.current.has(id)) automateQuietly({ ...prev, data }, 'cambio', prev.data);
       else if (hasTitle(prev.entity, data)) { pendingNew.current.delete(id); automateQuietly({ ...prev, data }, 'alta', null); }
     }, (e) => { fail(e); setRecords((rs) => rs.map((r) => (r.id === id ? prev : r))); });
@@ -250,6 +290,27 @@ export default function AppPage() {
     try { await api.clearSamples(appId); setRecords(await api.records(appId)); } catch (e) { fail(e); }
   };
 
+  const connectGoogle = async () => {
+    setGoogleWorking(true);
+    try { window.location.assign((await api.googleConnect(`${window.location.origin}/app/${appId}`)).url); } catch (e) { fail(e); setGoogleWorking(false); }
+  };
+  const disconnectGoogle = async () => {
+    if (!window.confirm('¿Desconectar tu Google Calendar? Los eventos que ya están en tu calendario se quedan.')) return;
+    setGoogleWorking(true);
+    try { setGoogle(await api.googleDisconnect()); toast({ title: 'Google Calendar desconectado' }); } catch (e) { fail(e); } finally { setGoogleWorking(false); }
+  };
+  const pushToGoogle = async (r: AppRecord) => {
+    const res = await api.googlePush(appId, r.id);
+    refreshBusy();
+    return res;
+  };
+  // Agendar o mover una cita la lleva sola al calendario; si falla, se dice.
+  const pushQuietly = (r: AppRecord) => {
+    pushToGoogle(r).then((res) => { const t = GOOGLE_DONE[res.estado]; if (t) toast({ title: t }); },
+      (e) => toast({ title: 'No se pudo guardar en Google Calendar', description: (e as Error).message, error: true }));
+  };
+  const googleActions: GoogleCalendarActions | null = google?.connected && !previewing ? { connected: true, busy: googleBusy, push: pushToGoogle } : null;
+
   if (loading) return <div className="flex h-screen items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
   if (!app) return <div className="flex h-screen flex-col items-center justify-center gap-3"><p>No encontramos esta aplicación.</p><Link to="/" className="text-primary underline">Volver</Link></div>;
 
@@ -258,6 +319,7 @@ export default function AppPage() {
     { key: 'piezas', label: 'Piezas', icon: Puzzle, onClick: () => setPanel('piezas'), active: panel === 'piezas' },
     { key: 'ia', label: 'Pedírselo a la IA', icon: Sparkles, onClick: () => setPanel('ia'), active: panel === 'ia' },
     { key: 'historial', label: 'Historial', icon: History, onClick: () => setPanel('historial'), badge: versions.length || undefined, active: panel === 'historial' },
+    { key: 'google', label: 'Google Calendar', icon: CalendarCheck, onClick: () => setPanel('google'), badge: google?.connected ? '✓' : undefined, active: panel === 'google' },
     { key: 'inicio', label: 'Todas mis apps', icon: Home, onClick: () => navigate('/') },
   ];
 
@@ -276,12 +338,14 @@ export default function AppPage() {
   return (
     <div className="h-[100dvh]">
       {showing ? (
+        <GoogleCalendarContext.Provider value={googleActions}>
         <Workspace key={showing.name} appId={appId} blueprint={showing} records={previewing ? previewRecords : records} tools={tools} banner={proposalBar} className="h-full"
           onCreate={previewing ? () => undefined : createRecord}
           onUpdate={previewing ? () => undefined : updateRecord}
           onDelete={previewing ? () => undefined : deleteRecord}
           onWebhook={previewing ? undefined : testWebhook}
           onSyncIcal={previewing ? undefined : syncIcal} />
+        </GoogleCalendarContext.Provider>
       ) : (
         <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
           <Sparkles className="h-8 w-8 text-primary" />
@@ -353,6 +417,12 @@ export default function AppPage() {
             {thinking && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Sparkles className="h-4 w-4 animate-pulse" /> Preparando la propuesta…</p>}
             <div ref={chatEnd} />
           </div>
+        </SidePanel>
+      )}
+
+      {panel === 'google' && (
+        <SidePanel title="Google Calendar" onClose={() => setPanel(null)}>
+          <GoogleCalendarPanel status={google} working={googleWorking} busyCount={googleBusy.length} onConnect={connectGoogle} onDisconnect={disconnectGoogle} />
         </SidePanel>
       )}
 

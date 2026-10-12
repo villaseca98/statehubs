@@ -8,6 +8,7 @@ import { Cell, Chip } from './views';
 import { actionsFor, whatsappUrl } from './actions';
 import type { ViewProps } from './views';
 import { useRuntime } from './runtimeContext';
+import { useGoogleCalendar } from './googleCalendarContext';
 
 // A list to work through (leads, pending orders…). Each row offers only the
 // actions that fit its current stage; the side panel shows the selected one
@@ -37,6 +38,7 @@ export function WorklistView({ blueprint, view, records, dark, solid, titleOf, o
   const [pick, setPick] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const runtime = useRuntime();
+  const google = useGoogleCalendar();
 
   const rows = filter === null ? mine : mine.filter((r) => r.data[stage?.key ?? ''] === filter);
   const selected = mine.find((r) => r.id === selectedId) ?? rows[0] ?? null;
@@ -185,7 +187,7 @@ export function WorklistView({ blueprint, view, records, dark, solid, titleOf, o
                 current={selected.data[booking.field ?? '']}
                 taken={mine.filter((r) => r.id !== selected.id).map((r) => r.data[booking.field ?? '']).filter((v): v is string => typeof v === 'string')}
                 availability={view.availability}
-                busy={runtime?.busy}
+                busy={google?.busy}
                 pick={pick}
                 onPick={setPick}
                 onConfirm={() => {
@@ -239,6 +241,7 @@ function SlotPicker({ label, field, current, taken, availability, busy, pick, on
               </button>
             ))}
           </div>
+          {busy && busy.length > 0 && <div className="text-[0.8em]" style={{ color: 'var(--crm-muted)' }}>Las horas tachadas ya están ocupadas aquí o en tu Google Calendar.</div>}
           <button disabled={!pick} onClick={onConfirm} className="mt-1 rounded py-2 font-medium disabled:opacity-40"
             style={{ background: 'var(--crm-primary)', color: 'var(--crm-primary-text)', borderRadius: 'var(--crm-radius)' }}>
             {pick ? `${label}: ${formatValue(field, pick)}` : 'Elige una hora'}
