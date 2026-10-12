@@ -121,3 +121,19 @@ Medir antes y después: tiempo hasta el primer contacto, leads sin siguiente acc
 
 ---
 Este documento es una estrategia inicial. Las decisiones de producto, precio y diferenciación deben ajustarse tras entrevistar a clientes y revisar el comportamiento real de la aplicación.
+
+
+## 8. Captación automática desde Instagram / Meta
+
+La captación automática debe ser una ventaja central del producto, no un simple campo de origen. Se ha añadido un primer conector de piloto para formularios instantáneos de Meta Lead Ads:
+
+- Webhook con verificación HMAC de Meta y recuperación de los datos por Graph API.
+- Normalización de datos de compra/alquiler/venta, presupuesto, zona, plazo y financiación.
+- Puntuación explicable de 0–100, estado de cualificación y siguiente acción.
+- Detección de eventos duplicados en la base de datos.
+- Sin contacto automático: el permiso para contactar se guarda aparte de la puntuación y nunca se deduce de un score alto.
+- Guía de instalación y límites en `docs/INSTAGRAM_LEAD_AUTOMATION.md`.
+
+**Alcance actual:** solo formularios instantáneos de Meta que generen eventos `leadgen`. Esos formularios pueden estar colocados en Instagram o Facebook; el origen se marca como Meta Ads salvo que la campaña conectada esté verificada como exclusiva de Instagram. Los mensajes directos de Instagram aún requieren una integración específica con Instagram Messaging API.
+
+**Límite para piloto:** el conector usa un único ID de aplicación y un token de Meta en secretos de servidor. No usar con varias agencias hasta añadir credenciales por organización protegidas en servidor, revocación/rotación de tokens y pruebas de aislamiento multi-tenant.
