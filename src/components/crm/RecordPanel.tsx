@@ -1,7 +1,8 @@
-import { Check, Trash2, X, ArrowLeft } from 'lucide-react';
+import { Check, Trash2, X, ArrowLeft, CalendarPlus } from 'lucide-react';
 import type { AppRecord, Blueprint, Field, RecordData } from '@shared/blueprint/types.ts';
 import { chipStyle, titleOfRecord, stageField, isNumeric } from './theme';
 import { Cell } from './views';
+import { eventFor, googleCalendarUrl } from '@/lib/crm/calendar';
 
 interface Props {
   blueprint: Blueprint;
@@ -86,6 +87,8 @@ export function RecordPanel({ blueprint, record, records, groupBy, titleOf, onUp
   const set = (key: string) => (v: unknown) => onUpdate(record.id, { [key]: v });
   const related = blueprint.entities.flatMap((e) => e.fields.filter((f) => f.type === 'relation' && f.relation === entity.key).map((f) => ({ e, f })));
   const page = false;
+  // Works without any setup: Google Calendar opens with the appointment filled in.
+  const event = eventFor(blueprint, record, records);
 
   return (
     <div className="flex h-full flex-col" style={{ background: 'var(--crm-surface)', color: 'var(--crm-text)' }}>
@@ -120,6 +123,12 @@ export function RecordPanel({ blueprint, record, records, groupBy, titleOf, onUp
           </div>
         )}
         {stage && <div className="mb-5"><StagePath field={stage} value={record.data[stage.key]} dark={dark} onPick={set(stage.key)} /></div>}
+        {event && (
+          <a href={googleCalendarUrl(event)} target="_blank" rel="noreferrer" className="mb-4 inline-flex items-center gap-1.5 rounded px-3 py-1.5 font-medium"
+            style={{ border: '1px solid var(--crm-border)', color: 'var(--crm-primary)', borderRadius: 'calc(var(--crm-radius) * 0.75)' }}>
+            <CalendarPlus className="h-4 w-4" /> Añadir a Google Calendar
+          </a>
+        )}
 
         <div className={`grid gap-x-4 gap-y-3 ${page ? 'md:grid-cols-2' : ''}`} key={record.id}>
           {entity.fields.map((f) => (

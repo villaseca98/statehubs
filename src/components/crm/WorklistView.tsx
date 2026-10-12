@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CalendarClock, Mail, MessageCircle, Phone, ArrowRight, ExternalLink, AlertTriangle, ListPlus, Zap } from 'lucide-react';
 import type { AppRecord, Field, ViewAction } from '@shared/blueprint/types.ts';
 import { buildSlots, isoDay } from '@shared/blueprint/slots.ts';
+import type { BusyInterval } from '@shared/blueprint/slots.ts';
 import { chipStyle, formatValue, titleOfRecord } from './theme';
 import { Cell, Chip } from './views';
 import { actionsFor, whatsappUrl } from './actions';
@@ -184,6 +185,7 @@ export function WorklistView({ blueprint, view, records, dark, solid, titleOf, o
                 current={selected.data[booking.field ?? '']}
                 taken={mine.filter((r) => r.id !== selected.id).map((r) => r.data[booking.field ?? '']).filter((v): v is string => typeof v === 'string')}
                 availability={view.availability}
+                busy={runtime?.busy}
                 pick={pick}
                 onPick={setPick}
                 onConfirm={() => {
@@ -201,11 +203,11 @@ export function WorklistView({ blueprint, view, records, dark, solid, titleOf, o
   );
 }
 
-function SlotPicker({ label, field, current, taken, availability, pick, onPick, onConfirm }: {
-  label: string; field: Field; current: unknown; taken: string[]; availability: NonNullable<ViewProps['view']['availability']>;
+function SlotPicker({ label, field, current, taken, availability, busy, pick, onPick, onConfirm }: {
+  label: string; field: Field; current: unknown; taken: string[]; availability: NonNullable<ViewProps['view']['availability']>; busy?: BusyInterval[];
   pick: string | null; onPick: (v: string) => void; onConfirm: () => void;
 }) {
-  const days = useMemo(() => buildSlots(availability, taken, new Date(), 5), [availability, taken]);
+  const days = useMemo(() => buildSlots(availability, taken, new Date(), 5, busy), [availability, taken, busy]);
   const [day, setDay] = useState(0);
   const shown = days[day];
   return (
@@ -228,7 +230,7 @@ function SlotPicker({ label, field, current, taken, availability, pick, onPick, 
           </div>
           <div className="grid grid-cols-3 gap-1.5" aria-label="Horas">
             {shown?.slots.map((s) => (
-              <button key={s.value} disabled={s.taken} onClick={() => onPick(s.value)} title={s.taken ? 'Ocupado' : undefined}
+              <button key={s.value} disabled={s.taken} onClick={() => onPick(s.value)} title={s.google ? 'Ocupado en tu Google Calendar' : s.taken ? 'Ocupado' : undefined} aria-label={s.google ? `${s.time}, ocupado en tu Google Calendar` : undefined}
                 className="rounded py-1.5 text-[0.9em] disabled:cursor-not-allowed disabled:line-through"
                 style={pick === s.value
                   ? { background: 'var(--crm-primary)', color: 'var(--crm-primary-text)' }

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { BrainCircuit, CalendarDays, Columns3, ListChecks, Menu, Plus, Sun, Table2, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { AppRecord, Blueprint, RecordData, View } from '@shared/blueprint/types.ts';
+import type { BusyInterval } from '@shared/blueprint/slots.ts';
 import { computeToday } from '@/lib/crm/today';
 import { makeTitleLookup, themeVars } from './theme';
 import { ViewBody } from './views';
@@ -26,6 +27,7 @@ export interface WorkspaceProps {
   onUpdate: (id: string, data: RecordData) => void;
   onDelete: (id: string) => void;
   onWebhook?: (record: AppRecord) => Promise<string> | string | void;
+  busy?: BusyInterval[];  // from the person's Google Calendar, when connected
   tools?: Tool[];
   banner?: ReactNode;
   now?: Date;
@@ -35,7 +37,7 @@ export interface WorkspaceProps {
 const ICON: Record<string, LucideIcon> = { table: Table2, kanban: Columns3, calendar: CalendarDays, worklist: ListChecks, analysis: BrainCircuit };
 const HOY = 'hoy';
 
-export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, onWebhook, tools = [], banner, now, className = '' }: WorkspaceProps) {
+export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, onWebhook, busy, tools = [], banner, now, className = '' }: WorkspaceProps) {
   const sections = useMemo(() => blueprint.views.filter((v) => v.type !== 'dashboard'), [blueprint.views]);
   const [section, setSection] = useState<string>(HOY);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -55,7 +57,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
     const r = await onCreate(entityKey, data);
     if (r && 'id' in r) setOpenId(r.id);
   };
-  const actions = useMemo(() => ({ createQuietly: onCreate, sendWebhook: onWebhook }), [onCreate, onWebhook]);
+  const actions = useMemo(() => ({ createQuietly: onCreate, sendWebhook: onWebhook, busy }), [onCreate, onWebhook, busy]);
 
   const nav = (
     <nav aria-label="Secciones" className="flex flex-col gap-0.5">

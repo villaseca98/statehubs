@@ -298,6 +298,12 @@ describe('buildSlots', () => {
     expect(days[1].slots.map((s) => [s.time, s.taken])).toEqual([['09:00', false], ['10:00', true], ['12:00', false]]);
   });
 
+  it('marks slots that overlap a Google Calendar busy interval', () => {
+    const busy = [{ from: '2026-10-12T09:30', to: '2026-10-12T10:15' }, { from: '2026-10-12T12:00', to: '2026-10-12T12:00' }, { from: '2026-10-12T13:00', to: '2026-10-12T14:00' }];
+    const [day] = buildSlots(a, [], new Date(2026, 9, 12, 8, 0), 1, busy);
+    expect(day.slots.map((s) => [s.time, s.taken, !!s.google])).toEqual([['09:00', true, true], ['10:00', true, true], ['12:00', false, false]]);
+  });
+
   it('drops a day with nothing left', () => {
     const days = buildSlots(a, [], new Date(2026, 9, 9, 12, 30), 1);
     expect(days[0].date).toBe('2026-10-12');
