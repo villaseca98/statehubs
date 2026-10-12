@@ -8,7 +8,10 @@ import type { BusyInterval } from '@shared/blueprint/slots.ts';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = () => server() as any;
 
-export interface CrmApp { id: string; name: string; current_version: number | null; updated_at: string }
+export interface CrmApp { id: string; org_id?: string | null; name: string; current_version: number | null; updated_at: string }
+export type OrgRole = 'owner' | 'admin' | 'agent' | 'viewer';
+export interface CrmOrganization { id: string; name: string; settings: Record<string, unknown>; owner_id: string; updated_at: string }
+export interface CrmOrgMember { org_id: string; user_id: string; role: OrgRole; joined_at: string }
 export interface CrmVersion { version: number; summary: string; created_at: string; blueprint: Blueprint }
 export interface CrmMessage { id: string; role: 'user' | 'assistant'; content: string; proposal_id: string | null; created_at: string }
 // What a calendar sync did; `mensaje` replaces the counts when there was nothing to do.
@@ -34,10 +37,15 @@ async function must<T>(p: PromiseLike<{ data: T; error: { message: string } | nu
 }
 
 export const crmApi = {
-  listApps: () => must<CrmApp[]>(db().from('crm_apps').select('id, name, current_version, updated_at').order('updated_at', { ascending: false })),
-  createApp: (ownerId: string) => must<CrmApp>(db().from('crm_apps').insert({ owner_id: ownerId }).select('id, name, current_version, updated_at').single()),
+  listApps: () => must<CrmApp[]>(db().from('crm_apps').select('id, org_id, name, current_version, updated_at').order('updated_at', { ascending: false })),
+  organizations: () => must<CrmOrganization[]>(db().from('crm_organizations').select('id, name, settings, owner_id, updated_at').order('updated_at', { ascending: false })),
+  members: (orgId: string) => must<CrmOrgMember[]>(db().from('crm_org_members').select('org_id, user_id, role, joined_at').eq('org_id', orgId)),
+  updateOrganization: (orgId: string, name: string, settings: Record<string, unknown>) => must<CrmOrganization>(db().from('crm_organizations').update({ name, settings }).eq('id', orgId).select('id, name, settings, owner_id, updated_at').single()),
+  setOrganizationMember: (orgId: string, userId: string, role: Exclude<OrgRole, 'owner'>) => must(db().rpc('crm_set_org_member', { p_org: orgId, p_user: userId, p_role: role })),
+  removeOrganizationMember: (orgId: string, userId: string) => must(db().rpc('crm_remove_org_member', { p_org: orgId, p_user: userId })),
+  createApp: (ownerId: string) => must<CrmApp>(db().from('crm_apps').insert({ owner_id: ownerId }).select('id, org_id, name, current_version, updated_at').single()),
   deleteApp: (id: string) => must(db().from('crm_apps').delete().eq('id', id)),
-  getApp: (id: string) => must<CrmApp | null>(db().from('crm_apps').select('id, name, current_version, updated_at').eq('id', id).maybeSingle()),
+  getApp: (id: string) => must<CrmApp | null>(db().from('crm_apps').select('id, org_id, name, current_version, updated_at').eq('id', id).maybeSingle()),
   versions: (appId: string) => must<CrmVersion[]>(db().from('crm_app_versions').select('version, summary, created_at, blueprint').eq('app_id', appId).order('version', { ascending: false })),
   messages: (appId: string) => must<CrmMessage[]>(db().from('crm_messages').select('id, role, content, proposal_id, created_at').eq('app_id', appId).order('created_at')),
   pendingProposal: async (appId: string) => {
