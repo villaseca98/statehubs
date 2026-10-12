@@ -82,7 +82,7 @@ export function Numbers() {
       <div className="mx-auto grid max-w-6xl gap-px overflow-hidden rounded-[28px] border border-estate-line bg-estate-line sm:grid-cols-2 lg:grid-cols-4">
         {FIGURES.map(([n, label, text], i) => (
           <Reveal key={label} delay={i * 0.07} className="h-full">
-            <div className="h-full bg-white p-6 sm:p-8">
+            <div className="group h-full bg-white p-6 transition-all duration-500 hover:bg-estate-cream sm:p-8">
               <div className="font-serif text-6xl font-normal leading-none tracking-tight text-estate-forest sm:text-7xl">{n}</div>
               <div className="mt-4 font-semibold text-estate-ink">{label}</div>
               <p className="mt-1.5 text-sm text-estate-muted">{text}</p>
@@ -186,7 +186,7 @@ export function Audience({ onPick, busy }: { onPick: (k: PackKey) => void; busy:
           const dark = key === 'ambos';
           return (
             <Reveal key={key} delay={i * 0.08} className="h-full">
-              <article className={`relative flex h-full flex-col rounded-[28px] border p-6 ${dark ? 'border-estate-forest bg-estate-forest text-estate-cream' : 'border-estate-line bg-white'}`}>
+              <article className={`group relative flex h-full transform-gpu flex-col rounded-[28px] border p-6 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_35px_65px_-30px_rgba(19,42,30,.42)] motion-reduce:transform-none ${dark ? 'border-estate-forest bg-estate-forest text-estate-cream' : 'border-estate-line bg-white'}`}>
                 {dark && <span className="absolute right-5 top-5 rounded-full bg-estate-lime px-2.5 py-0.5 text-[11px] font-semibold text-estate-forest">Todo en uno</span>}
                 <span className={`grid h-11 w-11 place-items-center rounded-full ${dark ? 'bg-estate-lime text-estate-forest' : 'bg-estate-forest text-estate-lime'}`}><Icon className="h-5 w-5" /></span>
                 <h3 className={`mt-5 font-serif text-3xl font-normal ${dark ? 'text-white' : 'text-estate-ink'}`}>{title}</h3>
