@@ -94,7 +94,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
   // One element for the hub switcher: a pill in the top bar on a computer,
   // a dock at the bottom on a phone.
   const hubNav = (
-    <nav aria-label="Hubs" className="fixed inset-x-3 bottom-3 z-30 mx-auto flex max-w-md justify-around gap-1 rounded-[22px] p-1.5 shadow-[0_12px_40px_rgba(11,16,32,.18)] md:static md:z-auto md:mx-0 md:max-w-none md:justify-start md:rounded-full md:p-1 md:shadow-none"
+    <nav aria-label="Hubs" className="fixed inset-x-3 bottom-3 z-30 mx-auto flex max-w-md justify-around gap-1 rounded-[22px] p-1.5 shadow-[0_16px_48px_rgba(11,16,32,.22)] md:static md:z-auto md:mx-0 md:max-w-none md:justify-start md:rounded-full md:p-1 md:shadow-none"
       style={glass}>
       {hubs.map((h) => {
         const Icon = HUB_ICON[h.key];
@@ -102,7 +102,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
         const badge = h.key === 'hoy' && home === HOY && pending ? pending : undefined;
         return (
           <button key={h.key} onClick={() => go(h.sections[0])} aria-current={active ? 'page' : undefined}
-            className="relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-2 py-1.5 text-[0.72em] font-medium transition md:flex-none md:flex-row md:gap-1.5 md:rounded-full md:px-3.5 md:text-[0.95em]"
+            className="relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-2 py-1.5 text-[0.72em] font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm active:scale-[.97] motion-reduce:transform-none md:flex-none md:flex-row md:gap-1.5 md:rounded-full md:px-3.5 md:text-[0.95em]"
             style={active ? { background: GREEN, color: '#fff' } : { color: 'var(--crm-muted)' }}>
             <Icon className="h-[18px] w-[18px] md:h-4 md:w-4" style={active ? { color: 'var(--crm-accent)' } : undefined} />
             <span className="truncate">{h.label}</span>
@@ -134,13 +134,13 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
           <div className="hidden min-w-0 flex-1 justify-center md:flex">{hubNav}</div>
           <div className="ml-auto flex shrink-0 items-center gap-1 md:ml-0">
             <button onClick={() => setPalette(true)} aria-label="Buscar en toda la app" title="Buscar (Ctrl/⌘ K)"
-              className="inline-flex items-center gap-2 rounded-full p-2 transition hover:opacity-80 lg:px-3 lg:py-1.5" style={{ border: '1px solid var(--crm-border)', color: 'var(--crm-muted)', background: 'var(--crm-surface)' }}>
+              className="inline-flex items-center gap-2 rounded-full p-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md active:scale-[.97] motion-reduce:transform-none lg:px-3 lg:py-1.5" style={{ border: '1px solid var(--crm-border)', color: 'var(--crm-muted)', background: 'var(--crm-surface)' }}>
               <Search className="h-4 w-4" /><span className="hidden lg:inline">Buscar</span>
               <kbd className="hidden rounded px-1 text-[0.78em] xl:inline" style={{ border: '1px solid var(--crm-border)' }}>⌘K</kbd>
             </button>
             {tools.map((t) => <ToolButton key={t.key} tool={t} dark={dark} />)}
             <button onClick={toggleMode} aria-label={dark ? 'Modo claro' : 'Modo oscuro'} title={dark ? 'Modo claro' : 'Modo oscuro'}
-              className="rounded-full p-2 transition hover:opacity-80" style={{ color: 'var(--crm-muted)' }}>
+              className="rounded-full p-2 transition-all duration-300 hover:-translate-y-0.5 hover:rotate-12 hover:bg-black/5 active:scale-95 motion-reduce:transform-none" style={{ color: 'var(--crm-muted)' }}>
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
           </div>
@@ -157,7 +157,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate, onDelete, on
                 <h1 className="mt-1 truncate text-[1.9em] font-normal leading-tight tracking-[-0.02em] md:text-[2.6em]">{view ? view.label : 'Hoy'}</h1>
               </div>
               {entity && (
-                <button onClick={() => create(entity.key)} className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(31,92,69,.28)] transition hover:-translate-y-px"
+                <button onClick={() => create(entity.key)} className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(31,92,69,.28)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(31,92,69,.32)] active:scale-[.98] motion-reduce:transform-none"
                   style={{ background: GREEN }}>
                   <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Nuevo: {entity.label.toLowerCase()}</span><span className="sm:hidden">Nuevo</span>
                 </button>
