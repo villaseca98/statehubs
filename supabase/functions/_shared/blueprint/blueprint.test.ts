@@ -92,7 +92,7 @@ describe('validateBlueprint', () => {
 describe('diffBlueprints', () => {
   it('describes a new app', () => {
     const changes = diffBlueprints(null, base());
-    expect(changes[0].text).toBe('Crear la aplicación «Inmobiliaria Sol».');
+    expect(changes[0].text).toBe(`Crear la aplicación «${base().name}».`);
     expect(changes.some((c) => c.text.startsWith('Operaciones:'))).toBe(true);
   });
 

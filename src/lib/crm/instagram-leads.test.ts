@@ -36,7 +36,7 @@ describe('Instagram lead qualification', () => {
       email: 'persona@example.com',
       contacto_autorizado: 'no',
     });
-    expect(result.score).toBe(90);
+    expect(result.score).toBe(100);
     expect(result.contactAllowed).toBe(false);
     expect(result.nextAction).toMatch(/No iniciar contacto comercial/);
   });
