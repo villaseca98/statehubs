@@ -9,6 +9,7 @@ Implemented means code exists and the indicated local workflow is covered; it do
 | Server CRUD | Partial | api.ts + RLS; live JWT workflow unverified, acknowledged writes and atomic conflict-aware patches now implemented; live deployment pending |
 | Leads | Partial | worklist/stages/filters/actions; no conversion, archive, bulk actions or activity ledger |
 | Clients/contact identity | Partial | contacto_inmo lifecycle conversion, reversible archive and multiple roles implemented; legacy cliente/lead reconciliation and independent client dossier pending |
+| Commission allocation and receipts | Partial | Fixed allocations, exact minor units, partial/full receipts, idempotent audited RPCs and concurrent balance protection; rules/reversals/banking pending (COMMISSION_LEDGER.md) |
 | Offers and negotiation | Partial | Immutable per-deal revision history, validated links, optimistic concurrency, idempotent RPC and read-only controls; competing offers/expiry/legal signing pending (DEAL_OFFERS.md) |
 | Pipeline | Partial | Kanban and stored stage values; no event history or transactional transition rules |
 | Activities/tasks | Partial | cita/tarea/servicio and Today; record activity timeline and linked dossier implemented; reminder worker and cross-record timeline pending |

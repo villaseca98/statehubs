@@ -1,3 +1,4 @@
+import { DealCommissions } from './DealCommissions';
 import { DealOffers } from './DealOffers';
 import { useEffect, useState } from 'react';
 import { Check, Trash2, X, ArrowLeft } from 'lucide-react';
@@ -128,6 +129,7 @@ export function RecordPanel({ blueprint, appId, record, records, groupBy, dark =
       </div>
 
       <div className="flex-1 overflow-y-auto" style={{ padding: 'var(--crm-pad)' }}>
+        {record.entity === 'operacion' && <DealCommissions key={`commissions-${record.id}`} appId={appId} record={record} readOnly={readOnly} />}
         {record.entity === 'operacion' && <DealOffers key={`offers-${record.id}`} appId={appId} record={record} readOnly={readOnly} />}
         <MatchIntelligence key={`matching-${record.id}`} appId={appId} record={record} records={records} blueprint={blueprint} readOnly={readOnly} onUpdate={onUpdate} onOpen={onOpen} />
         {record.entity === 'contacto_inmo' && <ContactLifecycle record={record} readOnly={readOnly} onUpdate={onUpdate} />}

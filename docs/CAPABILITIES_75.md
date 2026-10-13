@@ -41,7 +41,7 @@ Updated 2026-10-15. This tracker reserves every ID from 1 to 75. The supplied pr
 | 35 | Definition not supplied | Awaiting definition | Reserved for the corresponding master prompt; no completion claim. |
 | 36 | Customizable visual deal pipeline | Partial | Existing blueprint-configured Kanban and deals; detailed stage-value history incomplete. |
 | 37 | Agent and team management | Partial | Owner/admin/agent/viewer membership UI/RLS; offices/managers and email invites pending. |
-| 38 | Commission tracking and allocation | Partial | Existing deal percentage and totals; split allocation and payment ledger pending. |
+| 38 | Commission tracking and allocation | Partial | Fixed commission allocation and manual partial/full receipt ledger implemented with exact minor units, tenant permissions and concurrent overcollection prevention. Rules, amendments/reversals, bank reconciliation and payouts pending. |
 | 39 | Multi-role relationship management | Partial | Shared contact identity, multi-role flags, conversion/archive and linked dossier; legacy dedup reconciliation pending. |
 | 40 | Viewings, offers, negotiations and deal progression | Partial | Linked viewing creation and append-only submitted/countered/accepted/rejected/withdrawn offer history verified; competing offers, closing and commission lifecycle incomplete. |
 | 41 | Definition not supplied | Awaiting definition | Reserved for the corresponding master prompt; no completion claim. |
@@ -92,3 +92,5 @@ Updated 2026-10-15. This tracker reserves every ID from 1 to 75. The supplied pr
 - M2.6 (pending): pure investment portfolio metrics (15), residential lease review windows (13) and consent-aware dormant lead review (24), with Vitest regression cases. No persistent writes, automatic contact, legal renewals or production activation.
 
 - M2.3: one negotiation stream per deal, auditable offer revisions, retry deduplication, stale-write rejection and tenant-safe relationships. Full suite: 267 tests. SQL tenant/permission/workflow checks pass. See DEAL_OFFERS.md; production activation pending.
+
+- M2.4: commission allocation and receipt ledger verified: 284 tests, PostgreSQL tenant checks and concurrent receipt race, mobile/desktop workflows. See COMMISSION_LEDGER.md. Live migration and publication remain pending.

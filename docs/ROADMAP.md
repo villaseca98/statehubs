@@ -31,3 +31,5 @@ D6a / Master prompt 2: deterministic matching, editable profiles, persistent sho
 Supabase core activation is now verified against the real project, including CRUD, roles, notes, matching decisions and private Storage. Next release prerequisites are Vercel client configuration and Resend domain/SMTP, followed by correcting the existing PR #21 booking guard rather than duplicating it. Evidence and limitations: [SUPABASE_ACTIVATION](SUPABASE_ACTIVATION.md).
 
 D5a / Master prompt 2: deal offer history implemented with explicit currency, guarded transitions, per-revision audit and concurrent-edit protection. No automatic closing or financial movement. Next commercial milestone: commission allocation and payment ledger; see [DEAL_OFFERS](DEAL_OFFERS.md).
+
+D5b / Master prompt 2: commission allocation and manual receipt ledger verified, including real concurrent-write protection. Commission rules, corrections/reversals, automatic agent linking and external banking remain pending. See [COMMISSION_LEDGER](COMMISSION_LEDGER.md). Next commercial increment should add safe financial amendments/reversals before bank integration.
