@@ -21,20 +21,21 @@ export type ThemeMode = 'light' | 'dark';
 
 export function themeVars(mode: ThemeMode = 'light'): CSSProperties {
   const s = mode === 'dark' ? { ...LOOK, colors: LOOK_DARK } : LOOK;
+  const warm = mode === 'light';
   const d = DENSITY[s.density];
   return {
-    '--crm-bg': s.colors.bg,
-    '--crm-surface': s.colors.surface,
-    '--crm-border': s.colors.border,
+    '--crm-bg': warm ? '#fdf9f6' : s.colors.bg,
+    '--crm-surface': warm ? '#fffdfa' : s.colors.surface,
+    '--crm-border': warm ? '#efdfd8' : s.colors.border,
     '--crm-text': s.colors.text,
     '--crm-muted': s.colors.muted,
-    '--crm-primary': s.colors.primary,
+    '--crm-primary': warm ? '#bf3025' : s.colors.primary,
     '--crm-primary-text': s.colors.primaryText,
-    '--crm-nav-bg': s.colors.navBg,
+    '--crm-nav-bg': warm ? '#fff7f2' : s.colors.navBg,
     '--crm-nav-text': s.colors.navText,
     '--crm-nav-active': s.colors.navActive,
-    '--crm-soft': s.colors.soft,
-    '--crm-accent': s.colors.accent,
+    '--crm-soft': warm ? '#fce5de' : s.colors.soft,
+    '--crm-accent': warm ? '#ffe4da' : s.colors.accent,
     '--crm-radius': `${s.radius}px`,
     '--crm-row': d.row,
     '--crm-font-size': d.font,
@@ -45,7 +46,7 @@ export function themeVars(mode: ThemeMode = 'light'): CSSProperties {
     fontFamily: FONTS.sans,
     fontSize: d.font,
     color: s.colors.text,
-    background: s.colors.bg,
+    background: warm ? '#fdf9f6' : s.colors.bg,
     colorScheme: mode,
   } as CSSProperties;
 }
@@ -87,8 +88,8 @@ export function chipStyle(color: OptionColor | undefined, dark: boolean, solid =
   return dark ? { background: `${SOLID[c]}26`, color: darkFg } : { background: bg, color: fg };
 }
 
-const money = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 });
-const num = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2 });
+const money = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 });
+const num = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
 
 export function formatMoney(v: number) {
   return money.format(v);
@@ -100,14 +101,14 @@ export function formatValue(field: Field, value: unknown, titleOf?: (id: string)
     case 'money': return typeof value === 'number' ? money.format(value) : String(value);
     case 'number': return typeof value === 'number' ? num.format(value) : String(value);
     case 'percent': return typeof value === 'number' ? `${num.format(value)} %` : String(value);
-    case 'boolean': return value ? 'Sí' : 'No';
+    case 'boolean': return value ? 'Yes' : 'No';
     case 'date': {
       const d = new Date(`${value}T00:00:00`);
-      return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+      return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     }
     case 'datetime': {
       const d = new Date(String(value));
-      return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     }
     case 'select': return field.options?.find((o) => o.value === value)?.label ?? String(value);
     case 'relation': return titleOf?.(String(value)) ?? '';
@@ -120,7 +121,7 @@ export const isNumeric = (f?: Field) => !!f && (f.type === 'number' || f.type ==
 export function titleOfRecord(entity: Entity | undefined, data: RecordData): string {
   if (!entity) return '';
   const v = data[entity.titleField];
-  return v === undefined || v === null || v === '' ? `${entity.label} sin nombre` : String(v);
+  return v === undefined || v === null || v === '' ? `${entity.label} untitled` : String(v);
 }
 
 export function makeTitleLookup(entities: Entity[], records: AppRecord[]) {

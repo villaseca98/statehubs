@@ -15,6 +15,7 @@ import { RecordDialog } from './RecordDialog';
 import { TodayView } from './TodayView';
 import { OpsView } from './OpsView';
 import { OperationsDashboard } from './OperationsDashboard';
+import { LivingWorkspace } from './LivingWorkspace';
 import { CardsView } from './CardsView';
 import { RuntimeContext } from './runtimeContext';
 import { FilterBar } from './FilterBar';
@@ -59,6 +60,7 @@ const HUB_ICON: Record<string, LucideIcon> = { hoy: Sun, clientes: Users, inmueb
 // Sections that get the filter bar (search, rules, sort, saved views).
 const FILTERED = new Set<string>(['table', 'kanban', 'worklist', 'calendar', 'cards']);
 const ACCENT = 'var(--crm-primary)';
+const HUB_EN: Record<string,string> = { hoy:'Home', clientes:'Clients', inmuebles:'Properties', turistico:'Rentals', empresa:'Business' };
 
 export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecord, onDelete, onWebhook, onSyncIcal, tools = [], banner, now, className = '', appId, readOnly = false, canDelete = true }: WorkspaceProps) {
   const text = useProductText();
@@ -89,7 +91,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
   const baseShown = filters.entity ? filters.records : records;
   const contactView = entity?.key === 'contacto_inmo';
   const shown = contactView && contactFilter !== 'all' ? baseShown.filter(r => r.entity !== 'contacto_inmo' || contactStage(r.data) === contactFilter) : baseShown;
-  const labelOf = (key: string) => (key === HOY ? 'Hoy' : sections.find((v) => v.key === key)?.label ?? key);
+  const labelOf = (key: string) => (key === HOY ? 'Home' : sections.find((v) => v.key === key)?.label ?? key);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPalette((p) => !p); } };
@@ -122,7 +124,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             className="relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-2 py-1.5 text-[0.72em] font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm active:scale-[.97] motion-reduce:transform-none md:min-h-11 md:flex-none md:flex-row md:gap-3 md:rounded-xl md:px-3.5 md:text-[0.95em]"
             style={active ? { background: ACCENT, color: '#fff' } : { color: 'var(--crm-muted)' }}>
             <Icon className="h-[18px] w-[18px] md:h-4 md:w-4" style={active ? { color: 'var(--crm-accent)' } : undefined} />
-            <span className="truncate">{h.label}</span>
+            <span className="truncate">{HUB_EN[h.key] ?? h.label}</span>
             {badge !== undefined && <span className="absolute right-1 top-0.5 rounded-full px-1.5 text-[10px] font-semibold leading-4 text-white md:static md:leading-[18px]" style={{ background: ACCENT }}>{badge}</span>}
           </button>
         );
@@ -144,41 +146,41 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
           </div>
           <div className="hidden min-w-0 flex-1 md:block" />
           <div className="ml-auto flex min-w-0 items-center gap-1 overflow-x-auto md:ml-0">
-            <button onClick={() => setPalette(true)} aria-label="Buscar en toda la app" title="Buscar (Ctrl/⌘ K)"
+            <button onClick={() => setPalette(true)} aria-label="Search across workspace" title="Search (Ctrl/⌘ K)"
               className="sh-touch inline-flex items-center gap-2 rounded-full p-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md active:scale-[.97] motion-reduce:transform-none lg:px-3 lg:py-1.5" style={{ border: '1px solid var(--crm-border)', color: 'var(--crm-muted)', background: 'var(--crm-surface)' }}>
-              <Search className="h-4 w-4" /><span className="hidden lg:inline">Buscar</span>
+              <Search className="h-4 w-4" /><span className="hidden lg:inline">Search</span>
               <kbd className="hidden rounded px-1 text-[0.78em] xl:inline" style={{ border: '1px solid var(--crm-border)' }}>⌘K</kbd>
             </button>
             {tools.map((t) => <ToolButton key={t.key} tool={t} dark={dark} />)}
-            <button onClick={toggleMode} aria-label={dark ? 'Modo claro' : 'Modo oscuro'} title={dark ? 'Modo claro' : 'Modo oscuro'}
+            <button onClick={toggleMode} aria-label={dark ? 'Light mode' : 'Dark mode'} title={dark ? 'Light mode' : 'Dark mode'}
               className="sh-touch rounded-full p-2 transition-all duration-300 hover:-translate-y-0.5 hover:rotate-12 hover:bg-black/5 active:scale-95 motion-reduce:transform-none" style={{ color: 'var(--crm-muted)' }}>
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
           </div>
         </header>
         <div className="relative flex min-h-0 flex-1">
-        <aside className="md:w-52 md:shrink-0 md:border-r md:px-3 md:py-7" style={{ background: 'var(--crm-nav-bg)', borderColor: 'var(--crm-border)' }}>
+        <aside className="md:w-56 md:shrink-0 md:border-r md:px-3 md:py-7" style={{ background: 'var(--crm-nav-bg)', borderColor: 'var(--crm-border)' }}>
           <p className="mb-5 hidden px-3 text-[10px] font-semibold uppercase tracking-[.18em] md:block" style={{ color: 'var(--crm-muted)' }}>{text.workspace}</p>
           {hubNav}
         </aside>
         <main className="relative z-10 min-h-0 min-w-0 flex-1 overflow-auto">
-          <div className="mx-auto w-full max-w-[1440px] px-4 pb-28 pt-5 md:px-8 md:pb-10 md:pt-7">
+          <div className="mx-auto w-full max-w-[1680px] px-4 pb-28 pt-5 md:px-8 md:pb-10 md:pt-8">
             <div className="mb-5 flex flex-wrap items-end gap-x-4 gap-y-3">
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2 text-[0.78em] font-semibold uppercase tracking-[0.16em]" style={{ color: 'var(--crm-muted)' }}>
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: ACCENT }} />{hub.label}
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: ACCENT }} />{HUB_EN[hub.key] ?? hub.label}
                 </p>
-                <h1 className="mt-1 truncate text-[1.9em] font-normal leading-tight tracking-[-0.02em] md:text-[2.6em]">{view ? view.label : 'Hoy'}</h1>
+                <h1 className="mt-1 truncate text-[1.9em] font-normal leading-tight tracking-[-0.02em] md:text-[2.8em]">{view ? view.label : 'Home'}</h1>
               </div>
               {entity && !readOnly && (
                 <button onClick={() => create(entity.key)} className="sh-touch inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(180,22,54,.28)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(180,22,54,.32)] active:scale-[.98] motion-reduce:transform-none"
                   style={{ background: ACCENT }}>
-                  <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Nuevo: {entity.label.toLowerCase()}</span><span className="sm:hidden">Nuevo</span>
+                  <Plus className="h-4 w-4" /> <span className="hidden sm:inline">New: {entity.label.toLowerCase()}</span><span className="sm:hidden">New</span>
                 </button>
               )}
             </div>
             {hub.sections.length > 1 && (
-              <nav aria-label="Secciones" className="-mx-4 mb-5 flex gap-1 overflow-x-auto px-4 md:mx-0 md:px-0" style={{ borderBottom: '1px solid var(--crm-border)' }}>
+              <nav aria-label="Sections" className="-mx-4 mb-5 flex gap-1 overflow-x-auto px-4 md:mx-0 md:px-0" style={{ borderBottom: '1px solid var(--crm-border)' }}>
                 {hub.sections.map((key) => {
                   const v = sections.find((x) => x.key === key);
                   const Icon = v ? ICON[v.type] ?? Table2 : Sun;
@@ -202,6 +204,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             </div>}
             {contactView && !shown.some(r => r.entity === 'contacto_inmo') && <p role="status" className="mb-4 text-sm" style={{ color: 'var(--crm-muted)' }}>{contactsText.empty}</p>}
             {view && filters.entity && <div className="mb-4"><FilterBar filters={filters} records={records} titleOf={titleOf} dark={dark} /></div>}
+            {(!view || view.type === 'ops') && <LivingWorkspace blueprint={blueprint} records={records} onOpen={(r) => setOpenId(r.id)} />}
             {(!view || view.type === 'ops') && <OperationsDashboard blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
             {!view && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
             {view && view.type === 'worklist' && (
@@ -227,7 +230,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
         </div>
 
         {open && (
-          <RecordDialog title={`Detalle de ${titleOf(open.id) ?? open.entity}`} onClose={() => setOpenId(null)}>
+          <RecordDialog title={`Details: ${titleOf(open.id) ?? open.entity}`} onClose={() => setOpenId(null)}>
             <RecordPanel key={open.id} onOpen={id => { setRecordTrail(trail => [...trail, open.id]); setOpenId(id); }} onBack={recordTrail.length ? () => { setOpenId(recordTrail[recordTrail.length-1]); setRecordTrail(trail => trail.slice(0,-1)); } : undefined} blueprint={blueprint} appId={appId} record={open} records={records} titleOf={titleOf} dark={dark}
               groupBy={blueprint.views.find((v) => v.entity === open.entity && v.groupBy)?.groupBy}
               onUpdate={onUpdate} onDelete={(id) => { onDelete(id); setOpenId(null); }} onClose={() => setOpenId(null)} />
@@ -235,7 +238,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
         )}
 
         {palette && (
-          <CommandPalette blueprint={blueprint} records={records} sections={[{ key: HOY, label: 'Hoy' }, ...sections.map((v) => ({ key: v.key, label: v.label }))]}
+          <CommandPalette blueprint={blueprint} records={records} sections={[{ key: HOY, label: 'Home' }, ...sections.map((v) => ({ key: v.key, label: v.label }))]}
             onClose={() => setPalette(false)} onSection={go}
             onRecord={(id) => {
               const r = records.find((x) => x.id === id);

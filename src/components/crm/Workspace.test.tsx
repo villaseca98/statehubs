@@ -23,10 +23,10 @@ describe('Workspace', () => {
   it('opens on «Hoy» and moves between sections one at a time', () => {
     const bp = composeApp('crm', 'Mi CRM', modulesFor('crm').map((m) => m.key).filter((k) => k !== 'centro'));
     render(<Harness blueprint={bp} records={sampleRecordsFor(bp)} />);
-    expect(screen.getByRole('heading', { level: 1, name: 'Hoy' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Home' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Para hoy' })).toBeTruthy();
 
-    openSection(/Embudo/);
+    openSection(/Embudo|Pipeline/);
     expect(screen.getByRole('heading', { level: 1, name: 'Embudo' })).toBeTruthy();
     expect(screen.queryByRole('region', { name: 'Para hoy' })).toBeNull();
   });
@@ -75,7 +75,7 @@ describe('Workspace', () => {
   it('shows the property cards with price, badge and quick filters', () => {
     const bp = composePack('ambos', 'Inmobiliaria');
     render(<Harness blueprint={bp} records={sampleRecordsFor(bp)} />);
-    openSection(/^Inmuebles$/);
+    openSection(/^(Inmuebles|Properties)$/);
     const list = screen.getByRole('list', { name: 'Inmuebles' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(8);
     expect(within(list).getByText(/118\s€ \/ noche/)).toBeTruthy();
@@ -156,7 +156,7 @@ describe('Workspace', () => {
       const { container } = render(<Harness blueprint={bp} records={[]} />);
       const app = container.querySelector('[data-app="statehubs"]') as HTMLElement;
       expect(app.dataset.theme).toBe('light');
-      fireEvent.click(screen.getAllByRole('button', { name: 'Modo oscuro' })[0]);
+      fireEvent.click(screen.getAllByRole('button', { name: 'Dark mode' })[0]);
       expect(app.dataset.theme).toBe('dark');
       expect(app.style.getPropertyValue('--crm-bg')).toBe('#111114');
       expect(window.localStorage.getItem('statehubs.tema')).toBe('dark');

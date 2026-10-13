@@ -21,15 +21,15 @@ describe('AppPage: change the app with pieces, preview first, undo later', () =>
   it('adds a piece as a proposal, applies it and can go back', async () => {
     const id = await guestApp();
     render(<Toaster><MemoryRouter initialEntries={[`/app/${id}`]}><Routes><Route path="/app/:appId" element={<AppPage />} /></Routes></MemoryRouter></Toaster>);
-    await screen.findByRole('heading', { level: 1, name: 'Hoy' });
+    await screen.findByRole('heading', { level: 1, name: 'Home' });
 
     fireEvent.click(screen.getAllByRole('button', { name: /^Piezas/ })[0]);
     const panel = screen.getByRole('dialog', { name: 'Piezas' });
     fireEvent.click(within(panel).getByRole('button', { name: /^Presupuestos/ }));
     await screen.findByText(/Vista previa/);
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
-    fireEvent.click(within(screen.getAllByRole('navigation', { name: 'Hubs' })[0]).getByRole('button', { name: /Clientes/ }));
-    expect(within(screen.getAllByRole('navigation', { name: 'Secciones' })[0]).getByRole('button', { name: /Presupuestos/ })).toBeTruthy();
+    fireEvent.click(within(screen.getAllByRole('navigation', { name: 'Hubs' })[0]).getByRole('button', { name: /Clients/ }));
+    expect(within(screen.getAllByRole('navigation', { name: 'Sections' })[0]).getByRole('button', { name: /Presupuestos/ })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /^Aplicar/ }));
     await waitFor(async () => expect((await localCrmApi.getApp(id))?.current_version).toBe(2));
@@ -44,7 +44,7 @@ describe('AppPage: change the app with pieces, preview first, undo later', () =>
   it('sets up the analysis from the pieces panel, as a proposal', async () => {
     const id = await guestApp();
     render(<Toaster><MemoryRouter initialEntries={[`/app/${id}`]}><Routes><Route path="/app/:appId" element={<AppPage />} /></Routes></MemoryRouter></Toaster>);
-    await screen.findByRole('heading', { level: 1, name: 'Hoy' });
+    await screen.findByRole('heading', { level: 1, name: 'Home' });
     fireEvent.click(screen.getAllByRole('button', { name: /^Piezas/ })[0]);
     const setup = within(screen.getByRole('dialog', { name: 'Piezas' })).getByRole('region', { name: 'Configurar el análisis' });
     fireEvent.change(within(setup).getByRole('combobox'), { target: { value: '14' } });
@@ -58,7 +58,7 @@ describe('AppPage: change the app with pieces, preview first, undo later', () =>
   it('has a Google Calendar panel that, in guest mode, says it needs an account', async () => {
     const id = await guestApp();
     render(<Toaster><MemoryRouter initialEntries={[`/app/${id}`]}><Routes><Route path="/app/:appId" element={<AppPage />} /></Routes></MemoryRouter></Toaster>);
-    await screen.findByRole('heading', { level: 1, name: 'Hoy' });
+    await screen.findByRole('heading', { level: 1, name: 'Home' });
     fireEvent.click(screen.getAllByRole('button', { name: /^Google Calendar/ })[0]);
     const panel = screen.getByRole('dialog', { name: 'Google Calendar' });
     await within(panel).findByText(/necesita una cuenta/);
