@@ -97,7 +97,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
     if (r && 'id' in r) setOpenId(r.id);
   };
   const actions = useMemo(() => ({ canEdit: !readOnly, canDelete: canDelete && !readOnly, createQuietly: readOnly ? () => undefined : onCreate, sendWebhook: readOnly ? undefined : onWebhook }), [readOnly, canDelete, onCreate, onWebhook]);
-  const glass = { background: dark ? 'rgba(27,27,32,.94)' : 'rgba(255,255,255,.72)', border: '1px solid var(--crm-border)', backdropFilter: 'blur(18px) saturate(1.4)', WebkitBackdropFilter: 'blur(18px) saturate(1.4)' } as const;
+  const glass = { background: 'var(--crm-surface)', border: '1px solid var(--crm-border)' } as const;
 
   // One element for the hub switcher: a pill in the top bar on a computer,
   // a dock at the bottom on a phone.
@@ -124,12 +124,6 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
   return (
     <RuntimeContext.Provider value={actions}>
       <div className={`relative flex h-full min-h-0 flex-col overflow-hidden ${className}`} style={themeVars(mode)} data-app="statehubs" data-theme={mode}>
-        {/* Soft brand light behind everything. */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -left-40 -top-56 h-[520px] w-[520px] rounded-full blur-3xl" style={{ background: 'var(--crm-primary)', opacity: dark ? 0.05 : 0.025 }} />
-          <div className="absolute -right-40 -top-40 h-[460px] w-[460px] rounded-full blur-3xl" style={{ background: 'var(--crm-accent)', opacity: dark ? 0.06 : 0.22 }} />
-        </div>
-
         {banner}
         <header className="relative z-20 flex items-center gap-3 px-3 py-2.5 md:px-5" style={{ ...glass, borderWidth: '0 0 1px 0' }}>
           <div className="flex min-w-0 items-center gap-2.5 md:w-52 md:shrink-0">

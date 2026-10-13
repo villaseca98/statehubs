@@ -14,7 +14,7 @@ export interface LookColors {
   navText: string;
   navActive: string;
   soft: string;    // tinted background for chips, active rows and progress tracks
-  accent: string;  // the second colour of charts (a soft lime)
+  accent: string;  // the second colour of charts (soft rose)
 }
 
 export interface Look {
@@ -28,8 +28,8 @@ export const LOOK: Look = {
   radius: 18,
   // White surfaces, charcoal text and StateHubs red throughout the workspace.
   colors: {
-    bg: '#f8f8fa', surface: '#ffffff', border: '#e8e8ed', text: '#19191d', muted: '#686872',
-    primary: '#b41636', primaryText: '#ffffff', navBg: '#ffffff', navText: '#555560', navActive: '#b41636',
+    bg: '#f8f8fa', surface: '#fdfcfb', border: '#e8e8ed', text: '#19191d', muted: '#686872',
+    primary: '#b41636', primaryText: '#ffffff', navBg: '#fdfcfb', navText: '#555560', navActive: '#b41636',
     soft: '#fceef1', accent: '#f3a5b6',
   },
 };
