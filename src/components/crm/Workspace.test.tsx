@@ -109,7 +109,7 @@ describe('Workspace', () => {
     it('filters a section with presets, rules and the search box, and saves the view', () => {
       const records = sampleRecordsFor(bp);
       render(<Harness blueprint={bp} records={records} />);
-      goTo(new RegExp(firstView().label));
+      goTo(/Deals/);
       const total = records.filter((r) => r.entity === 'operacion').length;
       expect(screen.getByText(`${total} de ${total}`)).toBeTruthy();
 
