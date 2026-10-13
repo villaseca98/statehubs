@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { recordSaveError } from '@/lib/crm/recordSaveError';
 import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { CalendarCheck, Check, Eye, History, Home, Loader2, MessagesSquare, Minus, Pencil, Plus, Puzzle, Send, Settings, Sparkles, X } from 'lucide-react';
@@ -106,7 +107,7 @@ export default function AppPage() {
   const sentFirst = useRef(false);
   const chatEnd = useRef<HTMLDivElement>(null);
 
-  const fail = useCallback((e: unknown) => toast({ title: 'Algo ha fallado', description: (e as Error).message, error: true }), [toast]);
+  const fail = useCallback((e: unknown) => toast({ title: 'Unable to save changes', description: recordSaveError(e), error: true }), [toast]);
   const instagramAccount = useCallback((action: InstagramAction) => api.instagram(appId, action), [api, appId]);
 
   const load = useCallback(async () => {
