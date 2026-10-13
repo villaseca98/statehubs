@@ -16,6 +16,7 @@ import { TodayView } from './TodayView';
 import { OpsView } from './OpsView';
 import { OperationsDashboard } from './OperationsDashboard';
 import { LivingWorkspace } from './LivingWorkspace';
+import { BusinessModeCards } from './BusinessModeCards';
 import { MatchDesk } from './MatchDesk';
 import { CardsView } from './CardsView';
 import { RuntimeContext } from './runtimeContext';
@@ -87,6 +88,9 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
   const [openId, setOpenId] = useState<string | null>(null);
   const [mode, setMode] = useState<ThemeMode>(initialMode);
   const [palette, setPalette] = useState(false);
+  const [businessMode, setBusinessMode] = useState<'real-estate' | 'holiday-rentals' | null>(() => { try { const value = localStorage.getItem(`statehubs:business-mode:${appId ?? blueprint.name}`); return value === 'real-estate' || value === 'holiday-rentals' ? value : null; } catch { return null; } });
+  const chooseBusinessMode = (value: 'real-estate' | 'holiday-rentals') => { setBusinessMode(value); try { localStorage.setItem(`statehubs:business-mode:${appId ?? blueprint.name}`,value); } catch { /* Private browsing: keep the in-memory selection. */ } };
+  const hasPropertyModule = blueprint.entities.some(e=>e.key==='inmueble');
   const dark = mode === 'dark';
 
   useEffect(() => { if (section === HOY ? home !== HOY : !sections.some((v) => v.key === section)) setSection(home); }, [sections, section, home]);
@@ -215,7 +219,8 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             </div>}
             {contactView && !shown.some(r => r.entity === 'contacto_inmo') && <p role="status" className="mb-4 text-sm" style={{ color: 'var(--crm-muted)' }}>{contactsText.empty}</p>}
             {view && filters.entity && <div className="mb-4"><FilterBar filters={filters} records={records} titleOf={titleOf} dark={dark} /></div>}
-            {(!view || view.type === 'ops') && blueprint.entities.some(e=>e.key==='inmueble') && <MatchDesk records={records} onOpen={(r)=>setOpenId(r.id)} />}
+            {(!view || view.type === 'ops') && hasPropertyModule && <BusinessModeCards mode={businessMode} onChoose={chooseBusinessMode} />}
+            {(!view || view.type === 'ops') && hasPropertyModule && businessMode !== 'holiday-rentals' && <MatchDesk records={records} onOpen={(r)=>setOpenId(r.id)} />}
             {(!view || view.type === 'ops') && <LivingWorkspace blueprint={blueprint} records={records} onOpen={(r) => setOpenId(r.id)} />}
             {(!view || view.type === 'ops') && <OperationsDashboard blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
             {!view && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
