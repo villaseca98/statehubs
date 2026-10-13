@@ -15,7 +15,7 @@ Implemented means code exists and the indicated local workflow is covered; it do
 | Advanced search/filter/saved views | Partial | filters + CommandPalette tests; local datasets and browser-local saved views |
 | Duplicate detection | Partial | analysis.ts reporting; no identity merge/uniqueness workflow |
 | Properties | Partial | grid/table/detail/edit/private assets; maps/listing syndication/versioned ownership absent |
-| Property matching | Partial | estate.matchesFor budget/type/zone; missing rooms/area/currency-aware rules |
+| Property matching | Partial | Currency-safe explainable engine, profiles, forward/reverse cards, persistent shortlists/dismissals and linked viewing actions; PostgreSQL isolation and browser checks pass; live migration pending (MATCH_INTELLIGENCE.md) |
 | Holiday rentals | Partial | reservations/services/incidents/timeline tests; transactional booking exclusion absent |
 | Residential rentals | Planned | no dedicated lease, rent schedule or renewal domain |
 | Calendar | Partial | timeline day/week/month, appointment helpers; global timezone migration pending |

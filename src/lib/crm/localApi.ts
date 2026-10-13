@@ -1,13 +1,13 @@
 import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import { cardProposal } from '@shared/blueprint/modules.ts';
-import type { RecordEvent, CrmApp, CrmMessage, CrmProposal, CrmVersion, GoogleStatus, IcalSyncResult, InstagramStatus, crmApi } from './api';
+import type { MatchDecision, RecordEvent, CrmApp, CrmMessage, CrmProposal, CrmVersion, GoogleStatus, IcalSyncResult, InstagramStatus, crmApi } from './api';
 import { localAgent } from './localAgent';
 
 // Guest mode: the same API as crmApi, kept in this browser (localStorage).
 // Same rules as the server: proposals first, every apply is a version,
 // undo restores as a new version, a stale proposal is refused.
 
-interface LocalApp { events?: RecordEvent[]; app: CrmApp; versions: CrmVersion[]; messages: CrmMessage[]; proposals: CrmProposal[]; records: AppRecord[] }
+interface LocalApp { matches?: MatchDecision[]; events?: RecordEvent[]; app: CrmApp; versions: CrmVersion[]; messages: CrmMessage[]; proposals: CrmProposal[]; records: AppRecord[] }
 type Store = Record<string, LocalApp>;
 
 const KEY = 'statehubs_local_v1';
@@ -45,6 +45,18 @@ function eventFor(a: LocalApp, record: AppRecord, before?: RecordData) {
   (a.events ??= []).push({ id: uid(), record_id: record.id, actor_id: null, kind: before ? 'changed' : 'created', fields, body: null, created_at: now() });
 }
 export const localCrmApi: typeof crmApi = {
+  matchDecisions: async appId => load()[appId]?.matches ?? [],
+  setMatchDecision: async (contactId,propertyId,status) => {
+    if (!['saved','dismissed','suggested'].includes(status)) throw new Error('Invalid match decision');
+    const store=load();const app=Object.values(store).find(a=>a.records.some(r=>r.id===contactId));
+    const contact=app?.records.find(r=>r.id===contactId), property=app?.records.find(r=>r.id===propertyId);
+    if (!app||!contact||!property||!['contacto_inmo','lead','cliente'].includes(contact.entity)||property.entity!=='inmueble'||Boolean(contact.is_sample)!==Boolean(property.is_sample)) throw new Error('Match unavailable');
+    const previous=app.matches?.find(m=>m.contact_id===contactId&&m.property_id===propertyId);
+    const decision: MatchDecision={app_id:app.app.id,contact_id:contactId,property_id:propertyId,status,actor_id:null,updated_at:now()};
+    app.matches=[...(app.matches??[]).filter(m=>m.contact_id!==contactId||m.property_id!==propertyId),decision];
+    if(previous?.status!==status)(app.events??=[]).push({id:uid(),record_id:contactId,actor_id:null,kind:'note',body:`Match ${status}: property ${propertyId}`,fields:[],created_at:now()});
+    save(store);return decision;
+  },
   recordEvents: async (recordId: string) => Object.values(load()).flatMap(a => a.events ?? []).filter(e => e.record_id === recordId).sort((a,b) => b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id)).slice(0,50),
   addRecordActivity: async (recordId, kind, body, requestId) => {
     if (!['note','call','meeting'].includes(kind) || !body.trim() || body.trim().length > 4000 || !requestId) throw new Error('Invalid activity');
@@ -108,7 +120,7 @@ export const localCrmApi: typeof crmApi = {
   },
   deleteRecord: async (id: string) => {
     const s = load();
-    for (const a of Object.values(s)) { a.records = a.records.filter((r) => r.id !== id); a.events = a.events?.filter(e => e.record_id !== id); }
+    for (const a of Object.values(s)) { a.records = a.records.filter((r) => r.id !== id); a.events = a.events?.filter(e => e.record_id !== id); a.matches = a.matches?.filter(m=>m.contact_id!==id&&m.property_id!==id); }
     save(s);
     return null;
   },

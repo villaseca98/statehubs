@@ -8,6 +8,7 @@ import { PropertyMedia } from './PropertyMedia';
 import { PropertyOverview } from './PropertyOverview';
 import { useRuntime } from './runtimeContext';
 import { ContactLifecycle } from './ContactLifecycle';
+import { MatchIntelligence } from './MatchIntelligence';
 import { RecordActivity } from './RecordActivity';
 import { linkedRecords } from '@/lib/crm/recordLinks';
 import { useActivityText } from '@/i18n/activity';
@@ -126,6 +127,7 @@ export function RecordPanel({ blueprint, appId, record, records, groupBy, dark =
       </div>
 
       <div className="flex-1 overflow-y-auto" style={{ padding: 'var(--crm-pad)' }}>
+        <MatchIntelligence key={`matching-${record.id}`} appId={appId} record={record} records={records} blueprint={blueprint} readOnly={readOnly} onUpdate={onUpdate} onOpen={onOpen} />
         {record.entity === 'contacto_inmo' && <ContactLifecycle record={record} readOnly={readOnly} onUpdate={onUpdate} />}
         {highlights.length > 0 && (
           <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">

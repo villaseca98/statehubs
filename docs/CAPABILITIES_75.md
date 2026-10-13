@@ -24,15 +24,15 @@ Updated 2026-10-13. This tracker reserves every ID from 1 to 75. The supplied pr
 | 18 | Co-brokerage and partnership deals | Planned | Planned: partner mandate and shared commission ledger. |
 | 19 | Property management operations | Partial | Existing services/incidents/property records; owner reporting and SLA workflows pending. |
 | 20 | Remote ownership management | Planned | Planned: owner portal, remote approvals and reporting. |
-| 21 | Buyer-to-property matching | Partial | Deterministic engine and regression tests; cards and persistence being verified. |
+| 21 | Buyer-to-property matching | Partial | Verified deterministic engine, profile cards and persistent decisions; live activation pending. |
 | 22 | Tenant-to-rental matching | Partial | Explicit sale/rent intent with same-currency budget comparison; complete rental screening pending. |
 | 23 | Property-to-qualified-contact matching | Partial | Same engine in reverse; explicit qualification required by default. |
 | 24 | Dormant lead discovery/reactivation | Partial | Last meaningful contact >=30 days is flagged; no automatic communications. |
 | 25 | Matching authorized Instagram leads | Partial | Consumes existing authorized CRM contact records; Meta provider configuration unverified. |
-| 26 | Structured preference profiles | Partial | Additive structured preferences; profile UI being verified. |
+| 26 | Structured preference profiles | Partial | Additive structured preferences and editable profile verified; no inferred FX or currencies. |
 | 27 | Explainable compatibility scoring | Partial | Criterion evidence, missing facts and hard conflicts; heuristic, not ML or probability. |
-| 28 | Interactive matching cards | Partial | Card implementation being verified; English labels and guarded actions. |
-| 29 | Persistent shortlists and dismissals | Partial | Additive tenant-scoped decision migration/API in verification; not deployed. |
+| 28 | Interactive matching cards | Partial | Verified English cards, save/dismiss/restore, email handoff and linked viewing creation. |
+| 29 | Persistent shortlists and dismissals | Partial | Additive tenant-scoped decision migration/API passes PostgreSQL RLS checks; not deployed. |
 | 30 | Preference learning from explicit feedback | Partial | Explicit property-type preference update; no implicit training or automatic inference. |
 | 31 | Definition not supplied | Awaiting definition | Reserved for the corresponding master prompt; no completion claim. |
 | 32 | Definition not supplied | Awaiting definition | Reserved for the corresponding master prompt; no completion claim. |
@@ -83,4 +83,4 @@ Updated 2026-10-13. This tracker reserves every ID from 1 to 75. The supplied pr
 ## Milestones
 
 - M2.1: matching engine replaces the dashboard budget-margin heuristic with explicit criteria, currency checks, availability, dimensional constraints and missing-data reporting. Targeted engine tests executed before its commit.
-- M2.2: profile/card persistence and tenant tests are in progress; update this entry after verification.
+- M2.2: profile cards, persistent decisions, reverse matching and viewing creation verified at 390/1440 px. Full suite: 254 tests. PostgreSQL tenant/read-only/audit/duplicate-pair checks pass; live database activation remains pending. See MATCH_INTELLIGENCE.md.
