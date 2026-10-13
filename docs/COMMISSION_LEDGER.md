@@ -31,4 +31,14 @@ Deleting a deal/workspace cascades its ledger, consistent with existing CRM dele
 
 PR depends on #23, which depends on #22. Apply the additive migrations before activating their frontends in production. No live Supabase application or authenticated production test is claimed; production credentials are still unavailable in this environment.
 
-Commission rules/percentage calculation, automatic agent membership linking, editable plan amendments, receipt reversals/refunds, tax/invoices, bank reconciliation and actual payouts remain unfinished. Do not use the ledger as a complete accounting system. Capability 38 remains partial, with this verified operational increment recorded in CAPABILITIES_75.md.
+Commission rules/percentage calculation, automatic agent membership linking, editable plan amendments, partial refunds, tax/invoices, bank reconciliation and actual payouts remain unfinished. Do not use the ledger as a complete accounting system. Capability 38 remains partial, with this verified operational increment recorded in CAPABILITIES_75.md.
+
+## M2.5 — full receipt reversals
+
+Migration `20261013180000_commission_reversals.sql` adds a nullable, unique reference to the original receipt and an authenticated reversal RPC. Existing positive receipts remain unchanged. A reversal appends the exact opposite minor-unit amount to the same allocation, with a mandatory reason, server actor/time and an activity event. The original receipt remains visible and is marked reversed. This corrects the internal record, not a bank refund.
+
+Reversals lock the same ledger as receipt creation. A receipt can be reversed only once; negative reversal entries cannot themselves be reversed. Request IDs make exact retries idempotent and reject changed retry payloads. Viewers, anonymous callers and other tenants cannot reverse. The restored balance can be collected again through the normal overcollection checks. Deletion still follows the existing deal/workspace cascade semantics.
+
+The UI shows the selected amount/reference and requires an explicit confirmation with reason. Errors retain the reason and retry ID. Full reversals are supported; partial refunds, plan amendments, bank refunds and accounting approvals remain pending.
+
+Verification: 289 tests in 48 files, build, lint (zero errors; five existing warnings), all existing PostgreSQL suites, dedicated reversal permissions/audit/retry tests and a two-session race proving only one reversal succeeds. Chromium at 390/1440 px verifies settled receipt reversal, persisted original/reason after reload, restored balance and corrected collection. No live production database activation is asserted.

@@ -1,7 +1,7 @@
 import { CURRENCY_DECIMALS } from './currencyDecimals';
 export interface CommissionShare { recipient: string; units: number }
 export interface CommissionInput { currency: string; total_units: number; shares: CommissionShare[] }
-export interface CommissionReceipt { id: string; deal_id: string; share_index: number; units: number; reference: string; actor_id: string|null; created_at: string }
+export interface CommissionReceipt { reverses?: string | null; id: string; deal_id: string; share_index: number; units: number; reference: string; actor_id: string|null; created_at: string }
 export interface CommissionLedger extends CommissionInput { deal_id: string; app_id: string; request_id: string; actor_id: string|null; created_at: string; receipts: CommissionReceipt[] }
 export const MAX_COMMISSION_UNITS = 9_000_000_000_000;
 export function currencyDecimals(currency: string) {
