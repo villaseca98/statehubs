@@ -21,20 +21,21 @@ export type ThemeMode = 'light' | 'dark';
 
 export function themeVars(mode: ThemeMode = 'light'): CSSProperties {
   const s = mode === 'dark' ? { ...LOOK, colors: LOOK_DARK } : LOOK;
+  const warm = mode === 'light';
   const d = DENSITY[s.density];
   return {
-    '--crm-bg': s.colors.bg,
-    '--crm-surface': s.colors.surface,
-    '--crm-border': s.colors.border,
+    '--crm-bg': warm ? '#fdf9f6' : s.colors.bg,
+    '--crm-surface': warm ? '#fffdfa' : s.colors.surface,
+    '--crm-border': warm ? '#efdfd8' : s.colors.border,
     '--crm-text': s.colors.text,
     '--crm-muted': s.colors.muted,
-    '--crm-primary': s.colors.primary,
+    '--crm-primary': warm ? '#bf3025' : s.colors.primary,
     '--crm-primary-text': s.colors.primaryText,
-    '--crm-nav-bg': s.colors.navBg,
+    '--crm-nav-bg': warm ? '#fff7f2' : s.colors.navBg,
     '--crm-nav-text': s.colors.navText,
     '--crm-nav-active': s.colors.navActive,
-    '--crm-soft': s.colors.soft,
-    '--crm-accent': s.colors.accent,
+    '--crm-soft': warm ? '#fce5de' : s.colors.soft,
+    '--crm-accent': warm ? '#ffe4da' : s.colors.accent,
     '--crm-radius': `${s.radius}px`,
     '--crm-row': d.row,
     '--crm-font-size': d.font,
@@ -45,7 +46,7 @@ export function themeVars(mode: ThemeMode = 'light'): CSSProperties {
     fontFamily: FONTS.sans,
     fontSize: d.font,
     color: s.colors.text,
-    background: s.colors.bg,
+    background: warm ? '#fdf9f6' : s.colors.bg,
     colorScheme: mode,
   } as CSSProperties;
 }
