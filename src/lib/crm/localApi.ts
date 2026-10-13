@@ -1,3 +1,4 @@
+import { validateOffer, type OfferRevision } from './offers';
 import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import { cardProposal } from '@shared/blueprint/modules.ts';
 import type { MatchDecision, RecordEvent, CrmApp, CrmMessage, CrmProposal, CrmVersion, GoogleStatus, IcalSyncResult, InstagramStatus, crmApi } from './api';
@@ -7,7 +8,7 @@ import { localAgent } from './localAgent';
 // Same rules as the server: proposals first, every apply is a version,
 // undo restores as a new version, a stale proposal is refused.
 
-interface LocalApp { matches?: MatchDecision[]; events?: RecordEvent[]; app: CrmApp; versions: CrmVersion[]; messages: CrmMessage[]; proposals: CrmProposal[]; records: AppRecord[] }
+interface LocalApp { offers?: OfferRevision[]; matches?: MatchDecision[]; events?: RecordEvent[]; app: CrmApp; versions: CrmVersion[]; messages: CrmMessage[]; proposals: CrmProposal[]; records: AppRecord[] }
 type Store = Record<string, LocalApp>;
 
 const KEY = 'statehubs_local_v1';
@@ -45,6 +46,21 @@ function eventFor(a: LocalApp, record: AppRecord, before?: RecordData) {
   (a.events ??= []).push({ id: uid(), record_id: record.id, actor_id: null, kind: before ? 'changed' : 'created', fields, body: null, created_at: now() });
 }
 export const localCrmApi: typeof crmApi = {
+  offerRevisions: async dealId => Object.values(load()).flatMap(a=>a.offers??[]).filter(o=>o.deal_id===dealId).sort((a,b)=>b.revision-a.revision).slice(0,100),
+  appendOffer: async (dealId,input,expected,request) => {
+    const store=load();const app=Object.values(store).find(a=>a.records.some(r=>r.id===dealId));const deal=app?.records.find(r=>r.id===dealId);
+    if(!app||!deal||deal.entity!=='operacion')throw new Error('Deal unavailable');
+    const existing=Object.values(store).flatMap(a=>a.offers??[]).find(o=>o.id===request);
+    if(existing){if(existing.deal_id!==dealId||existing.amount!==input.amount||existing.currency!==input.currency||existing.status!==input.status||existing.note!==input.note||existing.revision!==expected+1)throw new Error('Request already used');return existing;}
+    const previous=(app.offers??[]).filter(o=>o.deal_id===dealId).sort((a,b)=>b.revision-a.revision)[0];
+    if((previous?.revision??0)!==expected)throw new Error('Offer changed. Reload before saving');
+    validateOffer(input,previous);
+    const contact=app.records.find(r=>r.id===deal.data.contacto&&['contacto_inmo','lead','cliente'].includes(r.entity));const property=app.records.find(r=>r.id===deal.data.inmueble&&r.entity==='inmueble');
+    if(!contact||!property||Boolean(contact.is_sample)!==Boolean(deal.is_sample)||Boolean(property.is_sample)!==Boolean(deal.is_sample))throw new Error('Link a contact and property from this workspace');
+    if(previous&&(previous.contact_id!==contact.id||previous.property_id!==property.id))throw new Error('Deal relationships changed. Use a separate deal for this negotiation');
+    const revision:OfferRevision={...input,id:request,app_id:app.app.id,deal_id:dealId,contact_id:contact.id,property_id:property.id,revision:expected+1,actor_id:null,created_at:now()};
+    (app.offers??=[]).push(revision);(app.events??=[]).push({id:uid(),record_id:dealId,actor_id:null,kind:'note',body:`Offer revision ${revision.revision}: ${input.status} · ${input.amount} ${input.currency}`,fields:[],created_at:now()});save(store);return revision;
+  },
   matchDecisions: async appId => load()[appId]?.matches ?? [],
   setMatchDecision: async (contactId,propertyId,status) => {
     if (!['saved','dismissed','suggested'].includes(status)) throw new Error('Invalid match decision');
@@ -120,7 +136,7 @@ export const localCrmApi: typeof crmApi = {
   },
   deleteRecord: async (id: string) => {
     const s = load();
-    for (const a of Object.values(s)) { a.records = a.records.filter((r) => r.id !== id); a.events = a.events?.filter(e => e.record_id !== id); a.matches = a.matches?.filter(m=>m.contact_id!==id&&m.property_id!==id); }
+    for (const a of Object.values(s)) { a.records = a.records.filter((r) => r.id !== id); a.events = a.events?.filter(e => e.record_id !== id); a.offers = a.offers?.filter(o=>o.deal_id!==id); a.matches = a.matches?.filter(m=>m.contact_id!==id&&m.property_id!==id); }
     save(s);
     return null;
   },

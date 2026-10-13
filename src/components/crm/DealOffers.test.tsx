@@ -1,0 +1,13 @@
+import {beforeEach,expect,it,vi} from 'vitest';
+import {fireEvent,render,screen,waitFor} from '@testing-library/react';
+import {DealOffers} from './DealOffers';
+const api=vi.hoisted(()=>({offerRevisions:vi.fn(),appendOffer:vi.fn()}));
+vi.mock('@/lib/crm/api',()=>({crmApi:api}));vi.mock('@/lib/crm/localApi',()=>({localCrmApi:api,isLocalApp:()=>false}));
+const props={appId:'app',record:{id:'deal',entity:'operacion',data:{contacto:'c',inmueble:'p'}},readOnly:false};
+const row={id:'revision',deal_id:'deal',revision:1,amount:250000,currency:'USD',status:'submitted',note:'Terms',created_at:'2026-10-13T10:00:00Z',actor_id:'agent'};
+beforeEach(()=>{vi.clearAllMocks();api.offerRevisions.mockResolvedValue([]);api.appendOffer.mockResolvedValue(row);});
+async function fill(){await screen.findByLabelText('Offer amount');fireEvent.change(screen.getByLabelText('Offer amount'),{target:{value:'250000'}});fireEvent.change(screen.getByLabelText('Offer currency'),{target:{value:'USD'}});}
+it('waits for acknowledgment before displaying history',async()=>{render(<DealOffers {...props}/>);await fill();fireEvent.click(screen.getByRole('button',{name:'Record revision'}));expect(await screen.findByText('Offer revision recorded')).toBeInTheDocument();expect(api.appendOffer).toHaveBeenCalledWith('deal',expect.objectContaining({amount:250000,currency:'USD',status:'submitted'}),0,expect.any(String));});
+it('preserves draft and retry key after network failure',async()=>{api.appendOffer.mockRejectedValue(new Error('Offline'));render(<DealOffers {...props}/>);await fill();fireEvent.click(screen.getByRole('button',{name:'Record revision'}));await screen.findByRole('alert');expect(screen.getByLabelText('Offer amount')).toHaveValue(250000);const request=api.appendOffer.mock.calls[0][3];fireEvent.click(screen.getByRole('button',{name:'Record revision'}));await waitFor(()=>expect(api.appendOffer).toHaveBeenCalledTimes(2));expect(api.appendOffer.mock.calls[1][3]).toBe(request);});
+it('viewers can read history without mutation controls',async()=>{api.offerRevisions.mockResolvedValue([row]);render(<DealOffers {...props} readOnly/>);await screen.findByRole('list',{name:'Offer history (latest 100 revisions)'});expect(screen.queryByRole('button',{name:'Record revision'})).not.toBeInTheDocument();});
+it('acceptance locks the current terms',async()=>{api.offerRevisions.mockResolvedValue([row]);render(<DealOffers {...props}/>);await screen.findByLabelText('Offer action');fireEvent.change(screen.getByLabelText('Offer action'),{target:{value:'accepted'}});expect(screen.getByLabelText('Offer amount')).toHaveAttribute('readonly');expect(screen.getByLabelText('Offer currency')).toBeDisabled();});

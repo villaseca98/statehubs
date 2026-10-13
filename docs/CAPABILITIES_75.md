@@ -43,7 +43,7 @@ Updated 2026-10-13. This tracker reserves every ID from 1 to 75. The supplied pr
 | 37 | Agent and team management | Partial | Owner/admin/agent/viewer membership UI/RLS; offices/managers and email invites pending. |
 | 38 | Commission tracking and allocation | Partial | Existing deal percentage and totals; split allocation and payment ledger pending. |
 | 39 | Multi-role relationship management | Partial | Shared contact identity, multi-role flags, conversion/archive and linked dossier; legacy dedup reconciliation pending. |
-| 40 | Viewings, offers, negotiations and deal progression | Partial | Existing appointments/deals/activity; offers and commission lifecycle incomplete. |
+| 40 | Viewings, offers, negotiations and deal progression | Partial | Linked viewing creation and append-only submitted/countered/accepted/rejected/withdrawn offer history verified; competing offers, closing and commission lifecycle incomplete. |
 | 41 | Definition not supplied | Awaiting definition | Reserved for the corresponding master prompt; no completion claim. |
 | 42 | Definition not supplied | Awaiting definition | Reserved for the corresponding master prompt; no completion claim. |
 | 43 | Definition not supplied | Awaiting definition | Reserved for the corresponding master prompt; no completion claim. |
@@ -84,3 +84,5 @@ Updated 2026-10-13. This tracker reserves every ID from 1 to 75. The supplied pr
 
 - M2.1: matching engine replaces the dashboard budget-margin heuristic with explicit criteria, currency checks, availability, dimensional constraints and missing-data reporting. Targeted engine tests executed before its commit.
 - M2.2: profile cards, persistent decisions, reverse matching and viewing creation verified at 390/1440 px. Full suite: 254 tests. PostgreSQL tenant/read-only/audit/duplicate-pair checks pass; live database activation remains pending. See MATCH_INTELLIGENCE.md.
+
+- M2.3: one negotiation stream per deal, auditable offer revisions, retry deduplication, stale-write rejection and tenant-safe relationships. Full suite: 267 tests. SQL tenant/permission/workflow checks pass. See DEAL_OFFERS.md; production activation pending.
