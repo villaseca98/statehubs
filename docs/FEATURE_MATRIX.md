@@ -8,7 +8,7 @@ Implemented means code exists and the indicated local workflow is covered; it do
 | Browser demo CRUD | Implemented locally | localApi tests; storage errors silently fall back, not durable SaaS storage |
 | Server CRUD | Partial | api.ts + RLS; live JWT workflow unverified, acknowledged writes and atomic conflict-aware patches now implemented; live deployment pending |
 | Leads | Partial | worklist/stages/filters/actions; no conversion, archive, bulk actions or activity ledger |
-| Clients/contact identity | Partial | cliente and contacto_inmo fields; duplicated identities and single roles |
+| Clients/contact identity | Partial | contacto_inmo lifecycle conversion, reversible archive and multiple roles implemented; legacy cliente/lead reconciliation and independent client dossier pending |
 | Pipeline | Partial | Kanban and stored stage values; no event history or transactional transition rules |
 | Activities/tasks | Partial | cita/tarea/servicio and Today; no unified commercial timeline/reminder worker |
 | Dashboard | Partial | real-record counts, priorities and tests; no role-specific or complete organization metrics |
@@ -40,3 +40,5 @@ Implemented means code exists and the indicated local workflow is covered; it do
 Release dependencies and verification scope: [DEPLOYMENT](DEPLOYMENT.md). Proposed implementation order: [ROADMAP](ROADMAP.md).
 
 Current operational delivery and activation: [OPERATIONAL_DELIVERY](OPERATIONAL_DELIVERY.md). Competitive proposal and research limits: [COMPETITIVE_PROPOSAL](COMPETITIVE_PROPOSAL.md).
+
+D4a contact lifecycle implementation and limits: [CONTACT_LIFECYCLE](CONTACT_LIFECYCLE.md).

@@ -19,3 +19,5 @@ Priorities describe risk and dependency, not arbitrary dates. P0 blocks the affe
 Cross-cutting gates: migrations staged with backups, live JWT/Storage/Edge tests, production build, regression suite, error observability and restore rehearsal. Resolve existing Instagram retry integrity before enabling live automation; do not wait for every future integration.
 
 D1 and the white/red navigation portion of D3 are implemented locally in the operational delivery. Live Supabase activation and the original logo asset remain pending. Next product block: D4, alongside D2 booking integrity. Do not replace the working CRM with placeholder screens while these deliveries progress.
+
+D4a delivered: explicit contact lifecycle, same-identity conversion, reversible archive, multi-role relationships and stage filters. Full D4 remains partial; see [CONTACT_LIFECYCLE](CONTACT_LIFECYCLE.md). Next D4 block is audited activity/transition history and the client dossier.

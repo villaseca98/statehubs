@@ -7,6 +7,7 @@ import { RecordCalendar } from './RecordCalendar';
 import { PropertyMedia } from './PropertyMedia';
 import { PropertyOverview } from './PropertyOverview';
 import { useRuntime } from './runtimeContext';
+import { ContactLifecycle } from './ContactLifecycle';
 
 interface Props {
   blueprint: Blueprint;
@@ -119,6 +120,7 @@ export function RecordPanel({ blueprint, appId, record, records, groupBy, dark =
       </div>
 
       <div className="flex-1 overflow-y-auto" style={{ padding: 'var(--crm-pad)' }}>
+        {record.entity === 'contacto_inmo' && <ContactLifecycle record={record} readOnly={readOnly} onUpdate={onUpdate} />}
         {highlights.length > 0 && (
           <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
             {highlights.map((f) => (

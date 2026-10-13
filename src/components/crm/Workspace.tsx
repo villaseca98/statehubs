@@ -23,6 +23,9 @@ import { CommandPalette } from './CommandPalette';
 import { HOY, hubsFor } from './hubs';
 import { AppLogo } from '@/components/brand/Logo';
 import { useProductText } from '@/i18n/product';
+import { useContactText } from '@/i18n/contacts';
+import { contactStage } from '@/lib/crm/contactLifecycle';
+import type { ContactStage } from '@/lib/crm/contactLifecycle';
 
 // The app itself. No sidebar: the sections are grouped in a few hubs
 // (Hoy, Clientes, Inmuebles, Turístico, Empresa) in a floating bar at the
@@ -59,6 +62,8 @@ const ACCENT = 'var(--crm-primary)';
 
 export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecord, onDelete, onWebhook, onSyncIcal, tools = [], banner, now, className = '', appId, readOnly = false, canDelete = true }: WorkspaceProps) {
   const text = useProductText();
+  const contactsText = useContactText();
+  const [contactFilter, setContactFilter] = useState<ContactStage | 'all'>('all');
   const onUpdate = (id: string, patch: RecordData) => { if (!readOnly) persistRecord(id, patch); };
   const sections = useMemo(() => blueprint.views.filter((v) => v.type !== 'dashboard'), [blueprint.views]);
   const hubs = useMemo(() => hubsFor(sections), [sections]);
@@ -80,7 +85,9 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
   const pending = useMemo(() => { const t = computeToday(blueprint, records, now); return t.hoy.length + t.atrasado.length; }, [blueprint, records, now]);
   const entity = view?.entity ? blueprint.entities.find((e) => e.key === view.entity) : undefined;
   const filters = useViewFilters(blueprint, view && FILTERED.has(view.type) ? view : null, records, { appId, titleOf, now });
-  const shown = filters.entity ? filters.records : records;
+  const baseShown = filters.entity ? filters.records : records;
+  const contactView = entity?.key === 'contacto_inmo';
+  const shown = contactView && contactFilter !== 'all' ? baseShown.filter(r => r.entity !== 'contacto_inmo' || contactStage(r.data) === contactFilter) : baseShown;
   const labelOf = (key: string) => (key === HOY ? 'Hoy' : sections.find((v) => v.key === key)?.label ?? key);
 
   useEffect(() => {
@@ -186,6 +193,12 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
               </nav>
             )}
 
+            {contactView && <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label={contactsText.filter}>
+              {(['all', 'unclassified', 'lead', 'client', 'archived'] as const).map(stage => <button key={stage} aria-pressed={contactFilter === stage} onClick={() => setContactFilter(stage)} className="min-h-11 rounded-full border px-3 py-2 text-sm" style={{ background: contactFilter === stage ? 'var(--crm-primary)' : 'var(--crm-surface)', color: contactFilter === stage ? 'var(--crm-primary-text)' : 'var(--crm-text)', borderColor: 'var(--crm-border)' }}>
+                {contactsText[stage]} ({baseShown.filter(r => r.entity === 'contacto_inmo' && (stage === 'all' || contactStage(r.data) === stage)).length})
+              </button>)}
+            </div>}
+            {contactView && !shown.some(r => r.entity === 'contacto_inmo') && <p role="status" className="mb-4 text-sm" style={{ color: 'var(--crm-muted)' }}>{contactsText.empty}</p>}
             {view && filters.entity && <div className="mb-4"><FilterBar filters={filters} records={records} titleOf={titleOf} dark={dark} /></div>}
             {(!view || view.type === 'ops') && <OperationsDashboard blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
             {!view && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
