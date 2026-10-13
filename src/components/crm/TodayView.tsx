@@ -67,7 +67,7 @@ function Group({ title, icon: Icon, items, empty, onOpen, accent }: { title: str
 function recordTitle(record: AppRecord, entity?: Entity): string {
   const key = entity?.titleField;
   const value = key ? record.data[key] : undefined;
-  return String(value || record.data.nombre || record.data.titulo || record.data.referencia || record.data.direccion || entity?.label || 'Sin título');
+  return String(value || record.data.nombre || record.data.titulo || record.data.referencia || record.data.direccion || entity?.label || 'Untitled');
 }
 
 function RealEstateOverview({ blueprint, records, today, onOpen, date }: {
@@ -90,36 +90,36 @@ function RealEstateOverview({ blueprint, records, today, onOpen, date }: {
   const urgent = [...today.atrasado, ...today.hoy].slice(0, 5);
 
   const stats = [
-    { label: 'Leads en cartera', value: leads.length, icon: Users, note: 'Compradores y propietarios', tint: '#dce9e5', ink: '#315f52' },
-    { label: 'Inmuebles activos', value: homes.length, icon: Home, note: 'En cartera comercial', tint: '#e8e3f6', ink: '#65538c' },
-    { label: 'Visitas registradas', value: visits.length, icon: CalendarClock, note: 'Actividad del equipo', tint: '#f5e8d6', ink: '#986b35' },
-    { label: 'Leads desde redes', value: socialLeads.length, icon: MessageCircle, note: 'Instagram y Meta Ads', tint: '#f8e1eb', ink: '#9c3f68' },
-    { label: 'Leads cualificados', value: qualifiedLeads.length, icon: CheckCircle2, note: 'Con datos suficientes para priorizar', tint: '#dce9e5', ink: '#315f52' },
-    { label: 'Seguimientos pendientes', value: followUps, icon: Clock3, note: overdue ? `${overdue} fuera de plazo` : 'Sin retrasos acumulados', tint: overdue ? '#fae1dc' : '#dce9e5', ink: overdue ? '#a84232' : '#315f52' },
+    { label: 'Active leads', value: leads.length, icon: Users, note: 'Buyers and owners', tint: '#dce9e5', ink: '#315f52' },
+    { label: 'Active properties', value: homes.length, icon: Home, note: 'Available inventory', tint: '#e8e3f6', ink: '#65538c' },
+    { label: 'Recorded viewings', value: visits.length, icon: CalendarClock, note: 'Team activity', tint: '#f5e8d6', ink: '#986b35' },
+    { label: 'Social leads', value: socialLeads.length, icon: MessageCircle, note: 'Instagram and Meta Ads', tint: '#f8e1eb', ink: '#9c3f68' },
+    { label: 'Qualified leads', value: qualifiedLeads.length, icon: CheckCircle2, note: 'Ready for prioritization', tint: '#dce9e5', ink: '#315f52' },
+    { label: 'Pending follow-ups', value: followUps, icon: Clock3, note: overdue ? `${overdue} overdue` : 'No overdue tasks', tint: overdue ? '#fae1dc' : '#dce9e5', ink: overdue ? '#a84232' : '#315f52' },
   ];
 
   return (
     <div className="mx-auto flex max-w-[1440px] flex-col gap-5 pb-8">
-      <section className="relative isolate overflow-hidden rounded-[26px] px-6 py-7 text-white shadow-sm sm:px-8 sm:py-9 lg:px-10" style={{ background: 'linear-gradient(112deg, #142c2b 0%, #1e4140 55%, #2a5752 100%)' }}>
+      <section className="relative isolate overflow-hidden rounded-[26px] px-6 py-7 text-white shadow-sm sm:px-8 sm:py-9 lg:px-10" style={{ background: 'linear-gradient(112deg, #9C4943 0%, #C76B61 55%, #E6A29A 100%)' }}>
         <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-24 -z-10 h-80 w-80 rounded-full border border-white/10" />
         <div aria-hidden="true" className="pointer-events-none absolute right-8 top-8 -z-10 h-52 w-52 rounded-full border border-white/10" />
         <div aria-hidden="true" className="pointer-events-none absolute right-24 top-24 -z-10 h-24 w-24 rounded-full" style={{ background: 'radial-gradient(circle, rgba(201,220,190,.25), rgba(201,220,190,0))' }} />
         <div className="relative max-w-3xl">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-wide text-white/85">
-            <Sparkles className="h-3.5 w-3.5 text-[#c7d8ad]" /> CENTRO DE OPERACIONES INMOBILIARIAS
+            <Sparkles className="h-3.5 w-3.5 text-[#c7d8ad]" /> REAL ESTATE OPERATIONS CENTER
           </div>
           <p className="text-sm text-white/65">{date}</p>
           <h2 className="mt-2 max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl lg:text-[2.8rem]" style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 500 }}>
-            Cada oportunidad merece<br className="hidden sm:block" /> un siguiente paso.
+            Every opportunity deserves<br className="hidden sm:block" /> a next step.
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-6 text-white/70 sm:text-base">
-            Tu equipo, tus propiedades y tus próximos cierres en un solo lugar. Detecta qué necesita atención antes de que se enfríe.
+            Your team, your properties and your next deals in one place. Know what needs attention before opportunities go cold.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-full bg-[#d2dfbd] px-4 py-2 text-sm font-semibold text-[#18352f]">
-              <TrendingUp className="h-4 w-4" /> {deals.length} operaciones en seguimiento
+            <div className="flex items-center gap-2 rounded-full bg-[#FCE9E3] px-4 py-2 text-sm font-semibold text-[#8C403A]">
+              <TrendingUp className="h-4 w-4" /> {deals.length} deals in progress
             </div>
-            <span className="text-sm text-white/65">{overdue ? `${overdue} seguimientos requieren atención` : 'Tu actividad comercial, bajo control'}</span>
+            <span className="text-sm text-white/65">{overdue ? `${overdue} follow-ups need attention` : 'Your pipeline, under control'}</span>
           </div>
         </div>
         <div className="absolute bottom-0 right-0 hidden h-full w-[34%] items-end justify-center overflow-hidden lg:flex" aria-hidden="true">
@@ -129,7 +129,7 @@ function RealEstateOverview({ blueprint, records, today, onOpen, date }: {
         </div>
       </section>
 
-      <section aria-label="Resumen comercial" className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-6">
+      <section aria-label="Commercial overview" className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-6">
         {stats.map((s) => (
           <div key={s.label} className="rounded-2xl p-4 sm:p-5" style={{ ...card, boxShadow: '0 5px 20px rgba(24,39,36,.025)' }}>
             <div className="flex items-start justify-between gap-2">
@@ -146,25 +146,25 @@ function RealEstateOverview({ blueprint, records, today, onOpen, date }: {
         <section className="overflow-hidden rounded-2xl" style={card}>
           <div className="flex items-center justify-between gap-3 border-b px-5 py-4" style={{ borderColor: 'var(--crm-border)' }}>
             <div>
-              <h3 className="font-semibold">Radar comercial</h3>
-              <p className="mt-1 text-xs" style={{ color: 'var(--crm-muted)' }}>Lo que conviene mover primero</p>
+              <h3 className="font-semibold">Opportunity radar</h3>
+              <p className="mt-1 text-xs" style={{ color: 'var(--crm-muted)' }}>What to prioritize next</p>
             </div>
-            <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: overdue ? '#fae1dc' : '#dce9e5', color: overdue ? '#a84232' : '#315f52' }}>{urgent.length} por atender</span>
+            <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: overdue ? '#fae1dc' : '#dce9e5', color: overdue ? '#a84232' : '#315f52' }}>{urgent.length} to review</span>
           </div>
           {urgent.length ? <ul className="flex flex-col p-2">{urgent.map((item) => <Row key={item.id} item={item} onOpen={onOpen} />)}</ul> : (
             <div className="flex items-center gap-3 px-5 py-7">
               <CheckCircle2 className="h-5 w-5 text-emerald-700" />
-              <div><p className="text-sm font-medium">Sin seguimientos urgentes</p><p className="mt-1 text-xs" style={{ color: 'var(--crm-muted)' }}>Cuando una llamada, visita o seguimiento toque, aparecerá aquí.</p></div>
+              <div><p className="text-sm font-medium">No urgent follow-ups</p><p className="mt-1 text-xs" style={{ color: 'var(--crm-muted)' }}>Calls, viewings and follow-ups will appear here when due.</p></div>
             </div>
           )}
           <div className="border-t px-5 py-3 text-xs" style={{ borderColor: 'var(--crm-border)', color: 'var(--crm-muted)' }}>
-            {today.proximo.length} tareas previstas para los próximos días
+            {today.proximo.length} upcoming tasks
           </div>
         </section>
 
         <section className="overflow-hidden rounded-2xl" style={card}>
           <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: 'var(--crm-border)' }}>
-            <div><h3 className="font-semibold">Cartera de propiedades</h3><p className="mt-1 text-xs" style={{ color: 'var(--crm-muted)' }}>Una vista rápida del inventario</p></div>
+            <div><h3 className="font-semibold">Property portfolio</h3><p className="mt-1 text-xs" style={{ color: 'var(--crm-muted)' }}>Your inventory at a glance</p></div>
             <Home className="h-5 w-5" style={{ color: 'var(--crm-muted)' }} />
           </div>
           {featured.length ? <div className="divide-y" style={{ borderColor: 'var(--crm-border)' }}>
@@ -173,24 +173,24 @@ function RealEstateOverview({ blueprint, records, today, onOpen, date }: {
               const zone = r.data.zona ?? r.data.direccion ?? r.data.localidad;
               return <button key={r.id} onClick={() => onOpen(r)} className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-black/[0.025]">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl" style={{ background: '#e9eee6', color: '#48634d' }}><Building2 className="h-5 w-5" /></span>
-                <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{recordTitle(r, homeEntity)}</span><span className="mt-1 block truncate text-xs" style={{ color: 'var(--crm-muted)' }}>{String(zone || 'Zona por confirmar')}</span></span>
-                <span className="shrink-0 text-right"><span className="block text-sm font-semibold">{price != null && price !== '' ? formatMoney(Number(price) || 0) : 'Precio pendiente'}</span><span className="mt-1 flex items-center justify-end gap-1 text-xs" style={{ color: 'var(--crm-muted)' }}>Ver ficha <ArrowRight className="h-3 w-3" /></span></span>
+                <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{recordTitle(r, homeEntity)}</span><span className="mt-1 block truncate text-xs" style={{ color: 'var(--crm-muted)' }}>{String(zone || 'Location to confirm')}</span></span>
+                <span className="shrink-0 text-right"><span className="block text-sm font-semibold">{price != null && price !== '' ? formatMoney(Number(price) || 0) : 'Price pending'}</span><span className="mt-1 flex items-center justify-end gap-1 text-xs" style={{ color: 'var(--crm-muted)' }}>View record <ArrowRight className="h-3 w-3" /></span></span>
               </button>;
             })}
-          </div> : <p className="px-5 py-7 text-sm" style={{ color: 'var(--crm-muted)' }}>Añade el primer inmueble para empezar a organizar tu cartera.</p>}
-          <div className="border-t px-5 py-3 text-xs" style={{ borderColor: 'var(--crm-border)', color: 'var(--crm-muted)' }}>{homes.length} propiedades en total · {visits.length} visitas registradas</div>
+          </div> : <p className="px-5 py-7 text-sm" style={{ color: 'var(--crm-muted)' }}>Add your first property to start building your portfolio.</p>}
+          <div className="border-t px-5 py-3 text-xs" style={{ borderColor: 'var(--crm-border)', color: 'var(--crm-muted)' }}>{homes.length} properties total · {visits.length} viewings recorded</div>
         </section>
       </div>
 
       <div className="grid items-start gap-5 lg:grid-cols-2">
         <section className="rounded-2xl p-5" style={card}>
-          <div className="mb-4 flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: '#e8e3f6', color: '#65538c' }}><Users className="h-5 w-5" /></span><div><h3 className="font-semibold">Compradores y propietarios</h3><p className="mt-1 text-xs" style={{ color: 'var(--crm-muted)' }}>Prioriza el contacto, no solo el registro</p></div></div>
+          <div className="mb-4 flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: '#e8e3f6', color: '#65538c' }}><Users className="h-5 w-5" /></span><div><h3 className="font-semibold">Buyers and owners</h3><p className="mt-1 text-xs" style={{ color: 'var(--crm-muted)' }}>Prioritize relationships, not just records</p></div></div>
           {leads.slice(0, 4).map((r) => {
             const next = r.data.siguiente_paso;
             const budget = r.data.presupuesto_max ?? r.data.presupuesto;
             return <button key={r.id} onClick={() => onOpen(r)} className="flex w-full items-center gap-3 rounded-xl px-2 py-3 text-left hover:bg-black/[0.025]">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold" style={{ background: '#e8e3f6', color: '#65538c' }}>{recordTitle(r, leadEntity).split(/\s+/).map((v) => v[0]).slice(0, 2).join('').toUpperCase()}</span>
-              <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{recordTitle(r, leadEntity)}</span><span className="mt-1 block truncate text-xs" style={{ color: 'var(--crm-muted)' }}>{String(next || 'Definir siguiente paso')}</span></span>
+              <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{recordTitle(r, leadEntity)}</span><span className="mt-1 block truncate text-xs" style={{ color: 'var(--crm-muted)' }}>{String(next || 'Define next step')}</span></span>
               <span className="shrink-0 text-xs font-medium" style={{ color: 'var(--crm-muted)' }}>{budget ? formatMoney(Number(budget)) : String(r.data.operacion_busca || 'Lead')}</span>
             </button>;
           })}
