@@ -15,6 +15,7 @@ import { RecordDialog } from './RecordDialog';
 import { TodayView } from './TodayView';
 import { OpsView } from './OpsView';
 import { OperationsDashboard } from './OperationsDashboard';
+import { LivingWorkspace } from './LivingWorkspace';
 import { CardsView } from './CardsView';
 import { RuntimeContext } from './runtimeContext';
 import { FilterBar } from './FilterBar';
@@ -167,19 +168,19 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             <div className="mb-5 flex flex-wrap items-end gap-x-4 gap-y-3">
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2 text-[0.78em] font-semibold uppercase tracking-[0.16em]" style={{ color: 'var(--crm-muted)' }}>
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: ACCENT }} />{hub.label}
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: ACCENT }} />{HUB_EN[hub.key] ?? hub.label}
                 </p>
                 <h1 className="mt-1 truncate text-[1.9em] font-normal leading-tight tracking-[-0.02em] md:text-[2.8em]">{view ? view.label : 'Home'}</h1>
               </div>
               {entity && !readOnly && (
                 <button onClick={() => create(entity.key)} className="sh-touch inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(180,22,54,.28)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(180,22,54,.32)] active:scale-[.98] motion-reduce:transform-none"
                   style={{ background: ACCENT }}>
-                  <Plus className="h-4 w-4" /> <span className="hidden sm:inline">New: {entity.label.toLowerCase()}</span><span className="sm:hidden">Nuevo</span>
+                  <Plus className="h-4 w-4" /> <span className="hidden sm:inline">New: {entity.label.toLowerCase()}</span><span className="sm:hidden">New</span>
                 </button>
               )}
             </div>
             {hub.sections.length > 1 && (
-              <nav aria-label="Secciones" className="-mx-4 mb-5 flex gap-1 overflow-x-auto px-4 md:mx-0 md:px-0" style={{ borderBottom: '1px solid var(--crm-border)' }}>
+              <nav aria-label="Sections" className="-mx-4 mb-5 flex gap-1 overflow-x-auto px-4 md:mx-0 md:px-0" style={{ borderBottom: '1px solid var(--crm-border)' }}>
                 {hub.sections.map((key) => {
                   const v = sections.find((x) => x.key === key);
                   const Icon = v ? ICON[v.type] ?? Table2 : Sun;
@@ -203,6 +204,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             </div>}
             {contactView && !shown.some(r => r.entity === 'contacto_inmo') && <p role="status" className="mb-4 text-sm" style={{ color: 'var(--crm-muted)' }}>{contactsText.empty}</p>}
             {view && filters.entity && <div className="mb-4"><FilterBar filters={filters} records={records} titleOf={titleOf} dark={dark} /></div>}
+            {(!view || view.type === 'ops') && <LivingWorkspace blueprint={blueprint} records={records} onOpen={(r) => setOpenId(r.id)} />}
             {(!view || view.type === 'ops') && <OperationsDashboard blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
             {!view && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
             {view && view.type === 'worklist' && (
@@ -228,7 +230,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
         </div>
 
         {open && (
-          <RecordDialog title={`Detalle de ${titleOf(open.id) ?? open.entity}`} onClose={() => setOpenId(null)}>
+          <RecordDialog title={`Details: ${titleOf(open.id) ?? open.entity}`} onClose={() => setOpenId(null)}>
             <RecordPanel key={open.id} onOpen={id => { setRecordTrail(trail => [...trail, open.id]); setOpenId(id); }} onBack={recordTrail.length ? () => { setOpenId(recordTrail[recordTrail.length-1]); setRecordTrail(trail => trail.slice(0,-1)); } : undefined} blueprint={blueprint} appId={appId} record={open} records={records} titleOf={titleOf} dark={dark}
               groupBy={blueprint.views.find((v) => v.entity === open.entity && v.groupBy)?.groupBy}
               onUpdate={onUpdate} onDelete={(id) => { onDelete(id); setOpenId(null); }} onClose={() => setOpenId(null)} />
@@ -236,7 +238,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
         )}
 
         {palette && (
-          <CommandPalette blueprint={blueprint} records={records} sections={[{ key: HOY, label: 'Hoy' }, ...sections.map((v) => ({ key: v.key, label: v.label }))]}
+          <CommandPalette blueprint={blueprint} records={records} sections={[{ key: HOY, label: 'Home' }, ...sections.map((v) => ({ key: v.key, label: v.label }))]}
             onClose={() => setPalette(false)} onSection={go}
             onRecord={(id) => {
               const r = records.find((x) => x.id === id);
