@@ -79,10 +79,28 @@ export function isPrivateAddress(ip: string): boolean {
     return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224;
   }
   if (ip.includes(':')) {
-    const x = ip.toLowerCase();
-    const mapped = x.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-    if (mapped) return isPrivateAddress(mapped[1]);
-    return x === '::' || x === '::1' || x.startsWith('fc') || x.startsWith('fd') || x.startsWith('fe80') || x.startsWith('ff');
+    // WHATWG URL rewrites ::ffff:127.0.0.1 to ::ffff:7f00:1. Classify
+    // numeric words, not spelling: DNS can also return expanded addresses.
+    let canonical: string;
+    try { canonical = new URL(`https://[${ip}]/`).hostname.slice(1, -1); }
+    catch { return true; } // Malformed IPv6 must fail closed.
+    const [left, right] = canonical.split('::');
+    const head = left ? left.split(':') : [];
+    const tail = right ? right.split(':') : [];
+    const words = (right === undefined ? head : [...head, ...Array(8 - head.length - tail.length).fill('0'), ...tail])
+      .map((word) => parseInt(word, 16));
+    if (words.length !== 8 || words.some((word) => !Number.isFinite(word))) return true;
+    if (words.slice(0, 5).every((word) => word === 0) && words[5] === 0xffff) {
+      const v4 = [words[6] >>> 8, words[6] & 255, words[7] >>> 8, words[7] & 255].join('.');
+      return isPrivateAddress(v4);
+    }
+    // Unspecified, loopback and deprecated IPv4-compatible addresses.
+    if (words.slice(0, 6).every((word) => word === 0)) return true;
+    const first = words[0];
+    return (first & 0xfe00) === 0xfc00 // unique local, fc00::/7
+      || (first & 0xffc0) === 0xfe80 // link local, fe80::/10 (not just fe80)
+      || (first & 0xffc0) === 0xfec0 // deprecated site local, fec0::/10
+      || (first & 0xff00) === 0xff00; // multicast
   }
   return false;
 }

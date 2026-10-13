@@ -4,13 +4,15 @@ import type { AppRecord, RecordData } from '@shared/blueprint/types.ts';
 import { hasServer } from '@/lib/supabase';
 import { parseAssets, removePropertyAsset, signedPropertyUrl, uploadPropertyAsset } from '@/lib/crm/propertyMedia';
 import type { PropertyAsset } from '@/lib/crm/propertyMedia';
+import { useRuntime } from './runtimeContext';
 
 export function PropertyMedia({ appId, record, onUpdate }: { appId?: string; record: AppRecord; onUpdate: (id: string, data: RecordData) => void }) {
+  const permissions = useRuntime();
   const assets = parseAssets(record.data.statehubs_media);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const enabled = hasServer && !!appId;
+  const enabled = hasServer && !!appId && !appId.startsWith('local-') && permissions?.canEdit !== false;
   useEffect(() => {
     let active = true;
     Promise.all(assets.map(async (asset) => {
@@ -60,7 +62,7 @@ export function PropertyMedia({ appId, record, onUpdate }: { appId?: string; rec
         <div className="flex items-center justify-between gap-1 p-2">
           <span className="min-w-0 flex-1 truncate text-xs" title={asset.name}>{asset.name}</span>
           {urls[asset.path] && <a href={urls[asset.path]} target="_blank" rel="noopener noreferrer" aria-label={`Abrir ${asset.name}`} className="sh-focus rounded p-1"><ExternalLink className="h-4 w-4"/></a>}
-          {enabled && <button type="button" disabled={busy} onClick={() => void remove(asset)} aria-label={`Eliminar ${asset.name}`} className="sh-focus rounded p-1 disabled:opacity-40"><Trash2 className="h-4 w-4"/></button>}
+          {enabled && permissions?.canDelete !== false && <button type="button" disabled={busy} onClick={() => void remove(asset)} aria-label={`Eliminar ${asset.name}`} className="sh-focus rounded p-1 disabled:opacity-40"><Trash2 className="h-4 w-4"/></button>}
         </div>
       </div>)}
     </div> : <p className="rounded-xl border border-dashed p-4 text-sm" style={{ borderColor: 'var(--crm-border)', color: 'var(--crm-muted)' }}>Todavía no hay fotografías ni documentos privados.</p>}

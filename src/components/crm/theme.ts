@@ -3,7 +3,7 @@ import { LOOK, LOOK_DARK } from '@shared/blueprint/look.ts';
 import type { Field, OptionColor, RecordData, AppRecord, Entity } from '@shared/blueprint/types.ts';
 
 const FONTS = {
-  sans: 'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
+  sans: '"Inter Variable", Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
   serif: 'Georgia, "Iowan Old Style", "Times New Roman", serif',
   mono: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
 };
@@ -52,17 +52,13 @@ export function themeVars(mode: ThemeMode = 'light'): CSSProperties {
 
 const MODE_KEY = 'statehubs.tema';
 
-// The person's choice if they made one in this browser, else the system's.
+// White/red is the default regardless of the device. Only an explicit choice overrides it.
 export function initialMode(): ThemeMode {
   try {
     const v = window.localStorage.getItem(MODE_KEY);
     if (v === 'light' || v === 'dark') return v;
   } catch { /* storage blocked */ }
-  try {
-    return window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ? 'dark' : 'light';
-  } catch {
-    return 'light';
-  }
+  return 'light';
 }
 
 export function storeMode(mode: ThemeMode): void {

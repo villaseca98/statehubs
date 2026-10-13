@@ -3,13 +3,13 @@ on:
   pull_request:
     paths:
       - 'supabase/migrations/**'
-      - 'supabase/tests/phase10_**'
+      - 'supabase/tests/**'
       - '.github/workflows/tenant-security.yml'
   push:
     branches: [main]
     paths:
       - 'supabase/migrations/**'
-      - 'supabase/tests/phase10_**'
+      - 'supabase/tests/**'
       - '.github/workflows/tenant-security.yml'
 permissions:
   contents: read
@@ -68,4 +68,6 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261012200000_tenant_security_hardening.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261012210000_global_org_preferences.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261013090000_workspace_access_platform_admin.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/phase10_negative_rls.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/workspace_access.sql

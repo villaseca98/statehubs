@@ -14,7 +14,7 @@ export interface LookColors {
   navText: string;
   navActive: string;
   soft: string;    // tinted background for chips, active rows and progress tracks
-  accent: string;  // the second colour of charts (a soft lime)
+  accent: string;  // the second colour of charts (soft rose)
 }
 
 export interface Look {
@@ -26,22 +26,22 @@ export interface Look {
 export const LOOK: Look = {
   density: 'comfortable',
   radius: 18,
-  // Forest green on warm cream: the look of a real-estate brand, not of a tool.
+  // White surfaces, charcoal text and StateHubs red throughout the workspace.
   colors: {
-    bg: '#f3f1eb', surface: '#ffffff', border: '#e7e3d9', text: '#15231b', muted: '#6b746d',
-    primary: '#1f5c45', primaryText: '#ffffff', navBg: '#ffffff', navText: '#4b554e', navActive: '#1f5c45',
-    soft: '#e8f1ec', accent: '#e4ec7c',
+    bg: '#f8f8fa', surface: '#fdfcfb', border: '#e8e8ed', text: '#19191d', muted: '#686872',
+    primary: '#b41636', primaryText: '#ffffff', navBg: '#fdfcfb', navText: '#555560', navActive: '#b41636',
+    soft: '#fceef1', accent: '#f3a5b6',
   },
 };
 
-// The same look at night: deep green-black, raised surfaces, soft borders
+// The same identity at night: charcoal surfaces, soft borders
 // and text that reads without glare.
 export const LOOK_DARK: LookColors = {
-  bg: '#0c1410', surface: '#141f19', border: '#243229', text: '#e9eee9', muted: '#9ca89f',
-  primary: '#3f9e78', primaryText: '#ffffff', navBg: '#101a14', navText: '#b3beb6', navActive: '#ffffff',
-  soft: '#1b2c23', accent: '#d5df63',
+  bg: '#111114', surface: '#1b1b20', border: '#303038', text: '#f5f5f7', muted: '#a4a4ae',
+  primary: '#c51d42', primaryText: '#ffffff', navBg: '#16161a', navText: '#c0c0c8', navActive: '#ffffff',
+  soft: '#351b24', accent: '#f3a5b6',
 };
 
-// StateHubs evergreen brand colours (legacy 'red' property kept for compatibility).
+// StateHubs corporate colours (legacy 'red' property kept for compatibility).
 // `red` is the solid version used for buttons; `light` reads well on dark.
-export const BRAND = { from: '#1e3a2b', to: '#3f8060', red: '#1f5c45', light: '#a8d6b2', ink: '#17231b' } as const;
+export const BRAND = { from: '#191919', to: '#b41636', red: '#b41636', light: '#f9e8ed', ink: '#141414' } as const;

@@ -68,7 +68,7 @@
 /* StateHubs: premium hover depth, with reduced-motion support. */
 @media (hover: hover) and (pointer: fine) {
   .sh-interactive { transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease; transform: translateZ(0); }
-  .sh-interactive:hover { transform: perspective(900px) translateY(-5px) rotateX(1.2deg); box-shadow: 0 28px 55px -25px rgba(19,42,30,.3); }
+  .sh-interactive:hover { transform: perspective(900px) translateY(-5px) rotateX(1.2deg); box-shadow: 0 28px 55px -25px rgba(25,25,29,.3); }
 }
 @media (prefers-reduced-motion: reduce) { .sh-interactive, .sh-interactive:hover { transition: none !important; transform: none !important; } }
 
@@ -76,23 +76,23 @@
  .sh-surface { @apply rounded-sh-md border border-estate-line bg-white shadow-sh-sm; }
  .sh-focus { @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-estate-moss; }
  .sh-elevate { @apply transform-gpu transition-all duration-300 ease-sh motion-reduce:transform-none motion-reduce:transition-none; }
- @media (hover: hover) and (pointer: fine) { .sh-elevate:hover { transform: translate3d(0,-3px,0); box-shadow: 0 20px 42px -20px rgba(19,42,30,.28); } }
+ @media (hover: hover) and (pointer: fine) { .sh-elevate:hover { transform: translate3d(0,-3px,0); box-shadow: 0 20px 42px -20px rgba(25,25,29,.28); } }
 }
 
 /* Phase 04: opt-in motion system. No global transforms on CRM containers. */
 @layer components {
-  .sh-glass { background: rgba(255,255,255,.74); border: 1px solid rgba(255,255,255,.66); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 12px 36px -24px rgba(19,42,30,.35); }
+  .sh-glass { background: rgba(255,255,255,.74); border: 1px solid rgba(255,255,255,.66); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 12px 36px -24px rgba(25,25,29,.35); }
   .sh-press { transition: transform 180ms cubic-bezier(.2,.8,.2,1), box-shadow 260ms ease, background-color 180ms ease; }
   .sh-tilt { transition: transform 420ms cubic-bezier(.2,.8,.2,1), box-shadow 420ms ease, border-color 420ms ease; transform-style: preserve-3d; }
-  .sh-skeleton { background: linear-gradient(100deg, #e9e5da 20%, #f4f2ec 38%, #e9e5da 58%); background-size: 200% 100%; animation: sh-shimmer 1.8s ease-in-out infinite; }
+  .sh-skeleton { background: linear-gradient(100deg, #ededf1 20%, #f8f8fa 38%, #ededf1 58%); background-size: 200% 100%; animation: sh-shimmer 1.8s ease-in-out infinite; }
   .sh-enter { animation: sh-enter 480ms cubic-bezier(.2,.8,.2,1) both; }
   @media (hover: hover) and (pointer: fine) {
     .sh-press:not(:disabled):active { transform: scale(.97); }
-    .sh-tilt:hover { transform: perspective(1000px) translate3d(0,-6px,0) rotateX(1.5deg) rotateY(-.6deg); box-shadow: 0 32px 58px -32px rgba(19,42,30,.38); }
+    .sh-tilt:hover { transform: perspective(1000px) translate3d(0,-6px,0) rotateX(1.5deg) rotateY(-.6deg); box-shadow: 0 32px 58px -32px rgba(25,25,29,.38); }
   }
   @media (prefers-reduced-motion: reduce) {
     .sh-press, .sh-tilt, .sh-tilt:hover, .sh-enter { animation: none !important; transition: none !important; transform: none !important; }
-    .sh-skeleton { animation: none !important; background: #e9e5da; }
+    .sh-skeleton { animation: none !important; background: #ededf1; }
   }
 }
 @keyframes sh-shimmer { from { background-position-x: 200%; } to { background-position-x: -200%; } }
@@ -108,7 +108,7 @@
   input, textarea, select { font-size: max(16px, 1em); }
 }
 :where(.sh-touch, button, a, input, select, textarea, [role="button"], [tabindex]):focus-visible {
-  outline: 3px solid var(--crm-primary, #17603d);
+  outline: 3px solid var(--crm-primary, #b41636);
   outline-offset: 3px;
 }
 @media (prefers-reduced-motion: reduce) {

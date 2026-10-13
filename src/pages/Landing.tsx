@@ -81,8 +81,8 @@ export default function Landing() {
     <div className="min-h-screen overflow-x-clip bg-estate-cream text-estate-ink">
       <a href="#empezar" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-estate-forest focus:px-4 focus:py-2 focus:text-white">Saltar a empezar</a>
       <Nav onStart={toStart} account={!loading && (user
-        ? <span className="hidden max-w-[12rem] truncate text-estate-muted sm:inline">{user.email}</span>
-        : hasServer && <Link to="/entrar" className="rounded-full px-3 py-2 font-medium text-estate-ink transition hover:bg-estate-forest/[.06]">Entrar</Link>)} />
+        ? <Link to="/workspace" className="hidden max-w-[12rem] truncate text-estate-forest sm:inline">{t('yourApps')}</Link>
+        : <Link to="/login" className="rounded-full px-3 py-2 font-medium text-estate-ink transition hover:bg-estate-forest/[.06]">{t('signIn')}</Link>)} />
 
       <main>
         <ScrollHero onStart={toStart} />

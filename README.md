@@ -10,6 +10,10 @@
 
 Un solo diseño, el de StateHubs. Sin catálogos de estilos.
 
+## Estado técnico y plan de producto
+
+La [auditoría técnica](docs/TECHNICAL_AUDIT.md) recoge el estado comprobado del código, los límites actuales y la primera corrección P0. Consulta la [matriz de funcionalidades](docs/FEATURE_MATRIX.md), la [hoja de ruta por entregas](docs/ROADMAP.md) y las [verificaciones de despliegue](docs/DEPLOYMENT.md). Las instrucciones permanentes de desarrollo están en [AGENTS.md](AGENTS.md).
+
 ## Arrancar
 
 ```bash
