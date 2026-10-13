@@ -26,15 +26,15 @@ describe('Workspace', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Home' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Para hoy' })).toBeTruthy();
 
-    openSection(/Embudo|Pipeline/);
-    expect(screen.getByRole('heading', { level: 1, name: 'Embudo' })).toBeTruthy();
+    openSection(/Pipeline/);
+    expect(screen.getByRole('heading', { level: 1, name: 'Pipeline' })).toBeTruthy();
     expect(screen.queryByRole('region', { name: 'Para hoy' })).toBeNull();
   });
 
   it('reads the data in the analysis section: funnel, priorities, patterns and database', () => {
     const bp = composeApp('crm', 'Mi CRM', ['panel', 'analisis', 'leads', 'embudo', 'clientes']);
     render(<Harness blueprint={bp} records={sampleRecordsFor(bp)} />);
-    openSection(/Análisis/);
+    openSection(/Insights/);
     const lenses = screen.getByRole('tablist', { name: 'Enfoques' });
     expect(screen.getByText('Previsión de cierre')).toBeTruthy();
     fireEvent.click(within(lenses).getByRole('tab', { name: 'A quién atacar hoy' }));
@@ -58,7 +58,7 @@ describe('Workspace', () => {
   it('opens on the operations centre when it comes first, instead of «Hoy»', () => {
     const bp = composePack('ambos', 'Inmobiliaria');
     render(<Harness blueprint={bp} records={sampleRecordsFor(bp)} />);
-    expect(screen.getByRole('heading', { level: 1, name: 'Centro de operaciones' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Operations center' })).toBeTruthy();
     expect(screen.queryByRole('region', { name: 'Para hoy' })).toBeNull();
     expect(screen.queryByRole('button', { name: /Nuevo/ })).toBeNull();
     expect(screen.getByRole('region', { name: 'Cifras del día' })).toBeTruthy();
