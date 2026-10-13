@@ -3,7 +3,7 @@ import { fireEvent, screen, within } from '@testing-library/react';
 // Test helpers for the hub navigation: sections live in tabs inside hubs.
 
 const hubButtons = () => within(screen.getAllByRole('navigation', { name: 'Hubs' })[0]).getAllByRole('button');
-const sectionNav = () => screen.queryAllByRole('navigation', { name: 'Secciones' })[0];
+const sectionNav = () => screen.queryAllByRole('navigation', { name: 'Sections' })[0];
 
 // Goes to a section by its name, through whichever hub holds it.
 export function openSection(name: RegExp | string) {
