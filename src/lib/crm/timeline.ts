@@ -46,9 +46,9 @@ export function shiftAnchor(mode: TimelineMode, anchor: string, dir: 1 | -1): st
   return `${y + Math.floor(m / 12)}-${pad(((m % 12) + 12) % 12 + 1)}-01`;
 }
 
-const MONTH = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-const SHORT = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', timeZone: 'UTC' });
-const LONG = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const MONTH = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const SHORT = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+const LONG = new Intl.DateTimeFormat('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 const asDate = (day: string) => new Date(toNum(day) * DAY);
 
 export function periodLabel(mode: TimelineMode, p: Period): string {
@@ -58,7 +58,7 @@ export function periodLabel(mode: TimelineMode, p: Period): string {
   return `${SHORT.format(asDate(p.start))} – ${SHORT.format(asDate(last))} ${last.slice(0, 4)}`;
 }
 
-export const WEEKDAY_SHORT = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
+export const WEEKDAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 // What a booking needs to be drawn.
 export interface Stay {
