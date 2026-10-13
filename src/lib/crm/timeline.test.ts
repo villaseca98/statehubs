@@ -20,8 +20,8 @@ describe('timeline', () => {
     expect(shiftAnchor('semana', '2026-10-14', -1)).toBe('2026-10-07');
     // Across the summer-time change the days stay whole.
     expect(periodFor('mes', '2026-03-05').days[28]).toBe('2026-03-29');
-    expect(periodLabel('mes', m)).toBe('febrero de 2026');
-    expect(periodLabel('semana', w)).toMatch(/12 oct.*18 oct.*2026/);
+    expect(periodLabel('mes', m)).toBe('February 2026');
+    expect(periodLabel('semana', w)).toMatch(/Oct 12.*Oct 18.*2026/);
   });
 
   it('draws a stay from the middle of check-in to the middle of check-out, clipped to the period', () => {
