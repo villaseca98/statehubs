@@ -22,4 +22,4 @@ D1 and the white/red navigation portion of D3 are implemented locally in the ope
 
 D4a delivered: explicit contact lifecycle, same-identity conversion, reversible archive, multi-role relationships and stage filters. Full D4 remains partial; see [CONTACT_LIFECYCLE](CONTACT_LIFECYCLE.md). Next D4 block is audited activity/transition history and the client dossier.
 
-D4b delivered: linked dossier navigation, server-attributed changed-field events, manual notes/calls/meetings and idempotent retries. Complete before/after stage audit, global contact reconciliation and duplicate review remain; see [RECORD_ACTIVITY](RECORD_ACTIVITY.md). Production deployment is gated by Supabase migration/configuration and merging PR #16.
+D4b delivered: linked dossier navigation, server-attributed changed-field events, manual notes/calls/meetings and idempotent retries. Complete before/after stage audit, global contact reconciliation and duplicate review remain; see [RECORD_ACTIVITY](RECORD_ACTIVITY.md). PR #16 has now merged and Vercel reports production success for its earlier CRM changes. D4b is a separate subsequent PR; its database activation remains pending.
