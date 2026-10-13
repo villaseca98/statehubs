@@ -21,13 +21,13 @@ export interface TimelineViewProps extends ViewProps {
 }
 
 const card = { background: 'var(--crm-surface)', border: '1px solid var(--crm-border)', borderRadius: 'var(--crm-radius)' } as const;
-const MODES: { key: TimelineMode; label: string }[] = [{ key: 'dia', label: 'Día' }, { key: 'semana', label: 'Semana' }, { key: 'mes', label: 'Mes' }];
+const MODES: { key: TimelineMode; label: string }[] = [{ key: 'dia', label: 'Day' }, { key: 'semana', label: 'Week' }, { key: 'mes', label: 'Month' }];
 const DAY_MIN: Record<TimelineMode, number> = { dia: 240, semana: 92, mes: 30 };
 const LANE = 30;
 const CONFLICT = SOLID.red;
-const euros = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+const euros = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
 const pct = (v: number) => `${Math.round(v * 100)} %`;
-const shortDate = (day: string) => new Date(`${day}T00:00:00`).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+const shortDate = (day: string) => new Date(`${day}T00:00:00`).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 const tint = (v: string, p: number) => `color-mix(in srgb, ${v} ${p}%, transparent)`;
 
 export function TimelineView(props: TimelineViewProps) {
@@ -36,7 +36,7 @@ export function TimelineView(props: TimelineViewProps) {
   const rowField = entity?.fields.find((f) => f.key === view.rowField && f.type === 'relation');
   const rowEntity = blueprint.entities.find((e) => e.key === rowField?.relation);
   if (!entity || !rowField || !rowEntity || !view.startField || !view.endField) {
-    return <p style={{ ...card, padding: 'var(--crm-pad)', color: 'var(--crm-muted)' }}>A este calendario le falta saber qué filas y qué fechas usar.</p>;
+    return <p style={{ ...card, padding: 'var(--crm-pad)', color: 'var(--crm-muted)' }}>This calendar needs a property relationship and start/end date fields.</p>;
   }
   return <Timeline {...props} entity={entity} rowField={rowField} rowEntity={rowEntity} startKey={view.startField} endKey={view.endField} />;
 }
@@ -87,7 +87,7 @@ function Timeline({ view, records, onOpen, onCreate, onSync, now, entity, rowFie
     if (!onSync) return;
     setSyncing(true);
     setSyncNote(null);
-    try { setSyncNote((await onSync()) || 'Calendarios al día.'); } catch (e) { setSyncNote((e as Error).message || 'No se pudo sincronizar.'); }
+    try { setSyncNote((await onSync()) || 'Calendars are up to date.'); } catch (e) { setSyncNote((e as Error).message || 'Calendar synchronization failed.'); }
     setSyncing(false);
   };
   const createAt = (row: AppRecord, day: string) => onCreate(entity.key, { [rowField.key]: row.id, [startKey]: day, [endKey]: addDays(day, 1) });
@@ -107,13 +107,13 @@ function Timeline({ view, records, onOpen, onCreate, onSync, now, entity, rowFie
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex min-w-0 basis-full items-center gap-2 sm:flex-1 sm:basis-auto">
         <div className="flex shrink-0 items-center gap-0.5">
-          <button aria-label="Anterior" onClick={() => setAnchor((a) => shiftAnchor(mode, a, -1))} className="rounded-lg p-1.5 hover:bg-black/5"><ChevronLeft className="h-4 w-4" /></button>
-          <button onClick={() => setAnchor(today)} className="rounded-lg px-2.5 py-1 font-medium hover:bg-black/5" style={{ border: '1px solid var(--crm-border)' }}>Hoy</button>
-          <button aria-label="Siguiente" onClick={() => setAnchor((a) => shiftAnchor(mode, a, 1))} className="rounded-lg p-1.5 hover:bg-black/5"><ChevronRight className="h-4 w-4" /></button>
+          <button aria-label="Previous period" onClick={() => setAnchor((a) => shiftAnchor(mode, a, -1))} className="rounded-lg p-1.5 hover:bg-black/5"><ChevronLeft className="h-4 w-4" /></button>
+          <button onClick={() => setAnchor(today)} className="rounded-lg px-2.5 py-1 font-medium hover:bg-black/5" style={{ border: '1px solid var(--crm-border)' }}>Today</button>
+          <button aria-label="Next period" onClick={() => setAnchor((a) => shiftAnchor(mode, a, 1))} className="rounded-lg p-1.5 hover:bg-black/5"><ChevronRight className="h-4 w-4" /></button>
         </div>
         <h2 className="min-w-0 flex-1 truncate font-semibold first-letter:uppercase" aria-live="polite">{periodLabel(mode, period)}</h2>
         </div>
-        <div role="radiogroup" aria-label="Escala" className="inline-flex rounded-lg p-0.5" style={{ background: tint('var(--crm-border)', 70) }}>
+        <div role="radiogroup" aria-label="Calendar scale" className="inline-flex rounded-lg p-0.5" style={{ background: tint('var(--crm-border)', 70) }}>
           {MODES.map((m) => (
             <button key={m.key} role="radio" aria-checked={mode === m.key} onClick={() => setMode(m.key)}
               className="rounded-md px-3 py-1 text-[0.92em] font-medium transition"
@@ -125,34 +125,34 @@ function Timeline({ view, records, onOpen, onCreate, onSync, now, entity, rowFie
       </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.92em]">
-        <span style={{ color: 'var(--crm-muted)' }}>Ocupación <b style={{ color: 'var(--crm-text)' }}>{pct(rows.length ? totalNights / (rows.length * n) : 0)}</b></span>
-        <span style={{ color: 'var(--crm-muted)' }}>Neto <b style={{ color: 'var(--crm-text)' }}>{euros.format(totalNet)}</b></span>
+        <span style={{ color: 'var(--crm-muted)' }}>Occupancy <b style={{ color: 'var(--crm-text)' }}>{pct(rows.length ? totalNights / (rows.length * n) : 0)}</b></span>
+        <span style={{ color: 'var(--crm-muted)' }}>Net <b style={{ color: 'var(--crm-text)' }}>{euros.format(totalNet)}</b></span>
         {clashing > 0 && (
           <span role="alert" className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium" style={{ background: tint(CONFLICT, 12), color: CONFLICT }}>
-            <AlertTriangle className="h-3.5 w-3.5" /> {clashing} {clashing === 1 ? 'reserva se solapa' : 'reservas se solapan'}
+            <AlertTriangle className="h-3.5 w-3.5" /> {clashing} {clashing === 1 ? 'overlapping booking' : 'overlapping bookings'}
           </span>
         )}
         <span className="flex flex-wrap items-center gap-x-4 gap-y-1 sm:ml-auto">
           {kind && (
             <label className="inline-flex cursor-pointer items-center gap-1.5">
-              <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} style={{ accentColor: 'var(--crm-primary)' }} /> Ver todos
+              <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} style={{ accentColor: 'var(--crm-primary)' }} /> Show all
             </label>
           )}
           {status && (
             <label className="inline-flex cursor-pointer items-center gap-1.5">
-              <input type="checkbox" checked={showCancelled} onChange={(e) => setShowCancelled(e.target.checked)} style={{ accentColor: 'var(--crm-primary)' }} /> Ver canceladas
+              <input type="checkbox" checked={showCancelled} onChange={(e) => setShowCancelled(e.target.checked)} style={{ accentColor: 'var(--crm-primary)' }} /> Show cancelled
             </label>
           )}
           {onSync && (
             <button onClick={sync} disabled={syncing} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium disabled:opacity-60" style={{ border: '1px solid var(--crm-border)', background: 'var(--crm-surface)' }}>
-              <RefreshCw className={`h-3.5 w-3.5 ${syncing ? 'animate-spin' : ''}`} /> {syncing ? 'Sincronizando…' : 'Sincronizar Airbnb y Booking'}
+              <RefreshCw className={`h-3.5 w-3.5 ${syncing ? 'animate-spin' : ''}`} /> {syncing ? 'Syncing…' : 'Sync Airbnb and Booking'}
             </button>
           )}
         </span>
       </div>
       {syncNote && <p role="status" className="text-[0.92em]" style={{ ...card, padding: '8px 12px' }}>{syncNote}</p>}
 
-      <div ref={scroller} className="max-w-full overflow-x-auto" style={card} aria-label={`Calendario de ${entity.labelPlural.toLowerCase()}`} role="region">
+      <div ref={scroller} className="max-w-full overflow-x-auto" style={card} aria-label={`Booking calendar`} role="region">
         <div className="relative inline-flex min-w-full flex-col">
           <div className="flex" style={{ borderBottom: '1px solid var(--crm-border)' }}>
             <NameCell header>
@@ -186,13 +186,13 @@ function Timeline({ view, records, onOpen, onCreate, onSync, now, entity, rowFie
                     {/* «Loft Carmen · C/ Quart 40» → the name; the address is in the tooltip. */}
                     <span className="block truncate font-medium">{title.split(' · ')[0]}</span>
                     <span className="block truncate text-[0.8em]" style={{ color: 'var(--crm-muted)' }}>{pct(st.occupancy)} · {euros.format(st.net)}</span>
-                    {rowClash && <span className="mt-0.5 flex items-center gap-1 text-[0.8em] font-medium" style={{ color: CONFLICT }}><AlertTriangle className="h-3 w-3 shrink-0" />Se solapan</span>}
+                    {rowClash && <span className="mt-0.5 flex items-center gap-1 text-[0.8em] font-medium" style={{ color: CONFLICT }}><AlertTriangle className="h-3 w-3 shrink-0" />Overlapping stays</span>}
                   </button>
                 </NameCell>
                 <div className="relative flex-1" style={{ minHeight: lanes * LANE + 14, minWidth: n * DAY_MIN[mode] }}>
                   <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${n}, minmax(${DAY_MIN[mode]}px, 1fr))` }}>
                     {period.days.map((d) => (
-                      <button key={d} tabIndex={-1} aria-label={`Nueva ${entity.label.toLowerCase()} en ${title} el ${shortDate(d)}`} onClick={() => createAt(row, d)}
+                      <button key={d} tabIndex={-1} aria-label={`New booking at ${title} on ${shortDate(d)}`} onClick={() => createAt(row, d)}
                         className="h-full transition hover:bg-black/[.04]"
                         style={{ background: d === today ? tint('var(--crm-primary)', 6) : isWeekend(d) ? tint('var(--crm-border)', 35) : undefined, borderLeft: '1px solid var(--crm-border)' }} />
                     ))}
@@ -202,15 +202,15 @@ function Timeline({ view, records, onOpen, onCreate, onSync, now, entity, rowFie
                     const guest = titleOfRecord(entity, s.record.data);
                     const nn = nights(s);
                     const clash = conflicts.has(s.record.id) && !s.cancelled;
-                    const label = s.block ? `Bloqueo · ${guest}` : guest;
+                    const label = s.block ? `Blocked · ${guest}` : guest;
                     return (
                       <button key={s.record.id} onClick={() => onOpen(s.record)}
-                        aria-label={`${label}, ${nn} ${nn === 1 ? 'noche' : 'noches'}, del ${shortDate(s.start)} al ${shortDate(s.end)}${s.cancelled ? ', cancelada' : ''}${clash ? '. Se solapa con otra reserva' : ''}`}
-                        title={clash ? 'Se solapan: dos reservas en las mismas noches' : undefined}
+                        aria-label={`${label}, ${nn} ${nn === 1 ? 'night' : 'nights'}, from ${shortDate(s.start)} to ${shortDate(s.end)}${s.cancelled ? ', cancelled' : ''}${clash ? '. Overlaps another booking' : ''}`}
+                        title={clash ? 'Booking conflict: overlapping nights' : undefined}
                         className="absolute flex items-center gap-1 overflow-hidden whitespace-nowrap px-2 text-left text-[0.84em] font-medium shadow-sm transition hover:brightness-95"
                         style={{ left: `calc(${(g.left / n) * 100}% + 1px)`, width: `calc(${(g.width / n) * 100}% - 2px)`, top: 7 + (lane.get(s.record.id) ?? 0) * LANE, height: LANE - 4, ...barStyle(s, g.clippedStart, g.clippedEnd) }}>
                         {clash && <AlertTriangle className="h-3.5 w-3.5 shrink-0" style={{ color: s.block ? CONFLICT : '#fff' }} aria-hidden />}
-                        <span className="truncate">{s.block ? 'Bloqueo' : guest}</span>
+                        <span className="truncate">{s.block ? 'Blocked' : guest}</span>
                         {!s.block && <span className="shrink-0 opacity-80">· {nn} n.</span>}
                       </button>
                     );
@@ -223,26 +223,26 @@ function Timeline({ view, records, onOpen, onCreate, onSync, now, entity, rowFie
           {rows.length === 0 && (
             <div className="p-6 text-center" style={{ color: 'var(--crm-muted)' }}>
               {hiddenRows > 0
-                ? <>Ningún {rowEntity.label.toLowerCase()} es de alquiler turístico. <button onClick={() => setShowAll(true)} className="underline">Ver todos</button></>
-                : <>Todavía no hay {rowEntity.labelPlural.toLowerCase()}. Añade uno para ver aquí sus {entity.labelPlural.toLowerCase()}.</>}
+                ? <>No holiday rental properties found. <button onClick={() => setShowAll(true)} className="underline">Show all</button></>
+                : <>No properties yet. Add a property to see its bookings here.</>}
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[0.88em]" style={{ color: 'var(--crm-muted)' }} aria-label="Leyenda">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[0.88em]" style={{ color: 'var(--crm-muted)' }} aria-label="Legend">
         {group?.options?.map((o) => (
           <span key={o.value} className="inline-flex items-center gap-1.5"><span className="h-2.5 w-5 rounded-full" style={{ background: SOLID[o.color ?? 'gray'] }} />{o.label}</span>
         ))}
         {status?.options?.some((o) => o.value === 'bloqueo') && (
-          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-5 rounded-full" style={{ background: `repeating-linear-gradient(135deg, ${tint('var(--crm-muted)', 40)} 0 3px, ${tint('var(--crm-muted)', 15)} 3px 6px)` }} />Bloqueo</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-5 rounded-full" style={{ background: `repeating-linear-gradient(135deg, ${tint('var(--crm-muted)', 40)} 0 3px, ${tint('var(--crm-muted)', 15)} 3px 6px)` }} />Blocked</span>
         )}
-        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-5 rounded-full" style={{ outline: `2px solid ${CONFLICT}`, outlineOffset: -1 }} />Se solapan</span>
-        <span>Clic en un día libre para crear una {entity.label.toLowerCase()}.</span>
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-5 rounded-full" style={{ outline: `2px solid ${CONFLICT}`, outlineOffset: -1 }} />Overlapping stays</span>
+        <span>Select an available day to create a booking.</span>
       </div>
       {onSync && (
         <p className="text-[0.88em]" style={{ color: 'var(--crm-muted)' }}>
-          Las reservas llegan por el calendario iCal de cada anuncio (al pulsar Sincronizar). Precios y mensajes no se sincronizan.
+          Bookings are imported from each listing's iCal feed when you select Sync. Prices and messages are not synchronized.
         </p>
       )}
     </div>
