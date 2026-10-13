@@ -33,3 +33,5 @@ Supabase core activation is now verified against the real project, including CRU
 D5a / Master prompt 2: deal offer history implemented with explicit currency, guarded transitions, per-revision audit and concurrent-edit protection. No automatic closing or financial movement. Next commercial milestone: commission allocation and payment ledger; see [DEAL_OFFERS](DEAL_OFFERS.md).
 
 D5b / Master prompt 2: commission allocation and manual receipt ledger verified, including real concurrent-write protection. Commission rules, corrections/reversals, automatic agent linking and external banking remain pending. See [COMMISSION_LEDGER](COMMISSION_LEDGER.md). Next commercial increment should add safe financial amendments/reversals before bank integration.
+
+D5c: full receipt reversals now append an auditable opposite entry and restore the balance exactly once under concurrent requests. Mandatory reason and confirmation preserve the original receipt. Plan amendments, partial refunds, commission rules and bank reconciliation remain pending. Verification: 289 tests plus SQL permissions and concurrent reversal sessions.
