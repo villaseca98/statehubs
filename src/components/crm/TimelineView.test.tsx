@@ -29,50 +29,50 @@ function setup(extra: Partial<Parameters<typeof TimelineView>[0]> = {}) {
 describe('TimelineView', () => {
   it('shows one row per holiday let, with bars per booking and overlaps flagged', () => {
     const { onOpen } = setup();
-    expect(screen.getByText('octubre de 2026')).toBeTruthy();
-    const cal = screen.getByRole('region', { name: 'Calendario de reservas' });
+    expect(screen.getByText('October 2026')).toBeTruthy();
+    const cal = screen.getByRole('region', { name: 'Booking calendar' });
     expect(within(cal).getByText('Loft Carmen')).toBeTruthy();
     expect(within(cal).queryByText('Piso en venta')).toBeNull();
-    expect(within(cal).getAllByText('Se solapan')).toHaveLength(1);
-    expect(screen.getByRole('alert').textContent).toMatch(/2 reservas se solapan/);
-    const bar = screen.getByRole('button', { name: /Sven Larsen, 4 noches.*Se solapa/ });
+    expect(within(cal).getAllByText('Overlapping bookings')).toHaveLength(1);
+    expect(screen.getByRole('alert').textContent).toMatch(/2 overlapping bookings/);
+    const bar = screen.getByRole('button', { name: /Sven Larsen, 4 nights.*Overlaps/ });
     fireEvent.click(bar);
     expect(onOpen).toHaveBeenCalledWith(records[4]);
-    expect(screen.getByRole('button', { name: /Bloqueo · Bloqueo propietario, 3 noches/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Blocked · Bloqueo propietario, 3 nights/ })).toBeTruthy();
     // Cancelled ones only on request.
     expect(screen.queryByRole('button', { name: /Marta Gil/ })).toBeNull();
-    fireEvent.click(screen.getByLabelText('Ver canceladas'));
-    expect(screen.getByRole('button', { name: /Marta Gil.*cancelada/ })).toBeTruthy();
-    fireEvent.click(screen.getByLabelText('Ver todos'));
+    fireEvent.click(screen.getByLabelText('Show cancelled'));
+    expect(screen.getByRole('button', { name: /Marta Gil.*cancelled/ })).toBeTruthy();
+    fireEvent.click(screen.getByLabelText('Show all'));
     expect(within(cal).getByText('Piso en venta')).toBeTruthy();
   });
 
   it('works out occupancy and net per row for the visible period', () => {
     setup();
-    fireEvent.click(screen.getByRole('radio', { name: 'Semana' }));
-    expect(screen.getByText(/12 oct.*18 oct/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: 'Week' }));
+    expect(screen.getByText(/Oct 12.*Oct 18/)).toBeTruthy();
     // Loft Carmen: 3 + 4 nights of 7 (they overlap), net 220 + 322.
-    expect(screen.getByText('100 % · 542 €')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
-    expect(screen.getByText(/19 oct.*25 oct/)).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Hoy' }));
-    fireEvent.click(screen.getByRole('radio', { name: 'Día' }));
-    expect(screen.getByText(/miércoles, 14 de octubre de 2026/)).toBeTruthy();
+    expect(screen.getByText('100 % · €542')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Next period' }));
+    expect(screen.getByText(/Oct 19.*Oct 25/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Today' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Day' }));
+    expect(screen.getByText(/Wednesday, October 14, 2026/)).toBeTruthy();
   });
 
   it('creates a booking on an empty day with the property and dates filled in', () => {
     const { onCreate } = setup();
-    fireEvent.click(screen.getByRole('button', { name: /Nueva reserva en Ático Ruzafa el 26 oct/ }));
+    fireEvent.click(screen.getByRole('button', { name: /New booking at Ático Ruzafa on Oct 26/ }));
     expect(onCreate).toHaveBeenCalledWith('reserva', { alojamiento: 'p2', entrada: '2026-10-26', salida: '2026-10-27' });
   });
 
   it('offers the calendar sync only when there is one, and says what it did', async () => {
     setup();
-    expect(screen.queryByRole('button', { name: /Sincronizar/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Sync/ })).toBeNull();
     document.body.innerHTML = '';
     setup({ onSync: async () => '2 nuevas, 0 actualizadas, 0 canceladas.' });
-    expect(screen.getByText(/Precios y mensajes no se sincronizan/)).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: /Sincronizar Airbnb y Booking/ }));
+    expect(screen.getByText(/Prices and messages are not synchronized/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Sync Airbnb and Booking/ }));
     expect((await screen.findByRole('status')).textContent).toBe('2 nuevas, 0 actualizadas, 0 canceladas.');
   });
 });
