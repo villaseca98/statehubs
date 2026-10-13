@@ -23,7 +23,7 @@ describe('Workspace', () => {
   it('opens on «Hoy» and moves between sections one at a time', () => {
     const bp = composeApp('crm', 'Mi CRM', modulesFor('crm').map((m) => m.key).filter((k) => k !== 'centro'));
     render(<Harness blueprint={bp} records={sampleRecordsFor(bp)} />);
-    expect(screen.getByRole('heading', { level: 1, name: 'Hoy' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Home' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Para hoy' })).toBeTruthy();
 
     openSection(/Embudo/);
@@ -156,7 +156,7 @@ describe('Workspace', () => {
       const { container } = render(<Harness blueprint={bp} records={[]} />);
       const app = container.querySelector('[data-app="statehubs"]') as HTMLElement;
       expect(app.dataset.theme).toBe('light');
-      fireEvent.click(screen.getAllByRole('button', { name: 'Modo oscuro' })[0]);
+      fireEvent.click(screen.getAllByRole('button', { name: 'Dark mode' })[0]);
       expect(app.dataset.theme).toBe('dark');
       expect(app.style.getPropertyValue('--crm-bg')).toBe('#111114');
       expect(window.localStorage.getItem('statehubs.tema')).toBe('dark');
