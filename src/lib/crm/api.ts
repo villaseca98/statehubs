@@ -8,6 +8,7 @@ import type { BusyInterval } from '@shared/blueprint/slots.ts';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = () => server() as any;
 
+export interface RecordEvent { id: string; record_id: string; actor_id: string | null; kind: 'created' | 'changed' | 'note' | 'call' | 'meeting'; body: string | null; fields: string[]; created_at: string }
 export interface CrmApp { id: string; org_id?: string | null; name: string; current_version: number | null; updated_at: string }
 export type OrgRole = 'owner' | 'admin' | 'agent' | 'viewer';
 export interface CrmOrganization { id: string; name: string; settings: Record<string, unknown>; owner_id: string; updated_at: string }
@@ -39,6 +40,8 @@ async function must<T>(p: PromiseLike<{ data: T; error: { message: string } | nu
 }
 
 export const crmApi = {
+  recordEvents: (recordId: string) => must<RecordEvent[]>(db().from('crm_record_events').select('id,record_id,actor_id,kind,body,fields,created_at').eq('record_id', recordId).order('created_at', { ascending: false }).order('id', { ascending: false }).limit(50)),
+  addRecordActivity: (recordId: string, kind: 'note' | 'call' | 'meeting', body: string, requestId: string) => must<RecordEvent>(db().rpc('crm_add_record_activity', { p_record: recordId, p_kind: kind, p_body: body, p_request: requestId })),
   platformStatus: () => must<boolean>(db().rpc('crm_platform_status')),
   platformOrganizations: () => must<PlatformOrganization[]>(db().rpc('crm_platform_organizations')),
   workspaceAccess: (appId: string) => must<WorkspaceAccess | null>(db().rpc('crm_workspace_access', { p_app: appId })),

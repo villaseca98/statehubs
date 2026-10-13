@@ -70,6 +70,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
   // With an operations centre first, the app opens there and it replaces «Hoy».
   const home = sections[0]?.type === 'ops' ? sections[0].key : HOY;
   const [section, setSection] = useState<string>(home);
+  const [recordTrail, setRecordTrail] = useState<string[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [mode, setMode] = useState<ThemeMode>(initialMode);
   const [palette, setPalette] = useState(false);
@@ -97,6 +98,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
   }, []);
   const toggleMode = () => { const next: ThemeMode = dark ? 'light' : 'dark'; setMode(next); storeMode(next); };
 
+  useEffect(() => { if (!openId) setRecordTrail([]); }, [openId]);
   const go = (key: string) => { setSection(key); setOpenId(null); };
   const create = async (entityKey: string, data: RecordData = {}) => {
     if (readOnly) return;
@@ -226,7 +228,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
 
         {open && (
           <RecordDialog title={`Detalle de ${titleOf(open.id) ?? open.entity}`} onClose={() => setOpenId(null)}>
-            <RecordPanel blueprint={blueprint} appId={appId} record={open} records={records} titleOf={titleOf} dark={dark}
+            <RecordPanel key={open.id} onOpen={id => { setRecordTrail(trail => [...trail, open.id]); setOpenId(id); }} onBack={recordTrail.length ? () => { setOpenId(recordTrail[recordTrail.length-1]); setRecordTrail(trail => trail.slice(0,-1)); } : undefined} blueprint={blueprint} appId={appId} record={open} records={records} titleOf={titleOf} dark={dark}
               groupBy={blueprint.views.find((v) => v.entity === open.entity && v.groupBy)?.groupBy}
               onUpdate={onUpdate} onDelete={(id) => { onDelete(id); setOpenId(null); }} onClose={() => setOpenId(null)} />
           </RecordDialog>

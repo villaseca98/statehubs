@@ -14,7 +14,7 @@
 | crm_instagram_accounts / crm_instagram_events | App connection and dedup event IDs; server only |
 | storage.objects / crm-property-media | Private image/PDF paths `app/record/asset.ext`; permission helpers verify property and agency |
 
-The nine migration files must run in timestamp order. Phase 09 backfills organizations and org IDs while preserving records. Phase 10 enforces non-null tenant scope and explicit privileges. Phase 11 adds optional localization metadata. The repository does not prove that any migration is installed on a live project.
+The ten migration files must run in timestamp order. Phase 09 backfills organizations and org IDs while preserving records. Phase 10 enforces non-null tenant scope and explicit privileges. Phase 11 adds optional localization metadata. The repository does not prove that any migration is installed on a live project.
 
 `crm_records.entity` includes `lead`, `cliente`, `contacto_inmo`, `inmueble`, `operacion`, `oportunidad`, `cita_inmo`, `reserva`, etc. Their relationships are strings inside JSON, **not foreign keys to another record**. Money fields are JSON numbers. Blueprint versions are not record-data history.
 
@@ -35,3 +35,7 @@ Expand first, backfill with audited counts and explicit ambiguous cases, dual-re
 ## Contact lifecycle compatibility layer
 
 D4a adds optional JSON record fields without migrations or automatic backfills. `contacto_inmo` keeps its ID; `crm_lifecycle`, `crm_archived` and `crm_role_<role>` describe its commercial state. Missing lifecycle is unclassified. These fields do not grant permissions and are not an audit log. See [CONTACT_LIFECYCLE](CONTACT_LIFECYCLE.md).
+
+## Operational record history
+
+`crm_record_events` records server-attributed insert/update events and notes/calls/meetings. Clients have membership-scoped SELECT only; a validated RPC adds manual activity. Parent deletion cascades; this is not a permanent retention ledger. Details: [RECORD_ACTIVITY](RECORD_ACTIVITY.md).

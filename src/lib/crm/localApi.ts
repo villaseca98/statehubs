@@ -1,13 +1,13 @@
 import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import { cardProposal } from '@shared/blueprint/modules.ts';
-import type { CrmApp, CrmMessage, CrmProposal, CrmVersion, GoogleStatus, IcalSyncResult, InstagramStatus, crmApi } from './api';
+import type { RecordEvent, CrmApp, CrmMessage, CrmProposal, CrmVersion, GoogleStatus, IcalSyncResult, InstagramStatus, crmApi } from './api';
 import { localAgent } from './localAgent';
 
 // Guest mode: the same API as crmApi, kept in this browser (localStorage).
 // Same rules as the server: proposals first, every apply is a version,
 // undo restores as a new version, a stale proposal is refused.
 
-interface LocalApp { app: CrmApp; versions: CrmVersion[]; messages: CrmMessage[]; proposals: CrmProposal[]; records: AppRecord[] }
+interface LocalApp { events?: RecordEvent[]; app: CrmApp; versions: CrmVersion[]; messages: CrmMessage[]; proposals: CrmProposal[]; records: AppRecord[] }
 type Store = Record<string, LocalApp>;
 
 const KEY = 'statehubs_local_v1';
@@ -39,7 +39,26 @@ const uid = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? cry
 const now = () => new Date().toISOString();
 export const isLocalApp = (id: string) => id.startsWith('local-');
 
+function eventFor(a: LocalApp, record: AppRecord, before?: RecordData) {
+  const fields = before ? [...new Set([...Object.keys(before), ...Object.keys(record.data)])].filter(k => JSON.stringify(before[k]) !== JSON.stringify(record.data[k])).sort() : [];
+  if (before && !fields.length) return;
+  (a.events ??= []).push({ id: uid(), record_id: record.id, actor_id: null, kind: before ? 'changed' : 'created', fields, body: null, created_at: now() });
+}
 export const localCrmApi: typeof crmApi = {
+  recordEvents: async (recordId: string) => Object.values(load()).flatMap(a => a.events ?? []).filter(e => e.record_id === recordId).sort((a,b) => b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id)).slice(0,50),
+  addRecordActivity: async (recordId, kind, body, requestId) => {
+    if (!['note','call','meeting'].includes(kind) || !body.trim() || body.trim().length > 4000 || !requestId) throw new Error('Invalid activity');
+    const s = load();
+    const app = Object.values(s).find(a => a.records.some(r => r.id === recordId));
+    if (!app) throw new Error('Record unavailable');
+    const existing = Object.values(s).flatMap(a => a.events ?? []).find(e => e.id === requestId);
+    if (existing) {
+      if (existing.record_id !== recordId || existing.kind !== kind || existing.body !== body.trim()) throw new Error('Activity request already used');
+      return existing;
+    }
+    const event: RecordEvent = { id: requestId, record_id: recordId, actor_id: null, kind, body: body.trim(), fields: [], created_at: now() };
+    (app.events ??= []).push(event); save(s); return event;
+  },
   platformStatus: async () => false,
   platformOrganizations: async () => [],
   workspaceAccess: async () => ({ role: 'owner', can_edit: true, can_delete: true, can_manage: true }),
@@ -63,12 +82,12 @@ export const localCrmApi: typeof crmApi = {
   pendingProposal: async (appId: string) => [...(load()[appId]?.proposals ?? [])].reverse().find((p) => p.status === 'pending') ?? null,
   records: async (appId: string) => load()[appId]?.records ?? [],
   createRecord: async (appId: string, entity: string, data: RecordData) =>
-    update(appId, (a) => { const r: AppRecord = { id: uid(), entity, data, created_at: now() }; a.records.push(r); return r; }),
+    update(appId, (a) => { const r: AppRecord = { id: uid(), entity, data, created_at: now() }; a.records.push(r); eventFor(a, r); return r; }),
   updateRecord: async (id: string, data: RecordData) => {
     const s = load();
     for (const a of Object.values(s)) {
       const r = a.records.find((x) => x.id === id);
-      if (r) { r.data = data; r.updated_at = now(); save(s); return null; }
+      if (r) { const before = r.data; r.data = data; eventFor(a, r, before); r.updated_at = now(); save(s); return null; }
     }
     throw new Error('Registro no encontrado');
   },
@@ -78,7 +97,9 @@ export const localCrmApi: typeof crmApi = {
       const r = a.records.find((x) => x.id === id);
       if (!r) continue;
       if (expectedUpdatedAt && r.updated_at !== expectedUpdatedAt) throw new Error('Record changed; reload before saving');
+      const before = r.data;
       r.data = { ...r.data, ...patch };
+      eventFor(a, r, before);
       r.updated_at = now();
       save(s);
       return r;
@@ -87,7 +108,7 @@ export const localCrmApi: typeof crmApi = {
   },
   deleteRecord: async (id: string) => {
     const s = load();
-    for (const a of Object.values(s)) a.records = a.records.filter((r) => r.id !== id);
+    for (const a of Object.values(s)) { a.records = a.records.filter((r) => r.id !== id); a.events = a.events?.filter(e => e.record_id !== id); }
     save(s);
     return null;
   },
