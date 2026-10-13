@@ -8,6 +8,9 @@ import { PropertyMedia } from './PropertyMedia';
 import { PropertyOverview } from './PropertyOverview';
 import { useRuntime } from './runtimeContext';
 import { ContactLifecycle } from './ContactLifecycle';
+import { RecordActivity } from './RecordActivity';
+import { linkedRecords } from '@/lib/crm/recordLinks';
+import { useActivityText } from '@/i18n/activity';
 
 interface Props {
   blueprint: Blueprint;
@@ -20,6 +23,8 @@ interface Props {
   onUpdate: (id: string, data: RecordData) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
+  onOpen?: (id: string) => void;
+  onBack?: () => void;
 }
 
 const input = 'w-full min-w-0 min-h-[44px] rounded px-3 py-2 outline-none focus-visible:ring-2';
@@ -88,23 +93,24 @@ export function StagePath({ field, value, dark, onPick }: { field: Field; value:
   );
 }
 
-export function RecordPanel({ blueprint, appId, record, records, groupBy, dark = false, titleOf, onUpdate, onDelete, onClose }: Props) {
+export function RecordPanel({ blueprint, appId, record, records, groupBy, dark = false, titleOf, onUpdate, onDelete, onClose, onOpen, onBack }: Props) {
+  const activityText = useActivityText();
   const permissions = useRuntime();
   const readOnly = permissions?.canEdit === false;
   const entity = blueprint.entities.find((e) => e.key === record.entity)!;
   const stage = stageField(entity, groupBy);
   const highlights = entity.fields.filter((f) => f.key !== entity.titleField && f.key !== stage?.key && (isNumeric(f) || f.type === 'select' || f.type === 'date' || f.type === 'datetime' || f.type === 'relation')).slice(0, 4);
   const set = (key: string) => (v: unknown) => onUpdate(record.id, { [key]: v });
-  const related = blueprint.entities.flatMap((e) => e.fields.filter((f) => f.type === 'relation' && f.relation === entity.key).map((f) => ({ e, f })));
+  const related = linkedRecords(blueprint,record,records);
   const page = false;
 
   return (
     <div className="flex h-full min-w-0 flex-col" style={{ background: 'var(--crm-surface)', color: 'var(--crm-text)' }}>
       <div className="flex items-start justify-between gap-3" style={{ padding: 'var(--crm-pad)', borderBottom: '1px solid var(--crm-border)' }}>
         <div className="min-w-0">
-          {page && (
-            <button onClick={onClose} className="mb-2 inline-flex items-center gap-1 text-[0.9em]" style={{ color: 'var(--crm-primary)' }}>
-              <ArrowLeft className="h-3.5 w-3.5" /> Volver
+          {onBack && (
+            <button onClick={onBack} className="mb-2 inline-flex items-center gap-1 text-[0.9em]" style={{ color: 'var(--crm-primary)' }}>
+              <ArrowLeft className="h-3.5 w-3.5" /> {activityText.back}
             </button>
           )}
           <div className="text-[0.85em] uppercase tracking-wide" style={{ color: 'var(--crm-muted)' }}>{entity.label}</div>
@@ -134,9 +140,9 @@ export function RecordPanel({ blueprint, appId, record, records, groupBy, dark =
         {stage && <fieldset disabled={readOnly} className="mb-5"><StagePath field={stage} value={record.data[stage.key]} dark={dark} onPick={set(stage.key)} /></fieldset>}
         {(record.entity === 'inmueble' || record.entity === 'alojamiento') && <PropertyOverview record={record} entity={entity} records={records} titleOf={titleOf} />}
         {(record.entity === 'inmueble' || record.entity === 'alojamiento') && <PropertyMedia appId={appId} record={record} onUpdate={onUpdate} />}
-        <RecordCalendar key={record.id} blueprint={blueprint} record={record} records={records} />
+        <RecordCalendar key={`calendar-${record.id}`} blueprint={blueprint} record={record} records={records} />
 
-        <fieldset disabled={readOnly} className={`grid min-w-0 gap-x-4 gap-y-3 ${page ? 'md:grid-cols-2' : ''}`} key={record.id}>
+        <fieldset disabled={readOnly} className={`grid min-w-0 gap-x-4 gap-y-3 ${page ? 'md:grid-cols-2' : ''}`} key={`fields-${record.id}`}>
           {entity.fields.map((f) => (
             <label key={f.key} className={`flex flex-col gap-1 ${f.type === 'longtext' && page ? 'md:col-span-2' : ''}`}>
               <span className="text-[0.85em]" style={{ color: 'var(--crm-muted)' }}>{f.label}{f.required ? ' *' : ''}</span>
@@ -146,18 +152,17 @@ export function RecordPanel({ blueprint, appId, record, records, groupBy, dark =
           ))}
         </fieldset>
 
-        {related.map(({ e, f }) => {
-          const items = records.filter((r) => r.entity === e.key && r.data[f.key] === record.id);
-          if (!items.length) return null;
-          return (
-            <div key={`${e.key}.${f.key}`} className="mt-6">
-              <div className="mb-2 font-semibold" style={{ fontFamily: 'var(--crm-heading-font)' }}>{e.labelPlural} <span style={{ color: 'var(--crm-muted)' }}>({items.length})</span></div>
-              <ul className="flex flex-col gap-1">
-                {items.map((r) => <li key={r.id} className="rounded px-2 py-1" style={{ border: '1px solid var(--crm-border)' }}>{titleOfRecord(e, r.data)}</li>)}
-              </ul>
-            </div>
-          );
-        })}
+        <section className="mt-6" aria-label={activityText.links}>
+          <h3 className="font-semibold">{activityText.links}</h3>
+          {!related.length && <p className="mt-2 text-sm" style={{color:'var(--crm-muted)'}}>{activityText.noLinks}</p>}
+          {related.map(({entity: linkedEntity,records: items}) => <div key={linkedEntity.key} className="mt-4">
+            <h4 className="text-sm font-semibold">{linkedEntity.labelPlural} ({items.length})</h4>
+            <ul className="mt-2 space-y-1">{items.map(r=><li key={r.id}>
+              <button disabled={!onOpen} onClick={()=>onOpen?.(r.id)} className="min-h-11 w-full rounded-lg border px-3 py-2 text-left text-sm" style={{borderColor:'var(--crm-border)',color:'var(--crm-primary)'}}>{titleOfRecord(linkedEntity,r.data)}</button>
+            </li>)}</ul>
+          </div>)}
+        </section>
+        <RecordActivity key={`activity-${record.id}`} appId={appId} record={record} entity={entity} readOnly={readOnly} />
       </div>
     </div>
   );

@@ -19,3 +19,5 @@ Build/typecheck and 230 tests pass; lint has zero errors and five existing warni
 This is part of D4, not the complete Clients module. Separate navigation destinations, audited transition history, actor/timestamps, canonical legacy mapping, duplicate review, bulk operations and client-specific dossier still remain. Contact-stage filter selection currently lasts for the mounted workspace and is independent of named saved views. Production Supabase/Vercel activation is still unverified.
 
 Next: a tenant-scoped activity/transition history and client dossier, followed by legacy identity reconciliation and duplicate review. Booking integrity remains an independent P0 release gate before production reservation use.
+
+Follow-up D4b now adds server-attributed event history and linked-record dossier navigation; see [RECORD_ACTIVITY](RECORD_ACTIVITY.md) for current scope and remaining limitations.

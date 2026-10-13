@@ -10,7 +10,7 @@ Implemented means code exists and the indicated local workflow is covered; it do
 | Leads | Partial | worklist/stages/filters/actions; no conversion, archive, bulk actions or activity ledger |
 | Clients/contact identity | Partial | contacto_inmo lifecycle conversion, reversible archive and multiple roles implemented; legacy cliente/lead reconciliation and independent client dossier pending |
 | Pipeline | Partial | Kanban and stored stage values; no event history or transactional transition rules |
-| Activities/tasks | Partial | cita/tarea/servicio and Today; no unified commercial timeline/reminder worker |
+| Activities/tasks | Partial | cita/tarea/servicio and Today; record activity timeline and linked dossier implemented; reminder worker and cross-record timeline pending |
 | Dashboard | Partial | real-record counts, priorities and tests; no role-specific or complete organization metrics |
 | Advanced search/filter/saved views | Partial | filters + CommandPalette tests; local datasets and browser-local saved views |
 | Duplicate detection | Partial | analysis.ts reporting; no identity merge/uniqueness workflow |
@@ -34,7 +34,7 @@ Implemented means code exists and the indicated local workflow is covered; it do
 | Multi-currency/global org settings | Partial | columns/helpers; runtime still EUR/Madrid in many paths |
 | Analytics | Partial | pure analysis/reporting/CSV; incomplete datasets, no audited revenue/FX model |
 | Billing/plans/entitlements | Planned | no provider, subscription model or enforced plan limits |
-| Audit/retention/export/backup recovery | Partial/planned | blueprint history and analysis CSV exist; full record audit, tenant export and tested restore absent |
+| Audit/retention/export/backup recovery | Partial/planned | blueprint history and analysis CSV exist; server-attributed creation/changed-field events and manual activity implemented; before/after audit, tenant export and tested restore pending |
 | Vercel production release | Unverified | local build succeeds; actual deployment logs/status unavailable |
 
 Release dependencies and verification scope: [DEPLOYMENT](DEPLOYMENT.md). Proposed implementation order: [ROADMAP](ROADMAP.md).
@@ -42,3 +42,5 @@ Release dependencies and verification scope: [DEPLOYMENT](DEPLOYMENT.md). Propos
 Current operational delivery and activation: [OPERATIONAL_DELIVERY](OPERATIONAL_DELIVERY.md). Competitive proposal and research limits: [COMPETITIVE_PROPOSAL](COMPETITIVE_PROPOSAL.md).
 
 D4a contact lifecycle implementation and limits: [CONTACT_LIFECYCLE](CONTACT_LIFECYCLE.md).
+
+D4b linked dossier and activity evidence: [RECORD_ACTIVITY](RECORD_ACTIVITY.md).

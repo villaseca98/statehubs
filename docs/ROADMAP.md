@@ -21,3 +21,5 @@ Cross-cutting gates: migrations staged with backups, live JWT/Storage/Edge tests
 D1 and the white/red navigation portion of D3 are implemented locally in the operational delivery. Live Supabase activation and the original logo asset remain pending. Next product block: D4, alongside D2 booking integrity. Do not replace the working CRM with placeholder screens while these deliveries progress.
 
 D4a delivered: explicit contact lifecycle, same-identity conversion, reversible archive, multi-role relationships and stage filters. Full D4 remains partial; see [CONTACT_LIFECYCLE](CONTACT_LIFECYCLE.md). Next D4 block is audited activity/transition history and the client dossier.
+
+D4b delivered: linked dossier navigation, server-attributed changed-field events, manual notes/calls/meetings and idempotent retries. Complete before/after stage audit, global contact reconciliation and duplicate review remain; see [RECORD_ACTIVITY](RECORD_ACTIVITY.md). Production deployment is gated by Supabase migration/configuration and merging PR #16.
