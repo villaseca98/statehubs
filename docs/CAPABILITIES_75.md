@@ -43,7 +43,7 @@ Updated 2026-10-15. This tracker reserves every ID from 1 to 75. The supplied pr
 | 37 | Agent and team management | Partial | Owner/admin/agent/viewer membership UI/RLS; offices/managers and email invites pending. |
 | 38 | Commission tracking and allocation | Partial | Existing deal percentage and totals; split allocation and payment ledger pending. |
 | 39 | Multi-role relationship management | Partial | Shared contact identity, multi-role flags, conversion/archive and linked dossier; legacy dedup reconciliation pending. |
-| 40 | Viewings, offers, negotiations and deal progression | Partial | Existing appointments/deals/activity; offers and commission lifecycle incomplete. |
+| 40 | Viewings, offers, negotiations and deal progression | Partial | Linked viewing creation and append-only submitted/countered/accepted/rejected/withdrawn offer history verified; competing offers, closing and commission lifecycle incomplete. |
 | 41 | Definition not supplied | Awaiting definition | Reserved for the corresponding master prompt; no completion claim. |
 | 42 | Definition not supplied | Awaiting definition | Reserved for the corresponding master prompt; no completion claim. |
 | 43 | Definition not supplied | Awaiting definition | Reserved for the corresponding master prompt; no completion claim. |
@@ -90,3 +90,5 @@ Updated 2026-10-15. This tracker reserves every ID from 1 to 75. The supplied pr
 - M2.5 (PR #27, pending validation): pure domain helpers and regression tests added for development unit reservation (16), renovation feasibility (17), property-management SLA summaries (19), and remote-owner approval transitions (20). None are connected to database writes or a live UI. Tenant checks in pure functions do not replace server-enforced RLS.
 
 - M2.6 (pending): pure investment portfolio metrics (15), residential lease review windows (13) and consent-aware dormant lead review (24), with Vitest regression cases. No persistent writes, automatic contact, legal renewals or production activation.
+
+- M2.3: one negotiation stream per deal, auditable offer revisions, retry deduplication, stale-write rejection and tenant-safe relationships. Full suite: 267 tests. SQL tenant/permission/workflow checks pass. See DEAL_OFFERS.md; production activation pending.
