@@ -67,7 +67,7 @@ describe('Workspace', () => {
     const avisos = screen.getByRole('region', { name: 'Avisos' });
     expect(within(avisos).getByText(/Reservas solapadas/)).toBeTruthy();
     // A line of today opens its record in the drawer.
-    const hoy = screen.getByRole('region', { name: 'Home' });
+    const hoy = screen.getByRole('region', { name: 'Hoy' });
     fireEvent.click(within(hoy).getByRole('button', { name: /Paolo Ricci/ }));
     expect(screen.getAllByDisplayValue('Paolo Ricci').length).toBeGreaterThan(0);
   });
