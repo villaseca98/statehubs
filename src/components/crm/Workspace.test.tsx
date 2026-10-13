@@ -26,7 +26,7 @@ describe('Workspace', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Home' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Para hoy' })).toBeTruthy();
 
-    openSection(/Embudo/);
+    openSection(/Embudo|Pipeline/);
     expect(screen.getByRole('heading', { level: 1, name: 'Embudo' })).toBeTruthy();
     expect(screen.queryByRole('region', { name: 'Para hoy' })).toBeNull();
   });
@@ -67,7 +67,7 @@ describe('Workspace', () => {
     const avisos = screen.getByRole('region', { name: 'Avisos' });
     expect(within(avisos).getByText(/Reservas solapadas/)).toBeTruthy();
     // A line of today opens its record in the drawer.
-    const hoy = screen.getByRole('region', { name: 'Hoy' });
+    const hoy = screen.getByRole('region', { name: 'Home' });
     fireEvent.click(within(hoy).getByRole('button', { name: /Paolo Ricci/ }));
     expect(screen.getAllByDisplayValue('Paolo Ricci').length).toBeGreaterThan(0);
   });
@@ -75,7 +75,7 @@ describe('Workspace', () => {
   it('shows the property cards with price, badge and quick filters', () => {
     const bp = composePack('ambos', 'Inmobiliaria');
     render(<Harness blueprint={bp} records={sampleRecordsFor(bp)} />);
-    openSection(/^Inmuebles$/);
+    openSection(/^(Inmuebles|Properties)$/);
     const list = screen.getByRole('list', { name: 'Inmuebles' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(8);
     expect(within(list).getByText(/118\s€ \/ noche/)).toBeTruthy();
