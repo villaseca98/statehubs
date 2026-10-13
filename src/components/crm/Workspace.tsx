@@ -16,6 +16,7 @@ import { TodayView } from './TodayView';
 import { OpsView } from './OpsView';
 import { OperationsDashboard } from './OperationsDashboard';
 import { LivingWorkspace } from './LivingWorkspace';
+import { ModulePlanner } from './ModulePlanner';
 import { CardsView } from './CardsView';
 import { RuntimeContext } from './runtimeContext';
 import { FilterBar } from './FilterBar';
@@ -214,6 +215,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             </div>}
             {contactView && !shown.some(r => r.entity === 'contacto_inmo') && <p role="status" className="mb-4 text-sm" style={{ color: 'var(--crm-muted)' }}>{contactsText.empty}</p>}
             {view && filters.entity && <div className="mb-4"><FilterBar filters={filters} records={records} titleOf={titleOf} dark={dark} /></div>}
+            {(!view || view.type === 'ops') && blueprint.entities.some(e=>e.key==='inmueble') && <ModulePlanner appId={appId ?? blueprint.name} />}
             {(!view || view.type === 'ops') && <LivingWorkspace blueprint={blueprint} records={records} onOpen={(r) => setOpenId(r.id)} />}
             {(!view || view.type === 'ops') && <OperationsDashboard blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
             {!view && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
