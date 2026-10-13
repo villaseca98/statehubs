@@ -38,7 +38,7 @@ export function OperationsDashboard({ blueprint, records, now, onOpen }: { bluep
         <p className="mt-1 text-xs" style={{ color: 'var(--crm-muted)' }}>Por fecha de creación · últimos {days} días</p>
         {sum ? <div role="img" aria-label={`Evolución de leads: ${sum} leads nuevos en los últimos ${days} días`} className="mt-5 flex h-36 items-end gap-[3px] sm:h-44">
           {plotted.map((p) => <div key={p.day} title={`${p.label}: ${p.leads} leads`} className="group relative flex h-full min-w-0 flex-1 items-end">
-            <div className="w-full rounded-t bg-emerald-700/75 transition-colors group-hover:bg-emerald-600" style={{ height: `${Math.max(p.leads ? 6 : 2, p.leads / max * 100)}%`, opacity: p.leads ? 1 : .15 }}/>
+            <div className="w-full rounded-t bg-[var(--crm-primary)] transition-opacity group-hover:opacity-80" style={{ height: `${Math.max(p.leads ? 6 : 2, p.leads / max * 100)}%`, opacity: p.leads ? 1 : .15 }}/>
           </div>)}
         </div> : <div className="mt-5 flex min-h-36 items-center justify-center rounded-xl border border-dashed p-5 text-center text-sm" style={{ borderColor: 'var(--crm-border)', color: 'var(--crm-muted)' }}>Todavía no hay leads nuevos con fecha de creación en este periodo.</div>}
         <div className="mt-3 flex justify-between text-[11px]" style={{ color: 'var(--crm-muted)' }}><span>{data.series[0]?.label}</span><span>{data.series[data.series.length - 1]?.label}</span></div>

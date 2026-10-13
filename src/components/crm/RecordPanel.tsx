@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Check, Trash2, X, ArrowLeft } from 'lucide-react';
 import type { AppRecord, Blueprint, Field, RecordData } from '@shared/blueprint/types.ts';
 import { chipStyle, titleOfRecord, stageField, isNumeric } from './theme';
@@ -5,6 +6,7 @@ import { Cell } from './views';
 import { RecordCalendar } from './RecordCalendar';
 import { PropertyMedia } from './PropertyMedia';
 import { PropertyOverview } from './PropertyOverview';
+import { useRuntime } from './runtimeContext';
 
 interface Props {
   blueprint: Blueprint;
@@ -24,9 +26,11 @@ const inputStyle = { background: 'var(--crm-bg)', border: '1px solid var(--crm-b
 
 function FieldInput({ field, value, records, titleOf, onChange }: { field: Field; value: unknown; records: AppRecord[]; titleOf: Props['titleOf']; onChange: (v: unknown) => void }) {
   const str = value === undefined || value === null ? '' : String(value);
+  const [draft, setDraft] = useState(str);
+  useEffect(() => { setDraft(str); }, [str]);
   switch (field.type) {
     case 'longtext':
-      return <textarea className={input} style={inputStyle} rows={3} defaultValue={str} onBlur={(e) => e.target.value !== str && onChange(e.target.value)} />;
+      return <textarea className={input} style={inputStyle} rows={3} value={draft} onChange={e => setDraft(e.target.value)} onBlur={(e) => e.target.value !== str && onChange(e.target.value)} />;
     case 'boolean':
       return <input type="checkbox" className="h-5 w-5" style={{ accentColor: 'var(--crm-primary)' }} checked={!!value} onChange={(e) => onChange(e.target.checked)} />;
     case 'select':
@@ -46,16 +50,16 @@ function FieldInput({ field, value, records, titleOf, onChange }: { field: Field
       );
     case 'number': case 'money': case 'percent':
       return (
-        <input type="number" step="any" className={input} style={{ ...inputStyle, fontFamily: 'var(--crm-number-font)' }} defaultValue={str}
+        <input type="number" step="any" className={input} style={{ ...inputStyle, fontFamily: 'var(--crm-number-font)' }} value={draft} onChange={e => setDraft(e.target.value)}
           onBlur={(e) => { const v = e.target.value === '' ? null : Number(e.target.value); if (v !== value) onChange(v); }} />
       );
     case 'date':
-      return <input type="date" className={input} style={inputStyle} defaultValue={str} onChange={(e) => onChange(e.target.value || null)} />;
+      return <input type="date" className={input} style={inputStyle} value={str} onChange={(e) => onChange(e.target.value || null)} />;
     case 'datetime':
-      return <input type="datetime-local" className={input} style={inputStyle} defaultValue={str.slice(0, 16)} onBlur={(e) => e.target.value !== str && onChange(e.target.value || null)} />;
+      return <input type="datetime-local" className={input} style={inputStyle} value={draft.slice(0, 16)} onChange={e => setDraft(e.target.value)} onBlur={(e) => e.target.value !== str && onChange(e.target.value || null)} />;
     default: {
       const type = field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : field.type === 'url' ? 'url' : 'text';
-      return <input type={type} className={input} style={inputStyle} defaultValue={str} onBlur={(e) => e.target.value !== str && onChange(e.target.value)} />;
+      return <input type={type} className={input} style={inputStyle} value={draft} onChange={e => setDraft(e.target.value)} onBlur={(e) => e.target.value !== str && onChange(e.target.value)} />;
     }
   }
 }
@@ -84,6 +88,8 @@ export function StagePath({ field, value, dark, onPick }: { field: Field; value:
 }
 
 export function RecordPanel({ blueprint, appId, record, records, groupBy, dark = false, titleOf, onUpdate, onDelete, onClose }: Props) {
+  const permissions = useRuntime();
+  const readOnly = permissions?.canEdit === false;
   const entity = blueprint.entities.find((e) => e.key === record.entity)!;
   const stage = stageField(entity, groupBy);
   const highlights = entity.fields.filter((f) => f.key !== entity.titleField && f.key !== stage?.key && (isNumeric(f) || f.type === 'select' || f.type === 'date' || f.type === 'datetime' || f.type === 'relation')).slice(0, 4);
@@ -105,9 +111,9 @@ export function RecordPanel({ blueprint, appId, record, records, groupBy, dark =
           {record.is_sample && <span className="mt-1 inline-block rounded px-1.5 text-[0.8em]" style={chipStyle('amber', dark)}>Dato de ejemplo</span>}
         </div>
         <div className="flex shrink-0 gap-1">
-          <button aria-label="Borrar" title="Borrar" onClick={() => { if (window.confirm(`¿Borrar «${titleOfRecord(entity, record.data)}»?`)) onDelete(record.id); }} className="sh-touch rounded p-2" style={{ color: 'var(--crm-muted)' }}>
+          {!readOnly && permissions?.canDelete !== false && <button aria-label="Borrar" title="Borrar" onClick={() => { if (window.confirm(`¿Borrar «${titleOfRecord(entity, record.data)}»?`)) onDelete(record.id); }} className="sh-touch rounded p-2" style={{ color: 'var(--crm-muted)' }}>
             <Trash2 className="h-4 w-4" />
-          </button>
+          </button>}
           {!page && <button aria-label="Cerrar" onClick={onClose} className="rounded p-1.5" style={{ color: 'var(--crm-muted)' }}><X className="h-4 w-4" /></button>}
         </div>
       </div>
@@ -123,12 +129,12 @@ export function RecordPanel({ blueprint, appId, record, records, groupBy, dark =
             ))}
           </div>
         )}
-        {stage && <div className="mb-5"><StagePath field={stage} value={record.data[stage.key]} dark={dark} onPick={set(stage.key)} /></div>}
+        {stage && <fieldset disabled={readOnly} className="mb-5"><StagePath field={stage} value={record.data[stage.key]} dark={dark} onPick={set(stage.key)} /></fieldset>}
         {(record.entity === 'inmueble' || record.entity === 'alojamiento') && <PropertyOverview record={record} entity={entity} records={records} titleOf={titleOf} />}
         {(record.entity === 'inmueble' || record.entity === 'alojamiento') && <PropertyMedia appId={appId} record={record} onUpdate={onUpdate} />}
         <RecordCalendar key={record.id} blueprint={blueprint} record={record} records={records} />
 
-        <div className={`grid gap-x-4 gap-y-3 ${page ? 'md:grid-cols-2' : ''}`} key={record.id}>
+        <fieldset disabled={readOnly} className={`grid min-w-0 gap-x-4 gap-y-3 ${page ? 'md:grid-cols-2' : ''}`} key={record.id}>
           {entity.fields.map((f) => (
             <label key={f.key} className={`flex flex-col gap-1 ${f.type === 'longtext' && page ? 'md:col-span-2' : ''}`}>
               <span className="text-[0.85em]" style={{ color: 'var(--crm-muted)' }}>{f.label}{f.required ? ' *' : ''}</span>
@@ -136,7 +142,7 @@ export function RecordPanel({ blueprint, appId, record, records, groupBy, dark =
               {f.help && <span className="text-[0.8em]" style={{ color: 'var(--crm-muted)' }}>{f.help}</span>}
             </label>
           ))}
-        </div>
+        </fieldset>
 
         {related.map(({ e, f }) => {
           const items = records.filter((r) => r.entity === e.key && r.data[f.key] === record.id);

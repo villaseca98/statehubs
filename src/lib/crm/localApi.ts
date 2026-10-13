@@ -40,6 +40,9 @@ const now = () => new Date().toISOString();
 export const isLocalApp = (id: string) => id.startsWith('local-');
 
 export const localCrmApi: typeof crmApi = {
+  platformStatus: async () => false,
+  platformOrganizations: async () => [],
+  workspaceAccess: async () => ({ role: 'owner', can_edit: true, can_delete: true, can_manage: true }),
   organizations: async () => [],
   members: async () => [],
   updateOrganization: needsAccount,
@@ -66,6 +69,19 @@ export const localCrmApi: typeof crmApi = {
     for (const a of Object.values(s)) {
       const r = a.records.find((x) => x.id === id);
       if (r) { r.data = data; r.updated_at = now(); save(s); return null; }
+    }
+    throw new Error('Registro no encontrado');
+  },
+  patchRecord: async (id: string, patch: RecordData, expectedUpdatedAt?: string) => {
+    const s = load();
+    for (const a of Object.values(s)) {
+      const r = a.records.find((x) => x.id === id);
+      if (!r) continue;
+      if (expectedUpdatedAt && r.updated_at !== expectedUpdatedAt) throw new Error('Record changed; reload before saving');
+      r.data = { ...r.data, ...patch };
+      r.updated_at = now();
+      save(s);
+      return r;
     }
     throw new Error('Registro no encontrado');
   },

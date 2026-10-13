@@ -5,6 +5,8 @@ import type { AppRecord, RecordData } from '@shared/blueprint/types.ts';
 // through every layout: create records quietly (a process launched as tasks)
 // and send a record to a webhook (testing an automation).
 export interface RuntimeActions {
+  canEdit?: boolean;
+  canDelete?: boolean;
   createQuietly: (entity: string, data: RecordData) => unknown;
   sendWebhook?: (record: AppRecord) => Promise<string> | string | void;
 }

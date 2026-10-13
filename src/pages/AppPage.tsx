@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { CalendarCheck, Check, Eye, History, Home, Loader2, MessagesSquare, Minus, Pencil, Plus, Puzzle, Send, Sparkles, X } from 'lucide-react';
+import { CalendarCheck, Check, Eye, History, Home, Loader2, MessagesSquare, Minus, Pencil, Plus, Puzzle, Send, Settings, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 import { useToast } from '@/lib/toast';
 import { crmApi, GOOGLE_NOT_CONFIGURED } from '@/lib/crm/api';
+import type { WorkspaceAccess } from '@/lib/crm/api';
+import { recordWriteQueue } from '@/lib/crm/recordWrites';
+import { useProductText } from '@/i18n/product';
 import type { CrmApp, CrmMessage, CrmProposal, CrmVersion, GooglePushResult, GoogleStatus } from '@/lib/crm/api';
 import { isLocalApp, localCrmApi } from '@/lib/crm/localApi';
 import { resultPatch, runAutomations } from '@/lib/crm/automations';
@@ -74,6 +77,7 @@ function SidePanel({ title, onClose, children, footer }: { title: string; onClos
 }
 
 export default function AppPage() {
+  const text = useProductText();
   const { appId = '' } = useParams();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -83,6 +87,9 @@ export default function AppPage() {
   const api = local ? localCrmApi : crmApi;
 
   const [app, setApp] = useState<CrmApp | null>(null);
+  const [access, setAccess] = useState<WorkspaceAccess | null>(null);
+  const [saving, setSaving] = useState(0);
+  const enqueue = useRef(recordWriteQueue());
   const [versions, setVersions] = useState<CrmVersion[]>([]);
   const [messages, setMessages] = useState<CrmMessage[]>([]);
   const [proposal, setProposal] = useState<CrmProposal | null>(null);
@@ -103,8 +110,9 @@ export default function AppPage() {
   const instagramAccount = useCallback((action: InstagramAction) => api.instagram(appId, action), [api, appId]);
 
   const load = useCallback(async () => {
-    const [a, v, m, p, r] = await Promise.all([api.getApp(appId), api.versions(appId), api.messages(appId), api.pendingProposal(appId), api.records(appId)]);
+    const [a, v, m, p, r, permissions] = await Promise.all([api.getApp(appId), api.versions(appId), api.messages(appId), api.pendingProposal(appId), api.records(appId), api.workspaceAccess(appId)]);
     setApp(a); setVersions(v); setMessages(m); setProposal(p); setRecords(r);
+    setAccess(permissions);
     return { app: a, messages: m };
   }, [appId, api]);
 
@@ -264,6 +272,7 @@ export default function AppPage() {
     return !!e && data[e.titleField] !== undefined && data[e.titleField] !== null && data[e.titleField] !== '';
   };
   const createRecord = async (entity: string, data: RecordData) => {
+    if (!access?.can_edit) return;
     try {
       const r = await api.createRecord(appId, entity, data);
       setRecords((rs) => [...rs, r]);
@@ -273,20 +282,38 @@ export default function AppPage() {
     } catch (e) { fail(e); }
   };
   const updateRecord = (id: string, patch: RecordData) => {
-    const prev = records.find((r) => r.id === id);
-    if (!prev) return;
-    const data = { ...prev.data, ...patch };
-    setRecords((rs) => rs.map((r) => (r.id === id ? { ...r, data } : r)));
-    api.updateRecord(id, data).then(() => {
-      if (google?.connected && current && patchMovesAppointment(current.blueprint, prev.entity, patch)) pushQuietly({ ...prev, data });
-      if (!pendingNew.current.has(id)) automateQuietly({ ...prev, data }, 'cambio', prev.data);
-      else if (hasTitle(prev.entity, data)) { pendingNew.current.delete(id); automateQuietly({ ...prev, data }, 'alta', null); }
-    }, (e) => { fail(e); setRecords((rs) => rs.map((r) => (r.id === id ? prev : r))); });
+    if (!access?.can_edit) return;
+    setSaving(n => n + 1);
+    void enqueue.current(id, async () => {
+      const prev = recordsRef.current.find(r => r.id === id);
+      if (!prev) return;
+      let saved: AppRecord;
+      try { saved = await api.patchRecord(id, patch, prev.updated_at); }
+      catch (e) {
+        // Keep recovery inside this record's queue so the next write uses fresh state.
+        try {
+          const rows = await api.records(appId);
+          const refreshed = rows.find(r => r.id === id);
+          recordsRef.current = refreshed ? recordsRef.current.map(r => r.id === id ? refreshed : r) : recordsRef.current.filter(r => r.id !== id);
+          setRecords(recordsRef.current);
+        } catch { /* keep the last confirmed state */ }
+        throw e;
+      }
+      recordsRef.current = recordsRef.current.map(r => r.id === id ? saved : r);
+      setRecords(recordsRef.current);
+      if (google?.connected && current && patchMovesAppointment(current.blueprint, prev.entity, patch)) pushQuietly(saved);
+      if (!pendingNew.current.has(id)) automateQuietly(saved, 'cambio', prev.data);
+      else if (hasTitle(prev.entity, saved.data)) { pendingNew.current.delete(id); automateQuietly(saved, 'alta', null); }
+    }).catch(fail).finally(() => setSaving(n => n - 1));
   };
   const deleteRecord = (id: string) => {
-    const prev = records;
-    setRecords((rs) => rs.filter((r) => r.id !== id));
-    api.deleteRecord(id).catch((e) => { fail(e); setRecords(prev); });
+    if (!access?.can_delete) return;
+    setSaving(n => n + 1);
+    void enqueue.current(id, async () => {
+      await api.deleteRecord(id);
+      recordsRef.current = recordsRef.current.filter(r => r.id !== id);
+      setRecords(recordsRef.current);
+    }).catch(fail).finally(() => setSaving(n => n - 1));
   };
   // Airbnb/Booking calendars (iCal), read on the server; guest mode says it needs an account.
   const syncIcal = async () => {
@@ -331,8 +358,9 @@ export default function AppPage() {
     { key: 'ia', label: 'Pedírselo a la IA', icon: Sparkles, onClick: () => setPanel('ia'), active: panel === 'ia' },
     { key: 'historial', label: 'Historial', icon: History, onClick: () => setPanel('historial'), badge: versions.length || undefined, active: panel === 'historial' },
     { key: 'google', label: 'Google Calendar', icon: CalendarCheck, onClick: () => setPanel('google'), badge: google?.connected ? '✓' : undefined, active: panel === 'google' },
-    { key: 'inicio', label: 'Todas mis apps', icon: Home, onClick: () => navigate('/') },
-  ];
+    { key: 'inicio', label: 'Todas mis apps', icon: Home, onClick: () => navigate(local ? '/' : '/workspace') },
+    { key: 'account', label: text.account, icon: Settings, onClick: () => navigate('/workspace') },
+  ].filter(tool => access?.can_manage || ['inicio', 'account'].includes(tool.key));
 
   const proposalBar = proposal && (
     <div className="flex flex-wrap items-center gap-2 border-b bg-amber-50 px-4 py-2 text-sm text-amber-950 md:px-6">
@@ -350,7 +378,9 @@ export default function AppPage() {
     <div className="h-[100dvh]">
       {showing ? (
         <GoogleCalendarContext.Provider value={googleActions}>
-        <Workspace key={showing.name} appId={appId} blueprint={showing} records={previewing ? previewRecords : records} tools={tools} banner={proposalBar} className="h-full"
+        <Workspace key={showing.name} appId={appId} blueprint={showing} records={previewing ? previewRecords : records} tools={tools}
+          banner={<>{proposalBar}<div role="status" className="flex flex-wrap items-center justify-between gap-2 border-b bg-white px-5 py-2 text-xs text-estate-muted"><span>{local ? text.localMode : !access?.can_edit ? text.readOnly : text.liveMode}</span>{saving > 0 && <span className="font-semibold text-estate-forest">{text.saving}</span>}</div></>}
+          readOnly={previewing || !access?.can_edit} canDelete={!previewing && !!access?.can_delete} className="h-full"
           onCreate={previewing ? () => undefined : createRecord}
           onUpdate={previewing ? () => undefined : updateRecord}
           onDelete={previewing ? () => undefined : deleteRecord}

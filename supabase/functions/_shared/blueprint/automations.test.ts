@@ -54,4 +54,19 @@ describe('automations', () => {
     expect(isPrivateAddress('fd12::1')).toBe(true);
     expect(isPrivateAddress('8.8.8.8')).toBe(false);
   });
+
+  it.each([
+    '::ffff:127.0.0.1', '::ffff:7f00:1', '0:0:0:0:0:ffff:a00:1',
+    '::ffff:169.254.169.254', '::ffff:c0a8:101', '::ffff:ac10:1',
+    '0:0:0:0:0:0:0:1', '0:0:0:0:0:0:0:0',
+    'fe90::1', 'fea0::1', 'febf::1', 'fec0::1',
+  ])('rejects non-public IPv6 address %s, including URL normalization', (address) => {
+    expect(isPrivateAddress(address)).toBe(true);
+    expect(isAllowedHookUrl(`https://[${address}]/hook`)).toBe(false);
+  });
+
+  it.each(['2606:4700:4700::1111', '2001:4860:4860::8888', '::ffff:8.8.8.8'])('preserves public IPv6 destination %s', (address) => {
+    expect(isPrivateAddress(address)).toBe(false);
+    expect(isAllowedHookUrl(`https://[${address}]/hook`)).toBe(true);
+  });
 });

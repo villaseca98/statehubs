@@ -12,6 +12,8 @@ export interface CrmApp { id: string; org_id?: string | null; name: string; curr
 export type OrgRole = 'owner' | 'admin' | 'agent' | 'viewer';
 export interface CrmOrganization { id: string; name: string; settings: Record<string, unknown>; owner_id: string; updated_at: string }
 export interface CrmOrgMember { org_id: string; user_id: string; role: OrgRole; joined_at: string }
+export interface WorkspaceAccess { role: OrgRole; can_edit: boolean; can_delete: boolean; can_manage: boolean }
+export interface PlatformOrganization extends CrmOrganization { member_count: number; app_count: number }
 export interface CrmVersion { version: number; summary: string; created_at: string; blueprint: Blueprint }
 export interface CrmMessage { id: string; role: 'user' | 'assistant'; content: string; proposal_id: string | null; created_at: string }
 // What a calendar sync did; `mensaje` replaces the counts when there was nothing to do.
@@ -37,16 +39,19 @@ async function must<T>(p: PromiseLike<{ data: T; error: { message: string } | nu
 }
 
 export const crmApi = {
+  platformStatus: () => must<boolean>(db().rpc('crm_platform_status')),
+  platformOrganizations: () => must<PlatformOrganization[]>(db().rpc('crm_platform_organizations')),
+  workspaceAccess: (appId: string) => must<WorkspaceAccess | null>(db().rpc('crm_workspace_access', { p_app: appId })),
   listApps: () => must<CrmApp[]>(db().from('crm_apps').select('id, name, current_version, updated_at').order('updated_at', { ascending: false })),
   organizations: () => must<CrmOrganization[]>(db().from('crm_organizations').select('id, name, settings, owner_id, updated_at').order('updated_at', { ascending: false })),
-  members: (orgId: string) => must<CrmOrgMember[]>(db().from('crm_org_members').select('org_id, user_id, role, joined_at').eq('org_id', orgId)),
+  members: (orgId: string) => must<CrmOrgMember[]>(db().rpc('crm_organization_members', { p_org: orgId })),
   updateOrganization: (orgId: string, name: string, settings: Record<string, unknown>) => must<CrmOrganization>(db().from('crm_organizations').update({ name, settings }).eq('id', orgId).select('id, name, settings, owner_id, updated_at').single()),
   setOrganizationMember: (orgId: string, userId: string, role: Exclude<OrgRole, 'owner'>) => must(db().rpc('crm_set_org_member', { p_org: orgId, p_user: userId, p_role: role })),
   removeOrganizationMember: (orgId: string, userId: string) => must(db().rpc('crm_remove_org_member', { p_org: orgId, p_user: userId })),
   createApp: (ownerId: string) => must<CrmApp>(db().from('crm_apps').insert({ owner_id: ownerId }).select('id, name, current_version, updated_at').single()),
-  deleteApp: (id: string) => must(db().from('crm_apps').delete().eq('id', id)),
+  deleteApp: (id: string) => must(db().from('crm_apps').delete().eq('id', id).select('id').single()),
   getApp: (id: string) => must<CrmApp | null>(db().from('crm_apps').select('id, name, current_version, updated_at').eq('id', id).maybeSingle()),
-  versions: (appId: string) => must<CrmVersion[]>(db().from('crm_app_versions').select('version, summary, created_at, blueprint').eq('app_id', appId).order('version', { ascending: false })),
+  versions: (appId: string) => must<CrmVersion[]>(db().rpc('crm_visible_versions', { p_app: appId })),
   messages: (appId: string) => must<CrmMessage[]>(db().from('crm_messages').select('id, role, content, proposal_id, created_at').eq('app_id', appId).order('created_at')),
   pendingProposal: async (appId: string) => {
     const rows = await must<CrmProposal[]>(db().from('crm_proposals').select('*').eq('app_id', appId).eq('status', 'pending').order('created_at', { ascending: false }).limit(1));
@@ -55,8 +60,9 @@ export const crmApi = {
   records: (appId: string) => must<AppRecord[]>(db().from('crm_records').select('id, entity, data, is_sample, created_at, updated_at').eq('app_id', appId).order('created_at')),
   createRecord: (appId: string, entity: string, data: RecordData) =>
     must<AppRecord>(db().from('crm_records').insert({ app_id: appId, entity, data }).select('id, entity, data, is_sample, created_at, updated_at').single()),
-  updateRecord: (id: string, data: RecordData) => must(db().from('crm_records').update({ data, updated_at: new Date().toISOString() }).eq('id', id)),
-  deleteRecord: (id: string) => must(db().from('crm_records').delete().eq('id', id)),
+  updateRecord: (id: string, data: RecordData) => must(db().from('crm_records').update({ data, updated_at: new Date().toISOString() }).eq('id', id).select('id').single()),
+  patchRecord: (id: string, patch: RecordData, expectedUpdatedAt?: string) => must<AppRecord>(db().rpc('crm_patch_record', { p_id: id, p_patch: patch, p_expected_updated_at: expectedUpdatedAt ?? null })),
+  deleteRecord: (id: string) => must(db().from('crm_records').delete().eq('id', id).select('id').single()),
   apply: (proposalId: string) => must<number>(db().rpc('crm_apply_proposal', { p_proposal: proposalId })),
   discard: (proposalId: string) => must(db().rpc('crm_discard_proposal', { p_proposal: proposalId })),
   restore: (appId: string, version: number) => must<number>(db().rpc('crm_restore_version', { p_app: appId, p_version: version })),

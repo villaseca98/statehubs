@@ -53,6 +53,7 @@ export function WorklistView({ blueprint, view, records, dark, solid, titleOf, o
   const nextDate = (r: AppRecord) => scheduleFields.map((k) => r.data[k]).find((v) => typeof v === 'string' && v) as string | undefined;
 
   const run = (a: ViewAction, r: AppRecord) => {
+    if (runtime?.canEdit === false) return;
     if (a.kind === 'move' && stage && a.to) onUpdate(r.id, { [stage.key]: a.to });
     if (a.kind === 'schedule') { setSelectedId(r.id); setBooking(a); setPick(null); }
     if (a.kind === 'launch') launch(a, r);
@@ -90,7 +91,7 @@ export function WorklistView({ blueprint, view, records, dark, solid, titleOf, o
     const cls = `inline-flex items-center gap-1.5 whitespace-nowrap ${big ? 'w-full' : ''} ${missing ? 'pointer-events-none opacity-40' : ''}`;
     if (href) return <a href={href} target={a.kind === 'whatsapp' || a.kind === 'link' ? '_blank' : undefined} rel="noreferrer" onClick={(e) => e.stopPropagation()} className={cls} style={style}>{content}</a>;
     return (
-      <button title={missing ? 'Falta el dato de contacto' : undefined} onClick={(e) => { e.stopPropagation(); run(a, r); }} className={cls}
+      <button disabled={runtime?.canEdit === false} title={missing ? 'Falta el dato de contacto' : undefined} onClick={(e) => { e.stopPropagation(); run(a, r); }} className={cls}
         style={active ? { ...style, borderColor: 'var(--crm-primary)', background: 'color-mix(in srgb, var(--crm-primary) 10%, transparent)' } : style}>
         {content}
       </button>

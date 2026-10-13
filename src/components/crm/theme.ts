@@ -3,7 +3,7 @@ import { LOOK, LOOK_DARK } from '@shared/blueprint/look.ts';
 import type { Field, OptionColor, RecordData, AppRecord, Entity } from '@shared/blueprint/types.ts';
 
 const FONTS = {
-  sans: 'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
+  sans: '"Inter Variable", Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
   serif: 'Georgia, "Iowan Old Style", "Times New Roman", serif',
   mono: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
 };

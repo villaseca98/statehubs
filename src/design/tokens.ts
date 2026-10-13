@@ -1,5 +1,6 @@
+import { BRAND, LOOK } from '../../supabase/functions/_shared/blueprint/look';
 export const tokens = {
- color: { forest:'#1e3a2b', deep:'#132a1e', moss:'#2f5a41', sage:'#8fae8b', ivory:'#f4f2ec', sand:'#e9e5da', ink:'#17231b', muted:'#5f6a61', lime:'#d4ec7a', white:'#ffffff' },
+ color: { forest:BRAND.red, deep:'#810d25', moss:BRAND.red, sage:'#e9a5b4', ivory:LOOK.colors.bg, sand:'#f1f1f4', ink:BRAND.ink, muted:LOOK.colors.muted, lime:BRAND.light, white:'#ffffff' },
  font: { body:'Inter Variable', display:'Space Grotesk', editorial:'Iowan Old Style' },
  spacing: { xs:4, sm:8, md:12, lg:16, xl:24, xxl:32, xxxl:48 },
  radius: { sm:12, md:18, lg:28, pill:9999 },

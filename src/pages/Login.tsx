@@ -1,67 +1,75 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, Mail } from 'lucide-react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowRight, Building2, CheckCircle2, Loader2, Mail, ShieldCheck } from 'lucide-react';
 import { hasServer, supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
-import { useI18n } from '@/i18n';
+import { useProductText } from '@/i18n/product';
 import { Logo } from '@/components/brand/Logo';
 import { LanguageSelector } from '@/components/brand/LanguageSelector';
 
-// Sign in with Google or with a link sent by email. No passwords to forget.
 export default function Login() {
-  const {t,language}=useI18n();
+  const text = useProductText();
+  const location = useLocation();
   const [params] = useSearchParams();
   const requestedNext = params.get('next');
-  // Reject protocol-relative URLs (//evil.example) and backslash variants.
-  const next = requestedNext?.startsWith('/') && !requestedNext.startsWith('//') && !requestedNext.includes('\\') ? requestedNext : '/';
-  const { user } = useAuth();
+  const next = requestedNext?.startsWith('/') && !requestedNext.startsWith('//') && !requestedNext.includes('\\') ? requestedNext : '/workspace';
+  const { user, error: sessionError } = useAuth();
   const navigate = useNavigate();
+  const [register, setRegister] = useState(location.pathname === '/register');
   const [email, setEmail] = useState('');
-  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState('');
 
-  useEffect(() => { document.title = `${t('loginTitle')} · StateHubs`; }, [language,t]);
+  useEffect(() => { document.title = `${register ? text.register : text.signIn} · StateHubs`; }, [register, text]);
   useEffect(() => { if (user) navigate(next, { replace: true }); }, [user, next, navigate]);
 
   const redirectTo = `${window.location.origin}${next}`;
   const google = async () => {
-    const { error: e } = await supabase!.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
-    if (e) { setState('error'); setError(e.message); }
+    if (!supabase || state === 'sending') return;
+    setState('sending'); setError('');
+    try {
+      const { error: failure } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
+      if (failure) throw failure;
+    } catch (failure) { setError(failure instanceof Error ? failure.message : text.error); setState('idle'); }
   };
   const magic = async (ev: React.FormEvent) => {
     ev.preventDefault();
-    setState('sending');
-    const { error: e } = await supabase!.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: redirectTo } });
-    if (e) { setState('error'); setError(e.message); } else setState('sent');
+    if (!supabase || state === 'sending') return;
+    setState('sending'); setError('');
+    try {
+      const { error: failure } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: redirectTo, shouldCreateUser: register } });
+      if (failure) throw failure;
+      setState('sent');
+    } catch (failure) { setError(failure instanceof Error ? failure.message : text.error); setState('idle'); }
   };
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm rounded-2xl border bg-card p-6 shadow-sm">
-        <Link to="/"><Logo size={32} /></Link><div className="mt-3"><LanguageSelector /></div>
-        <h1 className="mt-4 text-2xl font-semibold">{t('signIn')}</h1>
-        {!hasServer ? (
-          <p className="mt-3 text-sm text-muted-foreground">{t('testMode')} <Link to="/" className="text-primary underline">{t('back')}</Link></p>
-        ) : state === 'sent' ? (
-          <p className="mt-3 text-sm">{t('linkSent')} <b>{email}</b>.</p>
-        ) : (
-          <>
-            <button onClick={google} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border bg-white px-4 py-2.5 font-medium hover:bg-muted">
-              <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
-              {t('continueGoogle')}
-            </button>
-            <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />o con tu email<span className="h-px flex-1 bg-border" /></div>
-            <form onSubmit={magic} className="flex flex-col gap-2">
-              <label htmlFor="email" className="text-sm font-medium">{t('email')}</label>
-              <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@agency.com" className="rounded-xl border bg-background px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary/40" />
-              <button disabled={state === 'sending'} className="mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-primary-foreground disabled:opacity-60">
-                {state === 'sending' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />} Enviarme un enlace
-              </button>
-            </form>
-            {state === 'error' && <p className="mt-3 text-sm text-destructive">{error}</p>}
-          </>
-        )}
+  return <main className="grid min-h-screen bg-white text-estate-ink lg:grid-cols-2">
+    <section className="relative hidden flex-col justify-between overflow-hidden bg-[#18181c] p-12 text-white lg:flex xl:p-20">
+      <div className="absolute -right-44 top-20 h-[520px] w-[520px] rounded-full border-[100px] border-[#b41636]/25" aria-hidden="true" />
+      <Link to="/" className="relative w-fit"><Logo dark size={42} /></Link>
+      <div className="relative max-w-lg py-20"><p className="mb-6 text-xs font-semibold uppercase tracking-[.22em] text-rose-200">{text.allWork}</p>
+        <h1 className="text-5xl font-semibold leading-[1.08] tracking-tight xl:text-6xl">{text.accessTitle}</h1>
+        <p className="mt-6 max-w-md text-lg leading-relaxed text-white/65">{text.accessSubtitle}</p>
+        <div className="mt-12 grid grid-cols-3 gap-3">{[text.contacts, text.properties, text.rentals].map(label => <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm"><Building2 className="mb-3 h-5 w-5 text-rose-300" />{label}</div>)}</div>
+      </div><p className="relative flex items-center gap-2 text-xs text-white/55"><ShieldCheck className="h-4 w-4" />{text.privacy}</p>
+    </section>
+    <section className="flex min-h-screen flex-col px-6 py-7 sm:px-12">
+      <header className="flex items-center justify-between gap-3"><Link to="/" className="lg:hidden"><Logo size={30} /></Link><Link to="/" className="hidden text-sm text-estate-muted hover:text-estate-forest lg:block">{text.backHome}</Link><LanguageSelector /></header>
+      <div className="mx-auto my-auto w-full max-w-md py-14">
+        <div className="mb-8 inline-flex rounded-xl bg-estate-sand p-1" role="group" aria-label={text.account}>
+          {[false, true].map(value => <button key={String(value)} onClick={() => { setRegister(value); setState('idle'); setError(''); }} disabled={state === 'sending'} aria-pressed={register === value} className={`rounded-lg px-5 py-2.5 text-sm font-semibold ${register === value ? 'bg-white text-estate-forest shadow-sm' : 'text-estate-muted'}`}>{value ? text.register : text.signIn}</button>)}
+        </div>
+        <h2 className="text-3xl font-semibold tracking-tight">{register ? text.registerTitle : text.welcome}</h2>
+        <p className="mt-3 text-sm leading-relaxed text-estate-muted">{text.noPassword}</p>
+        {!hasServer ? <div className="mt-8 rounded-2xl border border-estate-line bg-estate-sand p-6"><p role="status" className="text-sm leading-relaxed">{text.accessUnavailable}</p><Link to="/demo" className="mt-5 inline-flex items-center gap-2 font-semibold text-estate-forest">{text.exploreDemo}<ArrowRight className="h-4 w-4" /></Link></div>
+          : state === 'sent' ? <div className="mt-8 rounded-2xl border border-rose-100 bg-rose-50 p-6" role="status"><CheckCircle2 className="h-8 w-8 text-estate-forest" /><h3 className="mt-4 font-semibold">{text.linkSent}</h3><p className="mt-2 break-all text-sm font-medium">{email}</p><p className="mt-3 text-sm text-estate-muted">{text.linkDetails}</p><button onClick={() => setState('idle')} className="mt-5 text-sm font-semibold text-estate-forest">{text.sendAgain}</button></div>
+          : <><button onClick={google} disabled={state === 'sending'} className="mt-8 min-h-12 w-full rounded-xl border border-estate-line bg-white px-4 py-3 text-sm font-semibold hover:bg-estate-sand disabled:opacity-50">{text.google}</button>
+            <div className="my-6 flex items-center gap-4 text-xs text-estate-muted"><span className="h-px flex-1 bg-border" />{text.orEmail}<span className="h-px flex-1 bg-border" /></div>
+            <form onSubmit={magic} className="space-y-3"><label htmlFor="email" className="block text-sm font-semibold">{text.email}</label><input id="email" name="email" type="email" autoComplete="email" required maxLength={254} value={email} onChange={e => setEmail(e.target.value)} placeholder="you@agency.com" className="min-h-12 w-full rounded-xl border bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-primary/30" />
+              <button disabled={state === 'sending'} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-estate-forest px-4 py-3 text-sm font-semibold text-white hover:bg-estate-deep disabled:opacity-60">{state === 'sending' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}{register ? text.createAccount : text.sendLink}</button></form>
+          </>}
+        {(error || sessionError) && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error || text.sessionError}</p>}
       </div>
-    </div>
-  );
+    </section>
+  </main>;
 }
