@@ -233,7 +233,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             {(!view || view.type === 'ops') && hasPropertyModule && businessMode !== 'holiday-rentals' && (matchPresentation==='cards'?<MatchDesk records={records} onOpen={(r)=>setOpenId(r.id)} />:<OpportunityUniverse records={records} onOpen={(r)=>setOpenId(r.id)} />)}
             {(!view || view.type === 'ops') && <LivingWorkspace blueprint={blueprint} records={records} onOpen={(r) => setOpenId(r.id)} />}
             {(!view || view.type === 'ops') && <OperationsDashboard blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
-            {!view && hasPropertyModule && <PropertyFeed records={records} onOpen={(r)=>setOpenId(r.id)} />}
+            {!view && hasPropertyModule && <PropertyFeed records={records} onOpen={(r)=>setOpenId(r.id)} onDelete={onDelete} readOnly={readOnly} canDelete={canDelete} />}
             {!view && !hasPropertyModule && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
             {view && view.type === 'worklist' && (
               <WorklistView blueprint={blueprint} view={view} records={shown} dark={dark} titleOf={titleOf} selectedId={openId}
