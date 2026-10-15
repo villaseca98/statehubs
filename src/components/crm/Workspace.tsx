@@ -263,7 +263,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
 
         {palette && (
           <CommandPalette blueprint={blueprint} records={records} sections={[{ key: HOY, label: 'Home' }, ...sections.map((v) => ({ key: v.key, label: englishLabel(v.key, v.label) }))]}
-            onClose={() => setPalette(false)} onSection={go}
+            onClose={() => setPalette(false)} onSection={go} onCreate={(entityKey)=>{void create(entityKey);setPalette(false)}} readOnly={readOnly}
             onRecord={(id) => {
               const r = records.find((x) => x.id === id);
               const home = r && sections.find((v) => v.entity === r.entity);
