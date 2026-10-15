@@ -19,11 +19,11 @@ Updated 2026-10-15. This tracker reserves every ID from 1 to 75. The supplied pr
 | 13 | Long-term residential rentals | Partial | Rental listings/pipeline exist; leases, rent schedules and renewals pending. |
 | 14 | Holiday and short-term rentals | Partial | Reservations/iCal/calendar exist; transactional double-booking prevention pending. |
 | 15 | Real estate investment management | Partial | Investor role and deterministic preferences; portfolio valuations and returns pending. |
-| 16 | Development and new-build sales | Planned | Planned: development/unit inventory and reservations. |
-| 17 | Building acquisition, renovation and unit resale | Planned | Planned: acquisition, renovation budgets and unit cost allocation. |
+| 16 | Development and new-build sales | Planned | Pure unit inventory reservation/expiry planner and tests in PR #27; transactional database reservations and UI pending. |
+| 17 | Building acquisition, renovation and unit resale | Planned | Pure acquisition/renovation/resale feasibility calculator and tests in PR #27; persisted budgets and unit allocation pending. |
 | 18 | Co-brokerage and partnership deals | Planned | Pure deterministic co-brokerage commission split planner and unit tests added in PR #27; partner mandate, persistent allocations, payment ledger and integration pending. |
-| 19 | Property management operations | Partial | Existing services/incidents/property records; owner reporting and SLA workflows pending. |
-| 20 | Remote ownership management | Planned | Planned: owner portal, remote approvals and reporting. |
+| 19 | Property management operations | Partial | Existing services/incidents/property records; pure tenant-filtered SLA summary helper and tests added in PR #27. Owner reporting and persisted SLA workflows pending. |
+| 20 | Remote ownership management | Planned | Pure owner-approval state transition and tests in PR #27; owner portal, secure backend approval and reporting pending. |
 | 21 | Buyer-to-property matching | Partial | Verified deterministic engine, profile cards and persistent decisions; live activation pending. |
 | 22 | Tenant-to-rental matching | Partial | Explicit sale/rent intent with same-currency budget comparison; complete rental screening pending. |
 | 23 | Property-to-qualified-contact matching | Partial | Same engine in reverse; explicit qualification required by default. |
@@ -86,3 +86,5 @@ Updated 2026-10-15. This tracker reserves every ID from 1 to 75. The supplied pr
 - M2.2: profile cards, persistent decisions, reverse matching and viewing creation verified at 390/1440 px. Full suite: 254 tests. PostgreSQL tenant/read-only/audit/duplicate-pair checks pass; live database activation remains pending. See MATCH_INTELLIGENCE.md.
 
 - M2.4 (PR #27, pending validation): added a pure deterministic co-brokerage commission allocator with integer minor-unit rounding, explicit 100% allocation and tests. This is not a posted ledger entry, payment, or production feature.
+
+- M2.5 (PR #27, pending validation): pure domain helpers and regression tests added for development unit reservation (16), renovation feasibility (17), property-management SLA summaries (19), and remote-owner approval transitions (20). None are connected to database writes or a live UI. Tenant checks in pure functions do not replace server-enforced RLS.
