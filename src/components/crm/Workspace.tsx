@@ -25,6 +25,7 @@ import { HOY, hubsFor } from './hubs';
 import { AppLogo } from '@/components/brand/Logo';
 import { useProductText } from '@/i18n/product';
 import { useContactText } from '@/i18n/contacts';
+import { HUB_EN, englishSectionLabel } from './sectionLabels';
 import { contactStage } from '@/lib/crm/contactLifecycle';
 import type { ContactStage } from '@/lib/crm/contactLifecycle';
 
@@ -60,17 +61,6 @@ const HUB_ICON: Record<string, LucideIcon> = { hoy: Sun, clientes: Users, inmueb
 // Sections that get the filter bar (search, rules, sort, saved views).
 const FILTERED = new Set<string>(['table', 'kanban', 'worklist', 'calendar', 'cards']);
 const ACCENT = 'var(--crm-primary)';
-const HUB_EN: Record<string,string> = { hoy:'Home', clientes:'Clients', inmuebles:'Properties', turistico:'Rentals', empresa:'Business' };
-
-const SECTION_EN: Record<string,string> = {
-  hoy:'Home', panel:'Overview', centro:'Operations center', analisis:'Insights', leads:'Leads', embudo:'Pipeline',
-  clientes:'Clients', contactos:'Contacts', contacto_inmo:'Contacts', inmuebles:'Properties', propiedades:'Properties',
-  reservas:'Reservations', alquileres:'Rentals', calendario:'Calendar', operaciones:'Deals', operacion:'Deals',
-  tareas:'Tasks', actividades:'Activities', agentes:'Agents', equipo:'Team', facturas:'Invoices',
-  pagos:'Payments', propietarios:'Owners', informes:'Reports', oportunidades:'Opportunities',
-  visitas:'Viewings', automatizaciones:'Automations', mensajes:'Messages', negocios:'Business',
-};
-const englishLabel = (key:string,label:string) => SECTION_EN[key.toLowerCase()] ?? SECTION_EN[label.toLowerCase()] ?? label;
 
 export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecord, onDelete, onWebhook, onSyncIcal, tools = [], banner, now, className = '', appId, readOnly = false, canDelete = true }: WorkspaceProps) {
   const text = useProductText();
@@ -101,7 +91,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
   const baseShown = filters.entity ? filters.records : records;
   const contactView = entity?.key === 'contacto_inmo';
   const shown = contactView && contactFilter !== 'all' ? baseShown.filter(r => r.entity !== 'contacto_inmo' || contactStage(r.data) === contactFilter) : baseShown;
-  const labelOf = (key: string) => (key === HOY ? 'Home' : englishLabel(key, sections.find((v) => v.key === key)?.label ?? key));
+  const labelOf = (key: string) => (key === HOY ? 'Home' : englishSectionLabel(key, sections.find((v) => v.key === key)?.label ?? key));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPalette((p) => !p); } };
@@ -180,7 +170,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
                 <p className="flex items-center gap-2 text-[0.78em] font-semibold uppercase tracking-[0.16em]" style={{ color: 'var(--crm-muted)' }}>
                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: ACCENT }} />{HUB_EN[hub.key] ?? hub.label}
                 </p>
-                <h1 className="mt-1 truncate text-[1.9em] font-normal leading-tight tracking-[-0.02em] md:text-[2.8em]">{view ? englishLabel(view.key, view.label) : 'Home'}</h1>
+                <h1 className="mt-1 truncate text-[1.9em] font-normal leading-tight tracking-[-0.02em] md:text-[2.8em]">{view ? englishSectionLabel(view.key, view.label) : 'Home'}</h1>
               </div>
               {entity && !readOnly && (
                 <button onClick={() => create(entity.key)} className="sh-touch inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(180,22,54,.28)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(180,22,54,.32)] active:scale-[.98] motion-reduce:transform-none"
@@ -248,7 +238,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
         )}
 
         {palette && (
-          <CommandPalette blueprint={blueprint} records={records} sections={[{ key: HOY, label: 'Home' }, ...sections.map((v) => ({ key: v.key, label: englishLabel(v.key, v.label) }))]}
+          <CommandPalette blueprint={blueprint} records={records} sections={[{ key: HOY, label: 'Home' }, ...sections.map((v) => ({ key: v.key, label: englishSectionLabel(v.key, v.label) }))]}
             onClose={() => setPalette(false)} onSection={go}
             onRecord={(id) => {
               const r = records.find((x) => x.id === id);
