@@ -1,4 +1,5 @@
 import type { AppRecord } from '@shared/blueprint/types.ts';
+import { matchProperty } from './matching';
 import { dayOf } from './today';
 import { hasGuests } from './ops';
 
@@ -67,32 +68,9 @@ export function monthOccupancy(flats: AppRecord[], reservas: AppRecord[], now = 
   return { booked, blocked, free: Math.max(0, total - booked - blocked), total };
 }
 
-const CLOSED = new Set(['cerrado', 'descartado']);
-const BUYERS = new Set(['comprador', 'inversor', 'arrendatario']);
-
-/**
- * Contacts this property suits: buyers or tenants still in play whose budget
- * reaches the price (10 % margin), and whose wanted type and zones match
- * when they said them. Tourist flats aren't sold to contacts.
- */
+/** Legacy dashboard uses the same strict engine; incomplete qualification is not a confirmed match. */
 export function matchesFor(property: AppRecord, contactos: AppRecord[]): AppRecord[] {
-  if (property.data.operacion === 'turistico') return [];
-  const price = num(property.data.precio);
-  const zone = norm(str(property.data.zona));
-  const tipo = str(property.data.tipo);
-  return contactos.filter((c) => {
-    if (CLOSED.has(str(c.data.temperatura)) || (c.data.tipo && !BUYERS.has(str(c.data.tipo)))) return false;
-    const budget = num(c.data.presupuesto);
-    if (!budget || !price) return false;
-    // A tenant's budget is monthly, a buyer's is the whole price: compare like with like.
-    const renting = property.data.operacion === 'alquiler';
-    if (renting !== (c.data.tipo === 'arrendatario')) return false;
-    if (budget < price * 0.9) return false;
-    if (c.data.tipo_deseado && tipo && c.data.tipo_deseado !== tipo) return false;
-    const zones = norm(str(c.data.zonas));
-    if (zones && zone && !zones.split(/[,;/]/).some((z) => z.trim() && (zone.includes(z.trim()) || z.includes(zone)))) return false;
-    return true;
-  });
+  return contactos.filter(contact => { const result=matchProperty(contact,property); return result.eligible && result.score!==null && result.reasons.every(r=>r.state==='match'); });
 }
 
 export interface DayItem { id: string; record: AppRecord; time?: string; title: string; kind: 'cita' | 'llegada' | 'salida' | 'servicio' }
