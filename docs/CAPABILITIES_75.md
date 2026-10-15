@@ -1,6 +1,6 @@
 # StateHubs — 75-capability tracker
 
-Updated 2026-10-13. This tracker reserves every ID from 1 to 75. The supplied prompt defines 12–30 and 36–40 only; undefined IDs are deliberately not assigned invented requirements. Earlier code is inventoried in FEATURE_MATRIX.md. “Partial” distinguishes implemented code from remaining business acceptance or live configuration. No status here asserts production activation.
+Updated 2026-10-15. This tracker reserves every ID from 1 to 75. The supplied prompt defines 12–30 and 36–40 only; undefined IDs are deliberately not assigned invented requirements. Earlier code is inventoried in FEATURE_MATRIX.md. “Partial” distinguishes implemented code from remaining business acceptance or live configuration. No status here asserts production activation.
 
 | ID | Capability | Status | Evidence / remaining work |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Updated 2026-10-13. This tracker reserves every ID from 1 to 75. The supplied pr
 | 15 | Real estate investment management | Partial | Investor role and deterministic preferences; portfolio valuations and returns pending. |
 | 16 | Development and new-build sales | Planned | Planned: development/unit inventory and reservations. |
 | 17 | Building acquisition, renovation and unit resale | Planned | Planned: acquisition, renovation budgets and unit cost allocation. |
-| 18 | Co-brokerage and partnership deals | Planned | Planned: partner mandate and shared commission ledger. |
+| 18 | Co-brokerage and partnership deals | Planned | Pure deterministic co-brokerage commission split planner and unit tests added in PR #27; partner mandate, persistent allocations, payment ledger and integration pending. |
 | 19 | Property management operations | Partial | Existing services/incidents/property records; owner reporting and SLA workflows pending. |
 | 20 | Remote ownership management | Planned | Planned: owner portal, remote approvals and reporting. |
 | 21 | Buyer-to-property matching | Partial | Verified deterministic engine, profile cards and persistent decisions; live activation pending. |
@@ -84,3 +84,5 @@ Updated 2026-10-13. This tracker reserves every ID from 1 to 75. The supplied pr
 
 - M2.1: matching engine replaces the dashboard budget-margin heuristic with explicit criteria, currency checks, availability, dimensional constraints and missing-data reporting. Targeted engine tests executed before its commit.
 - M2.2: profile cards, persistent decisions, reverse matching and viewing creation verified at 390/1440 px. Full suite: 254 tests. PostgreSQL tenant/read-only/audit/duplicate-pair checks pass; live database activation remains pending. See MATCH_INTELLIGENCE.md.
+
+- M2.4 (PR #27, pending validation): added a pure deterministic co-brokerage commission allocator with integer minor-unit rounding, explicit 100% allocation and tests. This is not a posted ledger entry, payment, or production feature.
