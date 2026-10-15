@@ -12,6 +12,8 @@ describe('Autopilot approval lifecycle in local demo',()=>{
   const approved=await localCrmApi.decideAutomation(proposal.id,'approved');
   expect(approved.status).toBe('approved');
   await expect(localCrmApi.decideAutomation(proposal.id,'dismissed')).rejects.toThrow('Invalid approval transition');
+  await expect(localCrmApi.decideAutomation(proposal.id,'completed')).rejects.toThrow('Missing CRM activity evidence');
+  await localCrmApi.addRecordActivity(record.id,'note','Autopilot approved action: Call buyer. Due today',proposal.id);
   expect((await localCrmApi.decideAutomation(proposal.id,'completed')).status).toBe('completed');
   expect((await localCrmApi.automationApprovalEvents(app.id)).map(e=>e.new_status)).toEqual(['completed','approved']);
  });
