@@ -58,8 +58,8 @@ const Title = ({ children, className = '' }: { children: ReactNode; className?: 
 type OpsLine = [time: string, who: string, where: string, tag?: [string, string], done?: boolean];
 const OPS: { title: string; icon: typeof LogIn; lines: OpsLine[] }[] = [
   { title: 'Llegadas', icon: LogIn, lines: [['16:00', 'Emma Larsen', 'Malvarrosa Sol', ['Airbnb', 'red']], ['19:30', 'Paolo Ricci', 'Loft Carmen', ['Booking', 'blue']]] },
-  { title: 'Salidas', icon: LogOut, lines: [['10:00', 'Grupo Martínez', 'Ático Ruzafa', undefined, true], ['11:00', 'Jonas Weber', 'Estudio Cabanyal']] },
-  { title: 'Limpiezas', icon: Sparkles, lines: [['11:30', 'Ático Ruzafa', 'Lucía', undefined, true], ['12:00', 'Estudio Cabanyal', 'Lucía'], ['13:00', 'Malvarrosa Sol', 'Marta']] },
+  { title: 'Departures', icon: LogOut, lines: [['10:00', 'Martinez Group', 'Ruzafa penthouse', undefined, true], ['11:00', 'Jonas Weber', 'Estudio Cabanyal']] },
+  { title: 'Cleaning', icon: Sparkles, lines: [['11:30', 'Ruzafa penthouse', 'Lucia', undefined, true], ['12:00', 'Estudio Cabanyal', 'Lucia'], ['13:00', 'Malvarrosa Sol', 'Marta']] },
 ];
 
 export function OpsMock() {
@@ -77,7 +77,7 @@ export function OpsMock() {
           <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Loft Carmen: dos reservas se solapan el 16 de octubre</span>
         </div>
         <div className="flex items-center gap-2 rounded-xl px-2.5 py-1.5 text-[11px] font-medium" style={{ background: CHIP.sun[0], color: CHIP.sun[1] }}>
-          <Sparkles className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Casa Albufera: llegada mañana sin limpieza asignada</span>
+          <Sparkles className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Casa Albufera: arrival tomorrow without assigned cleaning</span>
         </div>
       </div>
       <div className="mt-3 grid gap-2 sm:grid-cols-3">
@@ -111,7 +111,7 @@ type Bar = [from: number, nights: number, guest: string, channel: Channel, lane?
 const STAYS: [string, Bar[]][] = [
   ['Malvarrosa Sol', [[0, 3, 'Emma Larsen', 'airbnb'], [4, 5, 'Familia Dubois', 'booking'], [10, 3, 'Iker', 'directa']]],
   ['Loft Carmen', [[0, 2, 'Liam', 'airbnb'], [2, 3, 'Paolo Ricci', 'booking'], [4, 3, 'Sophie Klein', 'airbnb', 1], [9, 4, 'Ana y Luis', 'booking']]],
-  ['Ático Ruzafa', [[1, 6, 'Grupo Martínez', 'booking'], [8, 5, 'Noah Jensen', 'airbnb']]],
+  ['Ruzafa penthouse', [[1, 6, 'Martinez Group', 'booking'], [8, 5, 'Noah Jensen', 'airbnb']]],
   ['Casa Albufera', [[1, 4, 'Marco', 'directa'], [6, 7, 'The Millers', 'airbnb']]],
   ['Estudio Cabanyal', [[0, 1, 'Jonas', 'booking'], [3, 2, 'Chloé', 'airbnb'], [6, 3, 'Kenji', 'booking'], [11, 3, 'Zoe', 'airbnb']]],
 ];
@@ -176,15 +176,15 @@ export function CalendarMock() {
 // ---- Fichas de inmuebles ------------------------------------------------------
 
 const HOMES: { title: string; zone: string; price: string; tag: [string, string]; facts: [number, number, number] }[] = [
-  { title: 'Ático con terraza', zone: 'Ruzafa, Valencia', price: '330.000 €', tag: ['En venta', 'lime'], facts: [3, 2, 110] },
-  { title: 'Malvarrosa Sol', zone: 'Playa de la Malvarrosa', price: '128 € / noche', tag: ['Turístico', 'sun'], facts: [2, 1, 64] },
+  { title: 'Penthouse with terrace', zone: 'Ruzafa, Valencia', price: '330.000 €', tag: ['For sale', 'lime'], facts: [3, 2, 110] },
+  { title: 'Malvarrosa Sol', zone: 'Playa de la Malvarrosa', price: '128 € / night', tag: ['Holiday rental', 'sun'], facts: [2, 1, 64] },
   { title: 'Casa con piscina', zone: 'Godella', price: '435.000 €', tag: ['Reservada', 'gray'], facts: [5, 3, 260] },
 ];
 
 export function PropertiesMock() {
   return (
     <Paper className="p-3 sm:p-4">
-      <div className="mb-3 flex items-center justify-between"><Title className="text-lg">Inmuebles</Title><Muted className="text-[11px]">48 en cartera</Muted></div>
+      <div className="mb-3 flex items-center justify-between"><Title className="text-lg">Properties</Title><Muted className="text-[11px]">48 en cartera</Muted></div>
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
         {HOMES.map((h, i) => (
           <Box key={h.title} className={`overflow-hidden p-1.5 ${i === 2 ? 'hidden sm:block' : ''}`}>
@@ -262,10 +262,10 @@ export function SalesMock() {
         </Box>
       </div>
       <div className="mt-3 flex flex-col gap-1.5">
-        {([['Pisos', 62], ['Áticos', 44], ['Casas', 31], ['Turísticos', 23]] as [string, number][]).map(([k, v]) => (
+        {([['Apartments', 62], ['Penthouses', 44], ['Houses', 31], ['Holiday rentals', 23]] as [string, number][]).map(([k, v]) => (
           <div key={k} className="flex items-center gap-2 text-[11px]">
             <span className="w-16 shrink-0 font-medium">{k}</span>
-            <span className="relative h-2.5 flex-1 rounded-full" style={{ background: E.sand }}><span className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${v}%`, background: k === 'Turísticos' ? E.sun : E.forest }} /></span>
+            <span className="relative h-2.5 flex-1 rounded-full" style={{ background: E.sand }}><span className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${v}%`, background: k === 'Holiday rentals' ? E.sun : E.forest }} /></span>
             <span className="w-9 text-right font-semibold" style={NUM}>{v} %</span>
           </div>
         ))}
@@ -277,7 +277,7 @@ export function SalesMock() {
 // ---- Filtros tipo Notion -------------------------------------------------------
 
 const CLOSED: [string, string, string, string][] = [
-  ['Piso en Benimaclet', 'Marta', '3 oct', '215.000 €'], ['Ático Plaza Redonda', 'Álex', '27 sept', '330.000 €'],
+  ['Apartment in Benimaclet', 'Marta', 'Oct 3', '215.000 €'], ['Plaza Redonda penthouse', 'Alex', 'Sep 27', '330.000 €'],
   ['Alquiler Calle Sueca', 'Marta', '22 sept', '1.050 €/mes'], ['Casa en Rocafort', 'Nuria', '15 sept', '398.000 €'],
 ];
 
@@ -291,7 +291,7 @@ export function FiltersMock() {
       </div>
       <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[10px]">
         <Filter className="h-3 w-3" style={{ color: L.muted }} />
-        {[['Etapa', 'es', 'Cerrada'], ['Cierre', 'en', 'los últimos 30 días']].map(([a, b, c]) => (
+        {[['Stage', 'es', 'Closed'], ['Closing', 'en', 'the last 30 days']].map(([a, b, c]) => (
           <span key={a} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5" style={{ background: CHIP.lime[0], color: CHIP.lime[1] }}>
             <b className="font-semibold">{a}</b> {b} <b className="font-semibold">{c}</b><ChevronDown className="h-2.5 w-2.5" />
           </span>
@@ -300,7 +300,7 @@ export function FiltersMock() {
       </div>
       <Box className="mt-2.5 overflow-hidden">
         <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 px-2.5 py-1.5 text-[10px] font-medium sm:grid-cols-[1fr_4rem_3.5rem_auto]" style={{ color: L.muted, background: L.bg }}>
-          <span>Operación</span><span className="hidden sm:block">Agente</span><span>Cierre</span><span className="text-right">Importe</span>
+          <span>Deal</span><span className="hidden sm:block">Agent</span><span>Closing</span><span className="text-right">Amount</span>
         </div>
         {CLOSED.map(([what, who, when, money]) => (
           <div key={what} className="grid grid-cols-[1fr_auto_auto] items-center gap-x-3 px-2.5 py-1.5 text-[11px] sm:grid-cols-[1fr_4rem_3.5rem_auto]" style={{ borderTop: `1px solid ${L.border}` }}>
@@ -319,9 +319,9 @@ export function FiltersMock() {
 // ---- Búsqueda ⌘K ----------------------------------------------------------------
 
 const HITS: [string, [string, string][]][] = [
-  ['Inmuebles', [['Malva', 'rrosa Sol · apartamento turístico']]],
+  ['Properties', [['Malva', 'rrosa Sol · holiday apartment']]],
   ['Reservas', [['', 'Emma Larsen · '], ['Malva', 'rrosa Sol · 12–15 oct']]],
-  ['Contactos', [['', 'Sofía Llorens · propietaria de '], ['Malva', 'rrosa Sol']]],
+  ['Contacts', [['', 'Sofia Llorens · owner of '], ['Malva', 'rrosa Sol']]],
 ];
 
 export function CommandMock() {
@@ -355,17 +355,17 @@ function MiniBoard({ c }: { c: AppColors }) {
   return (
     <div className="absolute inset-0 p-3" style={{ background: c.bg, color: c.text }}>
       <div className="flex w-fit items-center gap-1 rounded-full p-1 text-[10px]" style={{ background: c.surface, border: `1px solid ${c.border}` }}>
-        {['Hoy', 'Reservas', 'Inmuebles'].map((t, i) => <span key={t} className="rounded-full px-2 py-0.5" style={i === 0 ? { background: dark ? E.lime : E.forest, color: dark ? E.deep : '#fff' } : { color: c.muted }}>{t}</span>)}
+        {['Hoy', 'Reservas', 'Properties'].map((t, i) => <span key={t} className="rounded-full px-2 py-0.5" style={i === 0 ? { background: dark ? E.lime : E.forest, color: dark ? E.deep : '#fff' } : { color: c.muted }}>{t}</span>)}
       </div>
       <div className="mt-2.5 grid grid-cols-2 gap-2">
-        {[['Ocupación', '82 %'], ['Neto del mes', '6.840 €']].map(([k, v]) => (
+        {[['Occupancy', '82 %'], ['Net this month', '6.840 €']].map(([k, v]) => (
           <div key={k} className="rounded-xl p-2" style={{ background: c.surface, border: `1px solid ${c.border}` }}>
             <div className="text-[9px]" style={{ color: c.muted }}>{k}</div><div className="text-[15px] font-bold" style={NUM}>{v}</div>
           </div>
         ))}
       </div>
       <div className="mt-2 flex flex-col gap-1">
-        {[['16:00', 'Llegada · Emma'], ['18:00', 'Visita · Clara Vidal'], ['19:30', 'Llegada · Paolo']].map(([h, t]) => (
+        {[['16:00', 'Llegada · Emma'], ['18:00', 'Viewing · Clara Vidal'], ['19:30', 'Llegada · Paolo']].map(([h, t]) => (
           <div key={h} className="flex items-center gap-2 rounded-lg px-2 py-1 text-[10px]" style={{ background: c.surface, border: `1px solid ${c.border}` }}>
             <span className="font-semibold" style={NUM}>{h}</span><span className="h-3 w-[3px] rounded-full" style={{ background: dark ? E.lime : E.moss }} />{t}
           </div>
@@ -404,7 +404,7 @@ export function AgendaMock() {
         ))}
       </div>
       <div className="mt-2.5 flex flex-col gap-1.5 text-[11px]">
-        {([['18:00', 'Visita · Ático Ruzafa', 'Clara Vidal · llega por Instagram', CalendarDays], ['Mañana', 'Llamar a Pilar Navarro', 'Tasación de su piso en Benimaclet', Bell]] as const).map(([h, t, s, Icon]) => (
+        {([['18:00', 'Viewing · Ruzafa penthouse', 'Clara Vidal · from Instagram', CalendarDays], ['Tomorrow', 'Call Pilar Navarro', 'Apartment valuation en Benimaclet', Bell]] as const).map(([h, t, s, Icon]) => (
           <Box key={t} className="flex items-center gap-2 p-2">
             <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full" style={{ background: CHIP.lime[0], color: E.forest }}><Icon className="h-3.5 w-3.5" /></span>
             <span className="min-w-0 flex-1 leading-tight"><b className="block truncate font-semibold">{t}</b><Muted className="block truncate text-[10px]">{s}</Muted></span>
@@ -420,11 +420,11 @@ export function AgendaMock() {
 
 type Msg = [from: 'them' | 'bot', text: ReactNode];
 const CHAT: Msg[] = [
-  ['them', 'Hola! ¿Sigue disponible el ático de Ruzafa?'],
-  ['bot', 'Sí, sigue disponible. ¿Lo buscas para vivir o para invertir?'],
-  ['them', 'Para vivir. Tenemos la hipoteca preaprobada'],
-  ['bot', 'Genial. ¿Te va bien verlo el jueves a las 18:00 o el viernes a las 10:00?'],
-  ['them', '¡Jueves a las 18:00, perfecto!'],
+  ['them', 'Hi! Is the Ruzafa penthouse still available?'],
+  ['bot', 'Yes, it is available. Are you looking to live there or invest?'],
+  ['them', 'To live in. Tenemos la hipoteca preaprobada'],
+  ['bot', 'Great. Would Thursday at 6 PM or Friday at 10 AM work for a viewing?'],
+  ['them', 'Thursday at 6 PM is perfect!'],
 ];
 
 export function InstagramMock() {
@@ -456,7 +456,7 @@ export function InstagramMock() {
           <Chip color="red" className="ml-auto">Caliente</Chip>
         </div>
         <div className="mt-2 grid grid-cols-2 gap-1 text-[10px]" style={{ color: E.muted }}>
-          <span>Para vivir</span><span>Hipoteca preaprobada</span><span>Ático Ruzafa</span><span className="font-semibold" style={{ color: E.forest }}>Visita jue 18:00</span>
+          <span>To live in</span><span>Mortgage pre-approved</span><span>Ruzafa penthouse</span><span className="font-semibold" style={{ color: E.forest }}>Viewing Thu 6 PM</span>
         </div>
       </div>
     </div>
