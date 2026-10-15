@@ -93,6 +93,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
   const [mode, setMode] = useState<ThemeMode>(initialMode);
   const [palette, setPalette] = useState(false);
   const [matchPresentation,setMatchPresentation] = useState<'cards'|'universe'>('cards');
+  const [homeTool,setHomeTool] = useState<null|'matches'|'operations'|'setup'>(null);
   const [businessMode, setBusinessMode] = useState<'real-estate' | 'holiday-rentals' | null>(() => { try { const value = localStorage.getItem(`statehubs:business-mode:${appId ?? blueprint.name}`); return value === 'real-estate' || value === 'holiday-rentals' ? value : null; } catch { return null; } });
   const chooseBusinessMode = (value: 'real-estate' | 'holiday-rentals') => { setBusinessMode(value); try { localStorage.setItem(`statehubs:business-mode:${appId ?? blueprint.name}`,value); } catch { /* Private browsing: keep the in-memory selection. */ } };
   const hasPropertyModule = blueprint.entities.some(e=>e.key==='inmueble');
@@ -224,14 +225,25 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             </div>}
             {contactView && !shown.some(r => r.entity === 'contacto_inmo') && <p role="status" className="mb-4 text-sm" style={{ color: 'var(--crm-muted)' }}>{contactsText.empty}</p>}
             {view && filters.entity && <div className="mb-4"><FilterBar filters={filters} records={records} titleOf={titleOf} dark={dark} /></div>}
+            {(!view || view.type === 'ops') && <div className="mb-5 rounded-[22px] border p-4 sm:p-5" style={{background:'var(--crm-surface)',borderColor:'var(--crm-border)'}}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div><h2 className="text-base font-semibold">Your workspace</h2><p className="mt-1 text-xs" style={{color:'var(--crm-muted)'}}>One priority view. Open the tools you need, when you need them.</p></div>
+                <div className="flex flex-wrap gap-2">
+                  {hasPropertyModule&&<button type="button" aria-pressed={homeTool==='matches'} onClick={()=>setHomeTool(v=>v==='matches'?null:'matches')} className="rounded-xl border px-3 py-2 text-xs font-semibold" style={{borderColor:'var(--crm-border)',background:homeTool==='matches'?'var(--crm-bg)':undefined}}>Matches</button>}
+                  <button type="button" aria-pressed={homeTool==='operations'} onClick={()=>setHomeTool(v=>v==='operations'?null:'operations')} className="rounded-xl border px-3 py-2 text-xs font-semibold" style={{borderColor:'var(--crm-border)',background:homeTool==='operations'?'var(--crm-bg)':undefined}}>Operations</button>
+                  {hasPropertyModule&&<button type="button" aria-pressed={homeTool==='setup'} onClick={()=>setHomeTool(v=>v==='setup'?null:'setup')} className="rounded-xl border px-3 py-2 text-xs font-semibold" style={{borderColor:'var(--crm-border)',background:homeTool==='setup'?'var(--crm-bg)':undefined}}>Workspace setup</button>}
+                </div>
+              </div>
+            </div>}
             {(!view || view.type === 'ops') && hasPropertyModule && <IntelligenceCommandCenter blueprint={blueprint} records={records} now={now} onOpen={(r)=>setOpenId(r.id)} onCreate={onCreate} readOnly={readOnly} />}
             {(!view || view.type === 'ops') && hasPropertyModule && <DealMomentumBoard records={records} now={now} onOpen={(r)=>setOpenId(r.id)} />}
-            {(!view || view.type === 'ops') && hasPropertyModule && <ModulePlanner appId={appId ?? blueprint.name} />}
-            {(!view || view.type === 'ops') && hasPropertyModule && <BusinessModeCards mode={businessMode} onChoose={chooseBusinessMode} />}
-            {(!view || view.type === 'ops') && hasPropertyModule && businessMode !== 'holiday-rentals' && <div className="mb-3 flex items-center justify-end gap-2" role="group" aria-label="Opportunity display"><span className="mr-auto text-xs" style={{color:'var(--crm-muted)'}}>Match Intelligence · one engine, two views</span>{(['cards','universe'] as const).map(p=><button key={p} type="button" aria-pressed={matchPresentation===p} onClick={()=>setMatchPresentation(p)} className="rounded-full border px-3 py-1.5 text-xs font-semibold" style={{borderColor:'var(--crm-border)',background:matchPresentation===p?'var(--crm-primary)':'var(--crm-surface)',color:matchPresentation===p?'white':'var(--crm-text)'}}>{p==='cards'?'Match cards':'Opportunity universe'}</button>)}</div>}
-            {(!view || view.type === 'ops') && hasPropertyModule && businessMode !== 'holiday-rentals' && (matchPresentation==='cards'?<MatchDesk records={records} onOpen={(r)=>setOpenId(r.id)} />:<OpportunityUniverse records={records} onOpen={(r)=>setOpenId(r.id)} />)}
-            {(!view || view.type === 'ops') && <LivingWorkspace blueprint={blueprint} records={records} onOpen={(r) => setOpenId(r.id)} />}
-            {(!view || view.type === 'ops') && <OperationsDashboard blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
+            {(!view || view.type === 'ops') && homeTool==='setup' && hasPropertyModule && <><ModulePlanner appId={appId ?? blueprint.name} /><BusinessModeCards mode={businessMode} onChoose={chooseBusinessMode} /></>}
+            {(!view || view.type === 'ops') && homeTool==='matches' && hasPropertyModule && businessMode !== 'holiday-rentals' && <>
+              <div className="mb-3 flex items-center justify-end gap-2" role="group" aria-label="Opportunity display"><span className="mr-auto text-xs" style={{color:'var(--crm-muted)'}}>One match engine · two perspectives</span>{(['cards','universe'] as const).map(p=><button key={p} type="button" aria-pressed={matchPresentation===p} onClick={()=>setMatchPresentation(p)} className="rounded-full border px-3 py-1.5 text-xs font-semibold" style={{borderColor:'var(--crm-border)',background:matchPresentation===p?'var(--crm-primary)':'var(--crm-surface)',color:matchPresentation===p?'white':'var(--crm-text)'}}>{p==='cards'?'Match cards':'Opportunity universe'}</button>)}</div>
+              {matchPresentation==='cards'?<MatchDesk records={records} onOpen={(r)=>setOpenId(r.id)} />:<OpportunityUniverse records={records} onOpen={(r)=>setOpenId(r.id)} />}
+            </>}
+            {(!view || view.type === 'ops') && homeTool==='matches' && businessMode==='holiday-rentals' && <p className="mb-4 text-sm" style={{color:'var(--crm-muted)'}}>Property-to-buyer matching is available for real-estate workspaces.</p>}
+            {(!view || view.type === 'ops') && homeTool==='operations' && <><LivingWorkspace blueprint={blueprint} records={records} onOpen={(r) => setOpenId(r.id)} /><OperationsDashboard blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} /></>}
             {!view && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
             {view && view.type === 'worklist' && (
               <WorklistView blueprint={blueprint} view={view} records={shown} dark={dark} titleOf={titleOf} selectedId={openId}
