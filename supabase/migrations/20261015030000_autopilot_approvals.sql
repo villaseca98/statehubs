@@ -38,9 +38,9 @@ begin
  update public.crm_automation_approvals
  set status=p_status,decided_at=now(),updated_at=now()
  where id=p_id and owner_id=auth.uid() and exists (select 1 from public.crm_apps a where a.id=app_id and a.owner_id=auth.uid())
- and ((status='pending' and p_status in ('approved','dismissed')) or (status='approved' and p_status='completed'))
+ and ((status='pending' and p_status in ('approved','dismissed')) or (status='approved' and p_status='completed' and exists (select 1 from public.crm_record_events e where e.id=p_id and e.record_id=source_record_id and e.kind='note')))
  returning * into result;
- if result.id is null then raise exception 'Approval not found or transition not permitted'; end if;
+ if result.id is null then raise exception 'Approval not found, missing activity evidence, or transition not permitted'; end if;
  return result;
 end $$;
 revoke all on function public.crm_decide_automation_approval(uuid,text) from public;
