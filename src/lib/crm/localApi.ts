@@ -1,13 +1,13 @@
 import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import { cardProposal } from '@shared/blueprint/modules.ts';
-import type { MatchDecision, RecordEvent, CrmApp, CrmMessage, CrmProposal, CrmVersion, GoogleStatus, IcalSyncResult, InstagramStatus, crmApi } from './api';
+import type { AutomationApproval, AutomationApprovalEvent, MatchDecision, RecordEvent, CrmApp, CrmMessage, CrmProposal, CrmVersion, GoogleStatus, IcalSyncResult, InstagramStatus, crmApi } from './api';
 import { localAgent } from './localAgent';
 
 // Guest mode: the same API as crmApi, kept in this browser (localStorage).
 // Same rules as the server: proposals first, every apply is a version,
 // undo restores as a new version, a stale proposal is refused.
 
-interface LocalApp { matches?: MatchDecision[]; events?: RecordEvent[]; app: CrmApp; versions: CrmVersion[]; messages: CrmMessage[]; proposals: CrmProposal[]; records: AppRecord[] }
+interface LocalApp { automationEvents?: AutomationApprovalEvent[]; automations?: AutomationApproval[]; matches?: MatchDecision[]; events?: RecordEvent[]; app: CrmApp; versions: CrmVersion[]; messages: CrmMessage[]; proposals: CrmProposal[]; records: AppRecord[] }
 type Store = Record<string, LocalApp>;
 
 const KEY = 'statehubs_local_v1';
@@ -45,6 +45,43 @@ function eventFor(a: LocalApp, record: AppRecord, before?: RecordData) {
   (a.events ??= []).push({ id: uid(), record_id: record.id, actor_id: null, kind: before ? 'changed' : 'created', fields, body: null, created_at: now() });
 }
 export const localCrmApi: typeof crmApi = {
+  scheduleAutomation: async(id,when)=>{
+    const date=new Date(when);
+    if(!Number.isFinite(date.getTime())||date.getTime()<Date.now()||date.getTime()>Date.now()+365*86400000)throw new Error('Invalid schedule');
+    const store=load();
+    for(const app of Object.values(store)){
+      const item=app.automations?.find(a=>a.id===id&&a.status==='approved');
+      if(item){item.execute_after=date.toISOString();item.updated_at=now();save(store);return item}
+    }
+    throw new Error('Approved action not found');
+  },
+  unscheduleAutomation: async id=>{
+    const store=load();
+    for(const app of Object.values(store)){
+      const item=app.automations?.find(a=>a.id===id&&a.status==='approved');
+      if(item){item.execute_after=null;item.updated_at=now();save(store);return item}
+    }
+    throw new Error('Approved action not found');
+  },
+  automationApprovalEvents: async appId => [...(load()[appId]?.automationEvents??[])].sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,100),
+  automationApprovals: async appId => [...(load()[appId]?.automations??[])].sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,100),
+  proposeAutomation: async (appId,ownerId,recordId,action,title,reason) => update(appId,a=>{
+    if(!a.records.some(r=>r.id===recordId))throw new Error('Record not found');
+    if((a.automations??[]).some(x=>x.source_record_id===recordId&&x.action_type===action&&x.status==='pending'))throw new Error('A pending proposal already exists');
+    const item:AutomationApproval={id:uid(),app_id:appId,owner_id:ownerId,source_record_id:recordId,action_type:action,title,reason,status:'pending',created_at:now(),updated_at:now(),decided_at:null};
+    (a.automations??=[]).push(item);return item;
+  }),
+  decideAutomation: async(id,status)=>{
+    const s=load();
+    for(const a of Object.values(s)){
+      const item=a.automations?.find(x=>x.id===id);
+      if(!item)continue;
+      if(!((item.status==='pending'&&['approved','dismissed'].includes(status))||(item.status==='approved'&&status==='completed')))throw new Error('Invalid approval transition');
+      if(status==='completed'&&!(a.events??[]).some(event=>event.id===id&&event.record_id===item.source_record_id&&event.kind==='note'))throw new Error('Missing CRM activity evidence');
+      const previous_status=item.status;item.status=status;item.decided_at=now();item.updated_at=now();(a.automationEvents??=[]).push({id:uid(),approval_id:id,app_id:item.app_id,owner_id:item.owner_id,previous_status,new_status:status,created_at:now()});save(s);return item;
+    }
+    throw new Error('Approval not found');
+  },
   matchDecisions: async appId => load()[appId]?.matches ?? [],
   setMatchDecision: async (contactId,propertyId,status) => {
     if (!['saved','dismissed','suggested'].includes(status)) throw new Error('Invalid match decision');
