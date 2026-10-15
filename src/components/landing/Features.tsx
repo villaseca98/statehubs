@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { CalendarDays, CalendarRange, Command, Filter, Home, LayoutDashboard, Moon, TrendingUp } from 'lucide-react';
 import { Reveal, SectionHead } from './Backdrop';
-import { ScheduleMock, CalendarMock, CommandMock, DarkModeMock, FiltersMock, OpsMock, PropertiesMock, SalesMock } from './Mockups';
+import { AgendaMock, CalendarMock, CommandMock, DarkModeMock, FiltersMock, OpsMock, PropertiesMock, SalesMock } from './Mockups';
 
 // The bento of features: each tile says one thing in words and shows it.
 
@@ -36,7 +36,7 @@ export function Features() {
         </Tile>
         <Tile className="lg:col-span-2" delay={0.08} icon={CalendarDays} kicker="Schedule" title="Your week at a glance"
           text="Viewings, calls, reminders and appointments from connected channels.">
-          <ScheduleMock />
+          <AgendaMock />
         </Tile>
         <Tile className="lg:col-span-6" side icon={CalendarRange} kicker="Booking calendar" title="One row per property, one color per channel"
           text="See Airbnb, Booking and direct reservations together, with overlap alerts.">
