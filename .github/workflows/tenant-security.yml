@@ -71,6 +71,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261013090000_workspace_access_platform_admin.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261013120000_record_activity.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261013140000_match_decisions.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261015130000_crm_patch_conflict_status.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/phase10_negative_rls.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/workspace_access.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/record_activity.sql

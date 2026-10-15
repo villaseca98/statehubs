@@ -159,7 +159,15 @@ grant execute on function public.crm_media_can_delete(text) to authenticated;
 
 -- Supabase Storage is shared by all buckets: change policies only for ours.
 -- Signed downloads still require SELECT RLS; no PUBLIC bucket access.
-alter table storage.objects enable row level security;
+-- Managed Supabase already enables RLS and rejects redundant ALTER TABLE
+-- operations on its Storage-owned table. Only enable it on an unprotected
+-- test/self-hosted substrate; never disable or replace managed protection.
+do $crm_storage_rls$
+begin
+ if not (select relrowsecurity from pg_class where oid='storage.objects'::regclass)
+ then alter table storage.objects enable row level security; end if;
+end
+$crm_storage_rls$;
 update storage.buckets set public=false where id='crm-property-media';
 drop policy if exists crm_property_media_select on storage.objects;
 drop policy if exists crm_property_media_insert on storage.objects;

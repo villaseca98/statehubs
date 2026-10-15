@@ -32,7 +32,9 @@ do $$ declare r jsonb; stamp timestamptz; begin
  begin
   perform public.crm_patch_record('33333333-3333-4333-8333-333333333333','{"stale":true}',stamp);
   raise exception 'Stale overwrite accepted';
- exception when serialization_failure then null; end;
+ exception when sqlstate 'PT409' then null; end;
+ if (select data ? 'stale' from public.crm_records where id='33333333-3333-4333-8333-333333333333')
+ then raise exception 'Rejected stale patch changed the record'; end if;
  begin
   perform public.crm_patch_record('44444444-4444-4444-8444-444444444444','{"cross":true}');
   raise exception 'Cross tenant patch accepted';
