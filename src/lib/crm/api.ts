@@ -1,3 +1,4 @@
+import type { OfferInput, OfferRevision } from './offers';
 import { server } from '@/lib/supabase';
 import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import type { Change } from '@shared/blueprint/diff.ts';
@@ -41,6 +42,8 @@ async function must<T>(p: PromiseLike<{ data: T; error: { message: string } | nu
 }
 
 export const crmApi = {
+  offerRevisions: (dealId: string) => must<OfferRevision[]>(db().from('crm_offer_revisions').select('*').eq('deal_id',dealId).order('revision',{ascending:false}).limit(100)),
+  appendOffer: (dealId: string, input: OfferInput, expected: number, request: string) => must<OfferRevision>(db().rpc('crm_append_offer',{p_deal:dealId,p_amount:input.amount,p_currency:input.currency,p_status:input.status,p_note:input.note,p_expected:expected,p_request:request})),
   matchDecisions: async (appId: string) => {
     const rows: MatchDecision[] = [];
     for (let offset = 0; ; offset += 500) {
