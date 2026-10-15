@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CornerDownLeft, FileText, LayoutGrid, Search } from 'lucide-react';
+import { CornerDownLeft, FileText, LayoutGrid, Search, Plus, X } from 'lucide-react';
 import type { AppRecord, Blueprint } from '@shared/blueprint/types.ts';
 import { globalSearch } from '@/lib/crm/filters';
 import {computeToday} from '@/lib/crm/today';
@@ -17,15 +17,21 @@ interface Props {
   onClose: () => void;
   onRecord: (id: string) => void;
   onSection: (key: string) => void;
+  onCreate?: (entity: string) => void;
+  readOnly?: boolean;
 }
 
-export function CommandPalette({ blueprint, records, sections, onClose, onRecord, onSection }: Props) {
+export function CommandPalette({ blueprint, records, sections, onClose, onRecord, onSection, onCreate, readOnly = false }: Props) {
   const [query, setQuery] = useState('');
   const [at, setAt] = useState(0);
+  const [mode,setMode]=useState<'search'|'create'>('search');
   const list = useRef<HTMLUListElement>(null);
   const hits = useMemo(() => {
     const q=query.trim().toLowerCase();
     const standard=globalSearch(blueprint,records,sections,q);
+    if(mode==='create'){
+      return blueprint.entities.filter(e=>!q||e.key.toLowerCase().includes(q)||e.label.toLowerCase().includes(q)).slice(0,12).map(e=>({kind:'section' as const,id:e.key,title:e.label,subtitle:'Create a new record',score:0}));
+    }
     if(!q)return sections.map(s=>({kind:'section' as const,id:s.key,title:s.label,subtitle:'Section',score:0}));
     if(/^(overdue|follow.?ups?|what.*(today|next)|priorit)/.test(q)){
       const t=computeToday(blueprint,records);
@@ -37,14 +43,14 @@ export function CommandPalette({ blueprint, records, sections, onClose, onRecord
       return results.slice(0,8).map(m=>({kind:'record' as const,id:m.property.id,title:String(m.property.data.direccion||m.property.data.nombre||'Property'),subtitle:`${m.score}% criteria fit · ${m.reasons.join(', ')}`,score:m.score}));
     }
     return standard;
-  },[blueprint,records,sections,query]);
+  },[blueprint,records,sections,query,mode]);
 
   useEffect(() => { setAt(0); }, [query]);
   useEffect(() => { list.current?.querySelector('[aria-selected="true"]')?.scrollIntoView?.({ block: 'nearest' }); }, [at]);
 
   const pick = (h: SearchHit | undefined) => {
     if (!h) return;
-    if (h.kind === 'record') onRecord(h.id); else onSection(h.id);
+    if(mode==='create'){if(readOnly||!onCreate)return;onCreate(h.id);} else if (h.kind === 'record') onRecord(h.id); else onSection(h.id);
     onClose();
   };
 
@@ -54,20 +60,22 @@ export function CommandPalette({ blueprint, records, sections, onClose, onRecord
         className="flex max-h-[70vh] w-full max-w-xl flex-col overflow-hidden"
         style={{ background: 'var(--crm-surface)', color: 'var(--crm-text)', border: '1px solid var(--crm-border)', borderRadius: 'var(--crm-radius)', boxShadow: '0 24px 64px rgba(0,0,0,.35)' }}>
         <label className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: '1px solid var(--crm-border)' }}>
-          <Search className="h-4 w-4 shrink-0" style={{ color: 'var(--crm-muted)' }} />
+          {mode==='create'?<Plus className="h-4 w-4 shrink-0" style={{color:'var(--crm-primary)'}}/>:<Search className="h-4 w-4 shrink-0" style={{ color: 'var(--crm-muted)' }} />}
           <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} role="combobox" aria-expanded="true" aria-controls="crm-palette-list"
-            aria-label="Buscar" placeholder="Search, overdue follow-ups, match buyers, properties for rent…" className="w-full bg-transparent text-[1.05em] outline-none"
+            aria-label="Buscar" placeholder={mode==='create'?'Choose what to create…':'Search records, overdue follow-ups, matching…'} className="w-full bg-transparent text-[1.05em] outline-none"
             onKeyDown={(e) => {
               if (e.key === 'ArrowDown') { e.preventDefault(); setAt((i) => Math.min(hits.length - 1, i + 1)); }
               if (e.key === 'ArrowUp') { e.preventDefault(); setAt((i) => Math.max(0, i - 1)); }
               if (e.key === 'Enter') { e.preventDefault(); pick(hits[at]); }
-              if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+              if (e.key === 'Escape') { e.preventDefault(); if(mode==='create'){setMode('search');setQuery('')}else onClose(); }
             }} />
+          {mode==='create'&&<button type="button" onClick={()=>{setMode('search');setQuery('')}} aria-label="Back to search" className="rounded-lg p-1.5" style={{color:'var(--crm-muted)'}}><X className="h-4 w-4"/></button>}
           <kbd className="hidden rounded px-1.5 text-[0.8em] sm:inline" style={{ border: '1px solid var(--crm-border)', color: 'var(--crm-muted)' }}>Esc</kbd>
         </label>
+        {onCreate&&!readOnly&&<div className="flex gap-1 px-3 py-2" style={{borderBottom:'1px solid var(--crm-border)'}}><button type="button" onClick={()=>{setMode('search');setQuery('')}} aria-pressed={mode==='search'} className="rounded-lg px-3 py-1.5 text-xs font-semibold" style={{background:mode==='search'?'var(--crm-bg)':undefined}}>Find</button><button type="button" onClick={()=>{setMode('create');setQuery('')}} aria-pressed={mode==='create'} className="rounded-lg px-3 py-1.5 text-xs font-semibold" style={{background:mode==='create'?'var(--crm-bg)':undefined}}>+ New record</button></div>}
         <ul id="crm-palette-list" ref={list} role="listbox" aria-label="Results" className="min-h-0 flex-1 overflow-y-auto p-1.5">
           {hits.map((h, i) => {
-            const Icon = h.kind === 'record' ? FileText : LayoutGrid;
+            const Icon = mode==='create'?Plus:h.kind === 'record' ? FileText : LayoutGrid;
             return (
               <li key={`${h.kind}.${h.id}`} role="option" aria-selected={i === at} onMouseEnter={() => setAt(i)} onClick={() => pick(h)}
                 className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2"
