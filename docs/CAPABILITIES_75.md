@@ -18,7 +18,7 @@ Updated 2026-10-15. This tracker reserves every ID from 1 to 75. The supplied pr
 | 12 | Residential and commercial brokerage | Partial | Existing property/deal modules; no specialized commercial asset workflow. |
 | 13 | Long-term residential rentals | Partial | Rental listings/pipeline exist; leases, rent schedules and renewals pending. |
 | 14 | Holiday and short-term rentals | Partial | Reservations/iCal/calendar exist; transactional double-booking prevention pending. |
-| 15 | Real estate investment management | Partial | Investor role and deterministic preferences; portfolio valuations and returns pending. |
+| 15 | Real estate investment management | Partial | Investor role and preferences; pure tenant-filtered portfolio valuation, cash flow and yield calculations with tests added. Persisted reporting pending. |
 | 16 | Development and new-build sales | Planned | Pure unit inventory reservation/expiry planner and tests in PR #27; transactional database reservations and UI pending. |
 | 17 | Building acquisition, renovation and unit resale | Planned | Pure acquisition/renovation/resale feasibility calculator and tests in PR #27; persisted budgets and unit allocation pending. |
 | 18 | Co-brokerage and partnership deals | Planned | Pure deterministic co-brokerage commission split planner and unit tests added in PR #27; partner mandate, persistent allocations, payment ledger and integration pending. |
@@ -27,7 +27,7 @@ Updated 2026-10-15. This tracker reserves every ID from 1 to 75. The supplied pr
 | 21 | Buyer-to-property matching | Partial | Verified deterministic engine, profile cards and persistent decisions; live activation pending. |
 | 22 | Tenant-to-rental matching | Partial | Explicit sale/rent intent with same-currency budget comparison; complete rental screening pending. |
 | 23 | Property-to-qualified-contact matching | Partial | Same engine in reverse; explicit qualification required by default. |
-| 24 | Dormant lead discovery/reactivation | Partial | Last meaningful contact >=30 days is flagged; no automatic communications. |
+| 24 | Dormant lead discovery/reactivation | Partial | Pure consent-aware, tenant-filtered qualified lead reactivation candidate helper and tests added; no automatic communications. |
 | 25 | Matching authorized Instagram leads | Partial | Consumes existing authorized CRM contact records; Meta provider configuration unverified. |
 | 26 | Structured preference profiles | Partial | Additive structured preferences and editable profile verified; no inferred FX or currencies. |
 | 27 | Explainable compatibility scoring | Partial | Criterion evidence, missing facts and hard conflicts; heuristic, not ML or probability. |
@@ -88,3 +88,5 @@ Updated 2026-10-15. This tracker reserves every ID from 1 to 75. The supplied pr
 - M2.4 (PR #27, pending validation): added a pure deterministic co-brokerage commission allocator with integer minor-unit rounding, explicit 100% allocation and tests. This is not a posted ledger entry, payment, or production feature.
 
 - M2.5 (PR #27, pending validation): pure domain helpers and regression tests added for development unit reservation (16), renovation feasibility (17), property-management SLA summaries (19), and remote-owner approval transitions (20). None are connected to database writes or a live UI. Tenant checks in pure functions do not replace server-enforced RLS.
+
+- M2.6 (pending): pure investment portfolio metrics (15), residential lease review windows (13) and consent-aware dormant lead review (24), with Vitest regression cases. No persistent writes, automatic contact, legal renewals or production activation.
