@@ -30,24 +30,19 @@ create policy "Autopilot owner create" on public.crm_automation_approvals for in
 revoke update on public.crm_automation_approvals from authenticated;
 create or replace function public.crm_decide_automation_approval(p_id uuid,p_status text)
 returns public.crm_automation_approvals
-language plpgsql security invoker set search_path = public
+language plpgsql security definer set search_path = public
 as $$
 declare result public.crm_automation_approvals;
 begin
  if p_status not in ('approved','dismissed','completed') then raise exception 'Invalid approval transition'; end if;
  update public.crm_automation_approvals
  set status=p_status,decided_at=now(),updated_at=now()
- where id=p_id and owner_id=auth.uid()
+ where id=p_id and owner_id=auth.uid() and exists (select 1 from public.crm_apps a where a.id=app_id and a.owner_id=auth.uid())
  and ((status='pending' and p_status in ('approved','dismissed')) or (status='approved' and p_status='completed'))
  returning * into result;
  if result.id is null then raise exception 'Approval not found or transition not permitted'; end if;
  return result;
 end $$;
--- SECURITY INVOKER RPC requires update privilege; use column-limited UPDATE policy instead.
-grant update(status,decided_at,updated_at) on public.crm_automation_approvals to authenticated;
-create policy "Autopilot owner decision" on public.crm_automation_approvals for update to authenticated
- using (owner_id=(select auth.uid()) and exists(select 1 from public.crm_apps a where a.id=app_id and a.owner_id=(select auth.uid())))
- with check (owner_id=(select auth.uid()) and exists(select 1 from public.crm_apps a where a.id=app_id and a.owner_id=(select auth.uid())));
 revoke all on function public.crm_decide_automation_approval(uuid,text) from public;
 grant execute on function public.crm_decide_automation_approval(uuid,text) to authenticated;
 comment on table public.crm_automation_approvals is 'Human approval ledger; approved means authorized for review, not executed or sent.';
