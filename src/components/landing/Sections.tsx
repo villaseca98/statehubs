@@ -235,7 +235,7 @@ export function Footer() {
           <Link to="/" className="text-xl" aria-label="StateHubs, inicio"><Logo dark size={32} /></Link>
           <p className="mt-3 max-w-xs text-sm text-estate-cream/75">A global CRM for real estate and holiday rentals.</p>
         </div>
-        {col('Product', [['#funciones', 'Features'], ['#leads', 'Instagram leads'], ['#turistico', 'Airbnb and Booking'], ['#para-quien', 'Who it's for'], ['/demo', 'Demo']])}
+        {col('Product', [['#funciones', 'Features'], ['#leads', 'Instagram leads'], ['#turistico', 'Airbnb and Booking'], ['#para-quien', 'Who it is for'], ['/demo', 'Demo']])}
         {col('Account', [['#empezar', 'Get started'], ['/register', 'Create account'], ['/login', 'Sign in']])}
       </div>
       <p className="mx-auto mt-12 max-w-6xl text-xs text-estate-cream/60">© {new Date().getFullYear()} StateHubs</p>
