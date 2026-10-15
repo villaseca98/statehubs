@@ -45,6 +45,24 @@ function eventFor(a: LocalApp, record: AppRecord, before?: RecordData) {
   (a.events ??= []).push({ id: uid(), record_id: record.id, actor_id: null, kind: before ? 'changed' : 'created', fields, body: null, created_at: now() });
 }
 export const localCrmApi: typeof crmApi = {
+  scheduleAutomation: async(id,when)=>{
+    const date=new Date(when);
+    if(!Number.isFinite(date.getTime())||date.getTime()<Date.now()||date.getTime()>Date.now()+365*86400000)throw new Error('Invalid schedule');
+    const store=load();
+    for(const app of Object.values(store)){
+      const item=app.automations?.find(a=>a.id===id&&a.status==='approved');
+      if(item){item.execute_after=date.toISOString();item.updated_at=now();save(store);return item}
+    }
+    throw new Error('Approved action not found');
+  },
+  unscheduleAutomation: async id=>{
+    const store=load();
+    for(const app of Object.values(store)){
+      const item=app.automations?.find(a=>a.id===id&&a.status==='approved');
+      if(item){item.execute_after=null;item.updated_at=now();save(store);return item}
+    }
+    throw new Error('Approved action not found');
+  },
   automationApprovalEvents: async appId => [...(load()[appId]?.automationEvents??[])].sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,100),
   automationApprovals: async appId => [...(load()[appId]?.automations??[])].sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,100),
   proposeAutomation: async (appId,ownerId,recordId,action,title,reason) => update(appId,a=>{
