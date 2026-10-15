@@ -2,7 +2,7 @@ import {useCallback,useEffect,useMemo,useState} from 'react';
 import {Check,ClipboardList,Loader2,ShieldCheck,X} from 'lucide-react';
 import type {AppRecord,Blueprint} from '@shared/blueprint/types.ts';
 import {crmApi} from '@/lib/crm/api';
-import type {AutomationApproval} from '@/lib/crm/api';
+import type {AutomationApproval,AutomationApprovalEvent} from '@/lib/crm/api';
 import {localCrmApi,isLocalApp} from '@/lib/crm/localApi';
 import {computeToday} from '@/lib/crm/today';
 import {prioritizeWork} from '@/lib/crm/operationalIntelligence';
@@ -12,11 +12,12 @@ export function AutopilotApprovalPanel({appId,blueprint,records,readOnly=false,o
  const {user}=useAuth();
  const api=appId&&isLocalApp(appId)?localCrmApi:crmApi;
  const [items,setItems]=useState<AutomationApproval[]>([]);
+ const [history,setHistory]=useState<AutomationApprovalEvent[]>([]);
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState('');
  const [expanded,setExpanded]=useState(false);
  const proposals=useMemo(()=>{const today=computeToday(blueprint,records);return prioritizeWork([...today.atrasado,...today.hoy,...today.proximo]).slice(0,8)},[blueprint,records]);
- const reload=useCallback(async()=>{if(!appId)return;try{setItems(await api.automationApprovals(appId));setError('')}catch(e){setError(e instanceof Error?e.message:'Unable to load approvals')}},[api,appId]);
+ const reload=useCallback(async()=>{if(!appId)return;try{const [approvals,events]=await Promise.all([api.automationApprovals(appId),api.automationApprovalEvents(appId)]);setItems(approvals);setHistory(events);setError('')}catch(e){setError(e instanceof Error?e.message:'Unable to load approvals')}},[api,appId]);
  useEffect(()=>{void reload()},[reload]);
  const propose=async(recordId:string,action:AutomationApproval['action_type'],title:string,reason:string)=>{
   if(!appId||busy||readOnly)return;
@@ -44,6 +45,7 @@ export function AutopilotApprovalPanel({appId,blueprint,records,readOnly=false,o
    }):<p className="text-sm" style={{color:'var(--crm-muted)'}}>No follow-ups need review.</p>}</div></div>
    <div><h3 className="text-sm font-semibold">Pending approval ({pending.length})</h3><div className="mt-2 space-y-2">{pending.map(a=><div key={a.id} className="flex flex-wrap items-center gap-2 rounded-xl border p-3" style={{borderColor:'var(--crm-border)'}}><div className="min-w-0 flex-1"><p className="text-sm font-semibold">{a.title}</p><p className="text-xs" style={{color:'var(--crm-muted)'}}>{a.reason}</p></div><button disabled={busy||readOnly} onClick={()=>void decide(a.id,'approved')} className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 disabled:opacity-50"><Check className="mr-1 inline h-3 w-3"/>Approve</button><button disabled={busy||readOnly} onClick={()=>void decide(a.id,'dismissed')} className="rounded-lg border px-3 py-2 text-xs disabled:opacity-50" style={{borderColor:'var(--crm-border)'}}><X className="mr-1 inline h-3 w-3"/>Dismiss</button></div>)}{!pending.length&&<p className="text-xs" style={{color:'var(--crm-muted)'}}>No pending approvals.</p>}</div></div>
    {approved.length>0&&<div><h3 className="text-sm font-semibold">Approved for manual execution ({approved.length})</h3><div className="mt-2 space-y-2">{approved.map(a=><div key={a.id} className="flex flex-wrap items-center gap-2 rounded-xl border p-3" style={{borderColor:'var(--crm-border)'}}><div className="min-w-0 flex-1"><p className="text-sm font-semibold">{a.title}</p><p className="text-xs" style={{color:'var(--crm-muted)'}}>Approved · not automatically executed</p></div><button onClick={()=>{const r=records.find(x=>x.id===a.source_record_id);if(r)onOpen(r)}} className="rounded-lg border px-3 py-2 text-xs" style={{borderColor:'var(--crm-border)'}}>Open record</button><button disabled={busy||readOnly} onClick={()=>void decide(a.id,'completed')} className="rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-50" style={{background:'var(--crm-primary)'}}>Mark done</button></div>)}</div></div>}
+   {history.length>0&&<div className="rounded-xl border p-4" style={{borderColor:'var(--crm-border)'}}><h3 className="text-sm font-semibold">Decision history</h3><ol className="mt-3 max-h-44 space-y-2 overflow-auto">{history.slice(0,20).map(event=><li key={event.id} className="flex flex-wrap justify-between gap-2 text-xs" style={{color:'var(--crm-muted)'}}><span>{event.previous_status} → {event.new_status}</span><time dateTime={event.created_at}>{new Date(event.created_at).toLocaleString()}</time></li>)}</ol></div>}
    <p className="flex items-center gap-2 text-xs" style={{color:'var(--crm-muted)'}}>{busy&&<Loader2 className="h-3 w-3 animate-spin"/>}Only the workspace owner can manage this approval queue. No background sending or execution is enabled.</p>
   </div>}
  </section>;
