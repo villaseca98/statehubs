@@ -59,6 +59,7 @@ export const localCrmApi: typeof crmApi = {
       const item=a.automations?.find(x=>x.id===id);
       if(!item)continue;
       if(!((item.status==='pending'&&['approved','dismissed'].includes(status))||(item.status==='approved'&&status==='completed')))throw new Error('Invalid approval transition');
+      if(status==='completed'&&!(a.events??[]).some(event=>event.id===id&&event.record_id===item.source_record_id&&event.kind==='note'))throw new Error('Missing CRM activity evidence');
       const previous_status=item.status;item.status=status;item.decided_at=now();item.updated_at=now();(a.automationEvents??=[]).push({id:uid(),approval_id:id,app_id:item.app_id,owner_id:item.owner_id,previous_status,new_status:status,created_at:now()});save(s);return item;
     }
     throw new Error('Approval not found');
