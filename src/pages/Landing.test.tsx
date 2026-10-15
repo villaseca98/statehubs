@@ -1,5 +1,5 @@
 import {beforeEach,describe,expect,it,vi} from 'vitest';
-import {fireEvent,render,screen,within} from '@testing-library/react';
+import {fireEvent,render,screen} from '@testing-library/react';
 import {MemoryRouter,Route,Routes,useLocation} from 'react-router-dom';
 import Landing from './Landing';
 
@@ -11,8 +11,7 @@ describe('Landing onboarding entry points',()=>{
  beforeEach(()=>localStorage.clear());
  it('offers three business models and sends guests to registration with their choice preserved',()=>{
   render(<MemoryRouter initialEntries={['/']}><Routes><Route path="/" element={<Landing/>}/><Route path="/register" element={<Destination/>}/></Routes></MemoryRouter>);
-  const group=screen.getByRole('group',{name:/agency|business|type/i});
-  const buttons=within(group).getAllByRole('button');
+  const buttons=screen.getAllByRole('button',{name:/Empezar con/i});
   expect(buttons).toHaveLength(3);
   fireEvent.click(buttons[1]);
   expect(screen.getByTestId('destination').textContent).toContain('/register?next=');
