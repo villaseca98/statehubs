@@ -226,7 +226,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             </div>}
             {contactView && !shown.some(r => r.entity === 'contacto_inmo') && <p role="status" className="mb-4 text-sm" style={{ color: 'var(--crm-muted)' }}>{contactsText.empty}</p>}
             {view && filters.entity && <div className="mb-4"><FilterBar filters={filters} records={records} titleOf={titleOf} dark={dark} /></div>}
-            {!view && hasPropertyModule && <PropertyFeed records={records} onOpen={(r)=>setOpenId(r.id)} onDelete={onDelete} readOnly={readOnly} canDelete={canDelete} />}
+            {!view && hasPropertyModule && <PropertyFeed records={records} onOpen={(r)=>setOpenId(r.id)} onDelete={onDelete} onMatch={()=>setHomeDetail('matches')} readOnly={readOnly} canDelete={canDelete} />}
             {!view && !hasPropertyModule && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r)=>setOpenId(r.id)} />}
             {(!view || view.type === 'ops') && <section className="mx-auto mt-5 max-w-2xl rounded-2xl border p-4" style={{borderColor:'var(--crm-border)',background:'var(--crm-surface)'}}>
               <div className="flex flex-wrap items-center justify-between gap-3">
