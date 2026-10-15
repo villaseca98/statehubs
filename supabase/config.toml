@@ -1,0 +1,2 @@
+[functions.crm-autopilot-worker]
+verify_jwt = false
