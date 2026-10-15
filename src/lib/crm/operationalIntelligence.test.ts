@@ -3,7 +3,7 @@ import {prioritizeWork,suggestWorkflows} from './operationalIntelligence';
 import type {TodayItem} from './today';
 const record={id:'lead-1',entity:'lead',data:{nombre:'Jane'}};
 const entity={key:'lead',label:'Lead'};
-const item=(id:string,bucket:'atrasado'|'hoy'|'proximo',reason:string,recordId='lead-1')=>({id,bucket,reason,title:'Jane',record:{...record,id:recordId},entity} as TodayItem);
+const item=(id:string,bucket:'atrasado'|'hoy'|'proximo',reason:string,recordId='lead-1')=>({id,bucket,reason,title:'Jane',record:{...record,id:recordId},entity} as unknown as TodayItem);
 describe('operational intelligence',()=>{
  it('prioritizes overdue work and avoids duplicate actions for the same record',()=>{
   const result=prioritizeWork([item('a','proximo','Call next week'),item('b','atrasado','Follow-up missed'),item('c','hoy','Viewing today','visit-1')]);
