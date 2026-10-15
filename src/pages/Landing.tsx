@@ -112,7 +112,7 @@ export default function Landing() {
         <Leads />
         <Numbers />
         <Channels />
-        <Audience onPick={(k) => { toStart(); void open(k); }} busy={!!busy} />
+        <Audience onPick={open} busy={!!busy} />
 
         <Closing>
           <section ref={start} id="empezar" aria-labelledby="empezar-title" className="scroll-mt-24">
