@@ -20,11 +20,12 @@ function Harness({ blueprint, records: initial }: { blueprint: Blueprint; record
 }
 
 describe('Workspace', () => {
-  it('opens on «Hoy» and moves between sections one at a time', () => {
+  it('opens property workspaces on the feed and moves between sections one at a time', () => {
     const bp = composeApp('crm', 'Mi CRM', modulesFor('crm').map((m) => m.key).filter((k) => k !== 'centro'));
     render(<Harness blueprint={bp} records={sampleRecordsFor(bp)} />);
-    expect(screen.getByRole('heading', { level: 1, name: 'Home' })).toBeTruthy();
-    expect(screen.getByRole('region', { name: 'Para hoy' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Properties' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Property feed' })).toBeTruthy();
+    expect(screen.queryByRole('region', { name: 'Para hoy' })).toBeNull();
 
     openSection(/Pipeline/);
     expect(screen.getByRole('heading', { level: 1, name: 'Pipeline' })).toBeTruthy();
@@ -55,12 +56,16 @@ describe('Workspace', () => {
     expect(screen.getAllByText('Clara V.').length).toBeGreaterThan(0);
   });
 
-  it('opens on the operations centre when it comes first, instead of «Hoy»', () => {
+  it('opens on one property card even when the operations centre is first, keeping operations reachable', () => {
     const bp = composePack('ambos', 'Inmobiliaria');
     render(<Harness blueprint={bp} records={sampleRecordsFor(bp)} />);
-    expect(screen.getByRole('heading', { level: 1, name: 'Operations center' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Properties' })).toBeTruthy();
+    expect(screen.getAllByRole('region', { name: 'Property feed' })).toHaveLength(1);
+    expect(screen.queryByRole('region', { name: 'Cifras del día' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Para hoy' })).toBeNull();
     expect(screen.queryByRole('button', { name: /Nuevo/ })).toBeNull();
+    expect(screen.getByRole('combobox', { name: 'Workspace tool' })).toHaveValue('');
+    openSection('Operations center');
     expect(screen.getByRole('region', { name: 'Cifras del día' })).toBeTruthy();
     expect(screen.getByText('Ocupación hoy')).toBeTruthy();
     expect(screen.getByText('Comisión prevista')).toBeTruthy();
@@ -75,7 +80,8 @@ describe('Workspace', () => {
   it('shows the property cards with price, badge and quick filters', () => {
     const bp = composePack('ambos', 'Inmobiliaria');
     render(<Harness blueprint={bp} records={sampleRecordsFor(bp)} />);
-    openSection(/^(Inmuebles|Properties)$/);
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Hubs' })).getByRole('button', { name: 'More' }));
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Sections' })).getByRole('button', { name: 'Properties' }));
     const list = screen.getByRole('list', { name: 'Inmuebles' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(8);
     expect(within(list).getByText(/118\s€ \/ noche/)).toBeTruthy();
