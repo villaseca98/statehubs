@@ -13,6 +13,7 @@ describe('Autopilot approval lifecycle in local demo',()=>{
   expect(approved.status).toBe('approved');
   await expect(localCrmApi.decideAutomation(proposal.id,'dismissed')).rejects.toThrow('Invalid approval transition');
   expect((await localCrmApi.decideAutomation(proposal.id,'completed')).status).toBe('completed');
+  expect((await localCrmApi.automationApprovalEvents(app.id)).map(e=>e.new_status)).toEqual(['completed','approved']);
  });
  it('rejects proposals for records outside the workspace',async()=>{
   const app=await localCrmApi.createApp('local');
