@@ -56,7 +56,7 @@ export function CommandPalette({ blueprint, records, sections, onClose, onRecord
         <label className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: '1px solid var(--crm-border)' }}>
           <Search className="h-4 w-4 shrink-0" style={{ color: 'var(--crm-muted)' }} />
           <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} role="combobox" aria-expanded="true" aria-controls="crm-palette-list"
-            aria-label="Search or ask for actions" placeholder="Search, overdue follow-ups, match buyers, properties for rent…" className="w-full bg-transparent text-[1.05em] outline-none"
+            aria-label="Buscar" placeholder="Search, overdue follow-ups, match buyers, properties for rent…" className="w-full bg-transparent text-[1.05em] outline-none"
             onKeyDown={(e) => {
               if (e.key === 'ArrowDown') { e.preventDefault(); setAt((i) => Math.min(hits.length - 1, i + 1)); }
               if (e.key === 'ArrowUp') { e.preventDefault(); setAt((i) => Math.max(0, i - 1)); }
