@@ -21,7 +21,7 @@ describe('account access', () => {
  it('signs in without creating users and prevents external return URLs', async () => {
   show('/login?next=//example.com'); submit();
   await waitFor(() => expect(auth.signInWithOtp).toHaveBeenCalled());
-  expect(auth.signInWithOtp.mock.calls[0][0].options).toEqual({ shouldCreateUser: false, emailRedirectTo: `${window.location.origin}/workspace` });
+  expect(auth.signInWithOtp.mock.calls[0][0].options).toEqual({ shouldCreateUser: false, emailRedirectTo: `${window.location.origin}/auth/callback?next=%2Fworkspace` });
  });
  it('shows transport errors and permits retry', async () => {
   auth.signInWithOtp.mockRejectedValueOnce(new Error('Connection unavailable'));

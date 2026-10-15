@@ -11,7 +11,7 @@ import { CHANNEL, E } from './palette';
 // leads, the big numbers, the honest part about Airbnb and Booking, who it
 // is for, the closing call and the footer.
 
-const WORDS = ['Captación', 'Visitas', 'Arras', 'Leads de Instagram', 'Propietarios', 'Llegadas', 'Limpiezas', 'Licencia turística', 'Neto por reserva', 'Comisiones', 'Calendario iCal', 'Embudo de ventas'];
+const WORDS = ['Lead capture', 'Viewings', 'Offers', 'Instagram leads', 'Owners', 'Arrivals', 'Cleaning', 'Holiday permits', 'Net per booking', 'Commissions', 'iCal calendar', 'Sales pipeline'];
 
 export function Marquee() {
   const row = (hidden: boolean) => (
@@ -24,19 +24,19 @@ export function Marquee() {
     </ul>
   );
   return (
-    <section aria-label="Lo que lleva StateHubs" className="relative overflow-hidden border-y border-estate-line bg-white/50 py-6"
+    <section aria-label="What StateHubs brings together" className="relative overflow-hidden border-y border-estate-line bg-white/50 py-6"
       style={{ maskImage: 'linear-gradient(90deg, transparent, black 12%, black 88%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, black 12%, black 88%, transparent)' }}>
       <div className="sh-marquee">{row(false)}{row(true)}</div>
     </section>
   );
 }
 
-// ---- Leads de Instagram ----------------------------------------------------------
+// ---- Instagram leads ----------------------------------------------------------
 
 const STEPS: [typeof MessageCircle, string, string][] = [
-  [MessageCircle, 'Contesta al momento', 'A las dos de la mañana o en pleno puente. Nadie se queda esperando.'],
-  [UserCheck, 'Pregunta lo que importa', 'Para vivir o invertir, zona, presupuesto y financiación. Lo apunta en la ficha del contacto.'],
-  [CalendarCheck, 'Agenda la visita', 'Ofrece huecos de tu agenda y la cita aparece en Hoy, con el inmueble y el agente.'],
+  [MessageCircle, 'Reply instantly', 'Even late at night, every enquiry gets a timely reply.'],
+  [UserCheck, 'Ask the right questions', 'Capture intent, preferred area, budget and financing in a contact profile.'],
+  [CalendarCheck, 'Schedule the viewing', 'Suggest available appointment slots and link the viewing to the property and agent.'],
 ];
 
 export function Leads() {
@@ -45,8 +45,8 @@ export function Leads() {
       <Mesh dark intensity={0.9} />
       <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-16 lg:grid-cols-[1.05fr_1fr]">
         <div>
-          <SectionHead dark center={false} id="leads-title" eyebrow="Automatización de leads" title={<>Cualifica y agenda <span className="sh-accent">mientras duermes</span>.</>}
-            text="Un bot en el Instagram de tu agencia responde a quien pregunta por un piso, le hace las preguntas de siempre y le da cita. Por la mañana tienes el lead en el CRM, puntuado y con la visita puesta." />
+          <SectionHead dark center={false} id="leads-title" eyebrow="Lead workflows" title={<>Qualify and schedule <span className="sh-accent">while you sleep</span>.</>}
+            text="Turn authorized Instagram enquiries into structured leads, with qualification and scheduling workflows when integrations are configured." />
           <ol className="mt-10 space-y-5">
             {STEPS.map(([Icon, title, text], i) => (
               <Reveal key={title} delay={i * 0.08}>
@@ -61,7 +61,7 @@ export function Leads() {
         <Reveal delay={0.1} className="pb-24">
           <figure>
             <InstagramMock />
-            <figcaption className="sr-only">Conversación de Instagram en la que el bot pregunta y agenda una visita; el contacto entra en el CRM como lead caliente.</figcaption>
+            <figcaption className="sr-only">Illustrative Instagram lead conversation and appointment scheduling preview.</figcaption>
           </figure>
         </Reveal>
       </div>
@@ -70,15 +70,15 @@ export function Leads() {
 }
 
 const FIGURES: [string, string, string][] = [
-  ['1', 'sola app', 'Compraventa, alquiler y turístico comparten contactos, inmuebles y equipo.'],
-  ['24 h', 'atendiendo Instagram', 'El bot contesta y agenda a cualquier hora, también en festivos.'],
-  ['2', 'calendarios por anuncio', 'El de Airbnb y el de Booking, en la misma fila del alojamiento.'],
-  ['0 €', 'para probarlo', 'Sin tarjeta y sin cuenta: se abre en tu navegador con datos de ejemplo.'],
+  ['1', 'connected app', 'Sales and rentals can share contacts, properties and teams.'],
+  ['24 h', 'Instagram coverage', 'Configure authorized lead responses and appointment workflows.'],
+  ['2', 'calendars per listing', 'Airbnb and Booking calendars in one property view.'],
+  ['0 €', 'to explore', 'Explore a browser-based demo without creating an account.'],
 ];
 
 export function Numbers() {
   return (
-    <section aria-label="StateHubs en cifras" className="px-4 py-20 sm:py-28">
+    <section aria-label="StateHubs at a glance" className="px-4 py-20 sm:py-28">
       <div className="mx-auto grid max-w-6xl gap-px overflow-hidden rounded-[28px] border border-estate-line bg-estate-line sm:grid-cols-2 lg:grid-cols-4">
         {FIGURES.map(([n, label, text], i) => (
           <Reveal key={label} delay={i * 0.07} className="h-full">
@@ -94,7 +94,7 @@ export function Numbers() {
   );
 }
 
-// ---- Airbnb y Booking, sin humo --------------------------------------------------
+// ---- Airbnb and Booking, sin humo --------------------------------------------------
 
 function Source({ name, color, sub }: { name: string; color: string; sub: string }) {
   return (
@@ -113,25 +113,25 @@ function Wire({ delay = '0s' }: { delay?: string }) {
   );
 }
 
-const YES = ['Las reservas entran solas por el enlace iCal de cada anuncio', 'Se crean, se mueven o se cancelan cuando cambian en la plataforma', 'Los solapes entre canales se marcan en rojo', 'Limpiezas y llegadas salen en Hoy, con su hora'];
-const NO = ['Precios y tarifas', 'Mensajes con huéspedes', 'Pagos y cobros de la plataforma'];
+const YES = ['Las reservas entran solas por el enlace iCal de cada anuncio', 'Se crean, se mueven o se cancelan cuando cambian en la plataforma', 'Los solapes entre canales se marcan en rojo', 'Cleaning y llegadas salen en Hoy, con su hora'];
+const NO = ['Pricing and rates', 'Guest messages', 'Platform payments and collections'];
 
 export function Channels() {
   return (
     <section id="turistico" aria-labelledby="turistico-title" className="relative scroll-mt-24 overflow-hidden px-4 py-24 sm:py-32">
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
         <div>
-          <SectionHead center={false} id="turistico-title" eyebrow="Airbnb y Booking" title={<>Sincronizado, <span className="sh-accent">sin humo</span>.</>}
-            text="Pegas el enlace del calendario iCal de cada anuncio y las reservas aparecen en su fila. Solo fechas. Te contamos qué hace y qué no, sin letra pequeña." />
+          <SectionHead center={false} id="turistico-title" eyebrow="Airbnb and Booking" title={<>Sincronizado, <span className="sh-accent">sin humo</span>.</>}
+            text="Connect each listing's iCal calendar to view booking dates in one place. Calendar sync does not manage payments or messages." />
           <Reveal delay={0.1} className="mt-8 grid gap-6 sm:grid-cols-2">
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-estate-ink">Qué hace</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-estate-ink">What it does</h3>
               <ul className="mt-3 space-y-2.5 text-sm text-estate-muted">
                 {YES.map((t) => <li key={t} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-estate-moss" />{t}</li>)}
               </ul>
             </div>
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-estate-ink">Qué no hace</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-estate-ink">What it does not do</h3>
               <ul className="mt-3 space-y-2.5 text-sm text-estate-muted">
                 {NO.map((t) => <li key={t} className="flex gap-2"><X className="mt-0.5 h-4 w-4 shrink-0 text-estate-muted" />{t}</li>)}
               </ul>
@@ -157,7 +157,7 @@ export function Channels() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-2 flex items-center justify-between text-[10px] text-estate-muted"><span>Última lectura: hace 12 min</span><span className="font-semibold text-estate-moss">3 reservas</span></div>
+                <div className="mt-2 flex items-center justify-between text-[10px] text-estate-muted"><span>Last synced: 12 min ago</span><span className="font-semibold text-estate-moss">3 reservas</span></div>
               </div>
             </div>
             <figcaption className="sr-only">Los calendarios iCal de Airbnb y de Booking llenan la fila del alojamiento en StateHubs.</figcaption>
@@ -168,19 +168,19 @@ export function Channels() {
   );
 }
 
-// ---- Para quién ------------------------------------------------------------------
+// ---- Who it's for ------------------------------------------------------------------
 
 const WHO: { key: PackKey; icon: typeof Building2; title: string; lead: string; points: string[] }[] = [
-  { key: 'compraventa', icon: Building2, title: 'Compraventa', lead: 'Captas, enseñas y cierras.', points: ['Compradores y vendedores con su próxima acción', 'Leads de Instagram cualificados y con visita', 'Embudos de captación, venta y alquiler', 'Cartera con fotos, precio y estado'] },
-  { key: 'turistico', icon: KeyRound, title: 'Alquiler turístico', lead: 'Gestionas pisos de propietarios.', points: ['Reservas de Airbnb y Booking por alojamiento', 'Limpiezas y check-in del día', 'Neto de cada reserva: importe − comisión − gastos', 'Licencia e incidencias en la ficha'] },
-  { key: 'ambos', icon: Layers, title: 'Las dos cosas', lead: 'Vendes, alquilas y gestionas turísticos.', points: ['Un propietario puede vender un piso y alquilar otro', 'Mismos contactos, inmuebles y equipo', 'Un solo «Hoy» con todo lo del día', 'Sin pagar ni aprender dos programas'] },
+  { key: 'compraventa', icon: Building2, title: 'Real Estate', lead: 'Find clients, show homes and close deals.', points: ['Buyers and sellers with clear next steps', 'Qualified Instagram leads and viewings', 'Lead, sales and rental pipelines', 'Property listings with photos, prices and status'] },
+  { key: 'turistico', icon: KeyRound, title: 'Holiday Rentals', lead: 'Manage properties for owners.', points: ['Airbnb and Booking reservations by property', 'Daily cleaning and check-in', 'Net booking value: revenue minus fees and costs', 'Permits and incidents in property records'] },
+  { key: 'ambos', icon: Layers, title: 'Both businesses', lead: 'Sell, rent and manage short stays.', points: ['One owner can sell one property and rent another', 'Shared contacts, properties and team', 'One Today dashboard for daily operations', 'One workspace instead of two separate systems'] },
 ];
 
 export function Audience({ onPick, busy }: { onPick: (k: PackKey) => void; busy: boolean }) {
   return (
     <section id="para-quien" aria-labelledby="para-quien-title" className="scroll-mt-24 px-4 py-24 sm:py-32">
-      <SectionHead id="para-quien-title" eyebrow="Para quién" title={<>Hecho para agencias <span className="sh-accent">de verdad</span>.</>}
-        text="De una persona a un equipo entero. Elige cómo trabajas y se abre con lo que usas." />
+      <SectionHead id="para-quien-title" eyebrow="Who it's for" title={<>Built for real estate <span className="sh-accent">teams</span>.</>}
+        text="From solo agents to full teams. Choose the tools your business needs." />
       <div className="mx-auto mt-14 grid max-w-6xl gap-4 sm:gap-5 md:grid-cols-3">
         {WHO.map(({ key, icon: Icon, title, lead, points }, i) => {
           const dark = key === 'ambos';
@@ -233,10 +233,10 @@ export function Footer() {
       <div className="mx-auto grid max-w-6xl gap-10 sm:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <Link to="/" className="text-xl" aria-label="StateHubs, inicio"><Logo dark size={32} /></Link>
-          <p className="mt-3 max-w-xs text-sm text-estate-cream/75">El CRM para inmobiliarias y alquiler turístico. Hecho en España.</p>
+          <p className="mt-3 max-w-xs text-sm text-estate-cream/75">A global CRM for real estate and holiday rentals.</p>
         </div>
-        {col('Producto', [['#funciones', 'Funciones'], ['#leads', 'Leads de Instagram'], ['#turistico', 'Airbnb y Booking'], ['#para-quien', 'Para quién'], ['/demo', 'Demo']])}
-        {col('Cuenta', [['#empezar', 'Empezar gratis'], ['/entrar', 'Entrar'], ['/reels', 'Reels']])}
+        {col('Product', [['#funciones', 'Features'], ['#leads', 'Instagram leads'], ['#turistico', 'Airbnb and Booking'], ['#para-quien', 'Who it is for'], ['/demo', 'Demo']])}
+        {col('Account', [['#empezar', 'Get started'], ['/register', 'Create account'], ['/login', 'Sign in']])}
       </div>
       <p className="mx-auto mt-12 max-w-6xl text-xs text-estate-cream/60">© {new Date().getFullYear()} StateHubs</p>
     </footer>

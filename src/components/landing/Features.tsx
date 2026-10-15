@@ -27,39 +27,39 @@ function Tile({ icon: Icon, kicker, title, text, children, className = '', delay
 export function Features() {
   return (
     <section id="funciones" aria-labelledby="funciones-title" className="relative scroll-mt-24 px-4 py-24 sm:py-32">
-      <SectionHead id="funciones-title" eyebrow="Funciones" title={<>Todo lo que pasa en tu agencia, <span className="sh-accent">en un sitio</span>.</>}
-        text="Pensado para el día a día de una inmobiliaria: lo que entra, lo que se enseña, lo que se vende y lo que se alquila." />
+      <SectionHead id="funciones-title" eyebrow="Features" title={<>Everything your agency needs, <span className="sh-accent">in one place</span>.</>}
+        text="Built for real estate teams: leads, viewings, sales, rentals and tasks in one connected workspace." />
       <div className="mx-auto mt-14 grid max-w-6xl gap-4 sm:gap-5 lg:grid-cols-6">
-        <Tile className="lg:col-span-4" icon={LayoutDashboard} kicker="Centro de operaciones" title="Abres la app y sabes qué toca hoy"
-          text="Llegadas, salidas, limpiezas y visitas del día, con los avisos arriba: solapes, llegadas sin limpieza, cobros pendientes.">
+        <Tile className="lg:col-span-4" icon={LayoutDashboard} kicker="Operations center" title="Know what needs attention today"
+          text="Arrivals, departures, cleaning and viewings, with alerts for overlaps and pending tasks.">
           <OpsMock />
         </Tile>
-        <Tile className="lg:col-span-2" delay={0.08} icon={CalendarDays} kicker="Agenda" title="La semana de un vistazo"
-          text="Visitas, llamadas y recordatorios del equipo, con lo que agenda el bot de Instagram.">
+        <Tile className="lg:col-span-2" delay={0.08} icon={CalendarDays} kicker="Schedule" title="Your week at a glance"
+          text="Viewings, calls, reminders and appointments from connected channels.">
           <AgendaMock />
         </Tile>
-        <Tile className="lg:col-span-6" side icon={CalendarRange} kicker="Calendario de reservas" title="Una fila por alojamiento, un color por canal"
-          text="Las reservas de Airbnb, Booking y las directas en el mismo calendario. Si dos se pisan, la barra se marca en rojo y el aviso sale en Hoy.">
+        <Tile className="lg:col-span-6" side icon={CalendarRange} kicker="Booking calendar" title="One row per property, one color per channel"
+          text="See Airbnb, Booking and direct reservations together, with overlap alerts.">
           <CalendarMock />
         </Tile>
-        <Tile className="lg:col-span-3" icon={Home} kicker="Fichas de inmuebles" title="Cada inmueble, con sus fotos y lo que importa"
-          text="Venta, alquiler o turístico: precio, habitaciones, metros, licencia y ocupación en la misma ficha.">
+        <Tile className="lg:col-span-3" icon={Home} kicker="Property profiles" title="Property photos and the details that matter"
+          text="Sales, rentals and short stays: pricing, bedrooms, area and occupancy in one record.">
           <PropertiesMock />
         </Tile>
-        <Tile className="lg:col-span-3" delay={0.08} icon={TrendingUp} kicker="Ventas y objetivos" title="Sabes cómo va el trimestre"
-          text="Ventas cerradas mes a mes, el objetivo en un donut y qué tipo de inmueble se mueve más.">
+        <Tile className="lg:col-span-3" delay={0.08} icon={TrendingUp} kicker="Sales and targets" title="Track your quarterly performance"
+          text="See closed deals, progress against targets and active property types.">
           <SalesMock />
         </Tile>
-        <Tile className="lg:col-span-2" icon={Filter} kicker="Filtros" title="«Casos cerrados» a un clic"
-          text="Filtra como en Notion y guarda la vista: cerradas este mes, perdidas, por agente o por zona.">
+        <Tile className="lg:col-span-2" icon={Filter} kicker="Filters" title="Closed deals in one click"
+          text="Filter by stage, agent, location or date and save your views.">
           <FiltersMock />
         </Tile>
-        <Tile className="lg:col-span-2" delay={0.08} icon={Command} kicker="Búsqueda ⌘K" title="Encuentra cualquier cosa"
-          text="Un piso, un huésped, un propietario o una reserva. Escribe tres letras y ya está.">
+        <Tile className="lg:col-span-2" delay={0.08} icon={Command} kicker="Search ⌘K" title="Find anything fast"
+          text="Search properties, guests, owners and reservations from one place.">
           <CommandMock />
         </Tile>
-        <Tile className="lg:col-span-2" delay={0.16} icon={Moon} kicker="Modo oscuro" title="De día y de noche"
-          text="Para revisar las llegadas a las once de la noche sin quedarte ciego.">
+        <Tile className="lg:col-span-2" delay={0.16} icon={Moon} kicker="Dark mode" title="Comfortable day or night"
+          text="A calmer workspace for late-night operations.">
           <DarkModeMock />
         </Tile>
       </div>

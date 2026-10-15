@@ -23,7 +23,9 @@ export default function Login() {
   useEffect(() => { document.title = `${register ? text.register : text.signIn} · StateHubs`; }, [register, text]);
   useEffect(() => { if (user) navigate(next, { replace: true }); }, [user, next, navigate]);
 
-  const redirectTo = `${window.location.origin}${next}`;
+  // OAuth/magic-link callbacks must return through a route registered in Supabase Auth.
+  // Preserve the requested workspace onboarding path through the redirect allow-list.
+  const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
   const google = async () => {
     if (!supabase || state === 'sending') return;
     setState('sending'); setError('');
