@@ -171,9 +171,9 @@ export function Channels() {
 // ---- Who it's for ------------------------------------------------------------------
 
 const WHO: { key: PackKey; icon: typeof Building2; title: string; lead: string; points: string[] }[] = [
-  { key: 'compraventa', icon: Building2, title: 'Real Estate', lead: 'Find clients, show homes and close deals.', points: ['Buyers and sellers with clear next steps', 'Qualified Instagram leads and viewings', 'Embudos de captación, venta y alquiler', 'Cartera con fotos, precio y estado'] },
-  { key: 'turistico', icon: KeyRound, title: 'Holiday Rentals', lead: 'Manage properties for owners.', points: ['Airbnb and Booking reservations by property', 'Daily cleaning and check-in', 'Neto de cada reserva: importe − comisión − gastos', 'Licencia e incidencias en la ficha'] },
-  { key: 'ambos', icon: Layers, title: 'Both businesses', lead: 'Sell, rent and manage short stays.', points: ['One owner can sell one property and rent another', 'Shared contacts, properties and equipo', 'Un solo «Hoy» con todo lo del día', 'Sin pagar ni aprender dos programas'] },
+  { key: 'compraventa', icon: Building2, title: 'Real Estate', lead: 'Find clients, show homes and close deals.', points: ['Buyers and sellers with clear next steps', 'Qualified Instagram leads and viewings', 'Lead, sales and rental pipelines', 'Property listings with photos, prices and status'] },
+  { key: 'turistico', icon: KeyRound, title: 'Holiday Rentals', lead: 'Manage properties for owners.', points: ['Airbnb and Booking reservations by property', 'Daily cleaning and check-in', 'Net booking value: revenue minus fees and costs', 'Permits and incidents in property records'] },
+  { key: 'ambos', icon: Layers, title: 'Both businesses', lead: 'Sell, rent and manage short stays.', points: ['One owner can sell one property and rent another', 'Shared contacts, properties and team', 'One Today dashboard for daily operations', 'One workspace instead of two separate systems'] },
 ];
 
 export function Audience({ onPick, busy }: { onPick: (k: PackKey) => void; busy: boolean }) {
