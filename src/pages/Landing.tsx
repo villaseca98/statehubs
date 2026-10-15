@@ -24,7 +24,7 @@ import type { PackKey } from '@shared/blueprint/modules.ts';
 // cream, white, forest green and lime. Pieces live in components/landing.
 
 const PACK_ICON: Record<PackKey, typeof Building2> = { compraventa: Building2, turistico: CalendarRange, ambos: Layers };
-const PACK_NAME: Record<PackKey, string> = { compraventa: 'Mi inmobiliaria', turistico: 'Mis alojamientos', ambos: 'Mi inmobiliaria' };
+const PACK_NAME: Record<PackKey, string> = { compraventa: 'My real estate business', turistico: 'My holiday rentals', ambos: 'My real estate business' };
 
 export default function Landing() {
   const { user, loading } = useAuth();
@@ -53,6 +53,12 @@ export default function Landing() {
 
   // Each answer opens the same unified app with the pieces that business uses.
   const open = async (pack: PackKey) => {
+    // Account-first onboarding: never create anonymous browser-only production workspaces.
+    const mode = pack === 'turistico' ? 'holidays' : pack === 'ambos' ? 'both' : 'real-estate';
+    navigate(user ? '/onboarding?mode='+mode : '/register?next='+encodeURIComponent('/onboarding?mode='+mode));
+    return;
+  };
+  const legacyOpen = async (pack: PackKey) => {
     setBusy(pack); setError('');
     try {
       const { api, app } = await newApp();
@@ -79,7 +85,7 @@ export default function Landing() {
   return (
     <MotionConfig reducedMotion="user">
     <div className="min-h-screen overflow-x-clip bg-estate-cream text-estate-ink">
-      <a href="#empezar" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-estate-forest focus:px-4 focus:py-2 focus:text-white">Saltar a empezar</a>
+      <a href="#empezar" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-estate-forest focus:px-4 focus:py-2 focus:text-white">Skip to get started</a>
       <Nav onStart={toStart} account={!loading && (user
         ? <Link to="/workspace" className="hidden max-w-[12rem] truncate text-estate-forest sm:inline">{t('yourApps')}</Link>
         : <Link to="/login" className="rounded-full px-3 py-2 font-medium text-estate-ink transition hover:bg-estate-forest/[.06]">{t('signIn')}</Link>)} />
@@ -88,18 +94,18 @@ export default function Landing() {
         <ScrollHero onStart={toStart} />
 
         {apps.length > 0 && (
-          <section aria-label="Tus aplicaciones" className="mx-auto max-w-6xl px-4 pt-16">
+          <section aria-label="Your workspaces" className="mx-auto max-w-6xl px-4 pt-16">
             <h2 className="mb-4 font-serif text-2xl">{t('yourApps')}</h2>
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {apps.map((a) => (
                 <li key={a.id} className="flex items-center justify-between rounded-2xl border border-estate-line bg-white p-4 transition hover:shadow-md">
                   <Link to={`/app/${a.id}`} className="min-w-0">
                     <span className="block truncate font-medium">{a.name}</span>
-                    <span className="text-xs text-estate-muted">{a.current_version ? `Versión ${a.current_version}` : 'Sin crear todavía'} · {new Date(a.updated_at).toLocaleDateString('es-ES')}{isLocalApp(a.id) && ' · en este navegador'}</span>
+                    <span className="text-xs text-estate-muted">{a.current_version ? `Version ${a.current_version}` : 'Not configured yet'} · {new Date(a.updated_at).toLocaleDateString('en-GB')}{isLocalApp(a.id) && ' · in this browser'}</span>
                   </Link>
                   <span className="flex items-center">
-                    <button aria-label={`Borrar ${a.name}`} onClick={() => remove(a)} className="rounded-full p-2 text-estate-muted hover:text-red-700"><Trash2 className="h-4 w-4" /></button>
-                    <Link to={`/app/${a.id}`} aria-label={`Abrir ${a.name}`} className="rounded-full p-2 text-estate-forest"><ArrowRight className="h-4 w-4" /></Link>
+                    <button aria-label={`Delete ${a.name}`} onClick={() => remove(a)} className="rounded-full p-2 text-estate-muted hover:text-red-700"><Trash2 className="h-4 w-4" /></button>
+                    <Link to={`/app/${a.id}`} aria-label={`Open ${a.name}`} className="rounded-full p-2 text-estate-forest"><ArrowRight className="h-4 w-4" /></Link>
                   </span>
                 </li>
               ))}
@@ -121,7 +127,7 @@ export default function Landing() {
               <h2 id="empezar-title" className="mt-4 text-balance font-serif text-[2.5rem] font-normal leading-[1.02] tracking-[-0.02em] text-white sm:text-[4rem]">{t('agencyQuestion')}</h2>
               <p className="mx-auto mt-4 max-w-xl text-pretty text-estate-cream/75 sm:text-lg">{t('browserOnly')}</p>
             </Reveal>
-            <div role="group" aria-label="Tipo de agencia" className="mt-10 grid gap-3 sm:gap-4 md:grid-cols-3">
+            <div role="group" aria-label="Business type" className="mt-10 grid gap-3 sm:gap-4 md:grid-cols-3">
               {PACKS.map((p) => {
                 const Icon = PACK_ICON[p.key];
                 const main = p.key === 'ambos';
@@ -142,21 +148,21 @@ export default function Landing() {
               })}
             </div>
             {error && <p role="alert" className="mt-3 text-sm text-red-200">{error}</p>}
-            <p className="mt-8 text-center text-sm text-estate-cream/75">{t('previewFirst')} <Link to="/demo" className="font-semibold text-white underline decoration-estate-lime/50 underline-offset-4 hover:decoration-estate-lime">{t('openDemo')}</Link>, sin crear nada.</p>
+            <p className="mt-8 text-center text-sm text-estate-cream/75">{t('previewFirst')} <Link to="/demo" className="font-semibold text-white underline decoration-estate-lime/50 underline-offset-4 hover:decoration-estate-lime">{t('openDemo')}</Link>, without creating an account.</p>
 
             {/* A discreet way in for agencies that do not fit the three answers. */}
             <details className="group mx-auto mt-6 max-w-2xl text-sm">
-              <summary className="cursor-pointer list-none text-center text-estate-cream/70 underline decoration-white/20 underline-offset-4 hover:text-white">¿No encaja ninguna? Descríbenos tu agencia</summary>
+              <summary className="cursor-pointer list-none text-center text-estate-cream/70 underline decoration-white/20 underline-offset-4 hover:text-white">None of these fit? Describe your business</summary>
               <form className="mt-4 rounded-[22px] border border-white/15 bg-white/[.06] p-2" onSubmit={(e) => { e.preventDefault(); void ask(); }}>
-                <label htmlFor="pedir" className="block px-3 pt-2 text-sm font-medium text-white">Descríbenos tu agencia</label>
+                <label htmlFor="pedir" className="block px-3 pt-2 text-sm font-medium text-white">Describe your business</label>
                 <textarea id="pedir" value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={2} maxLength={4000}
                   onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void ask(); } }}
-                  placeholder="Somos tres agentes en Valencia, vendemos pisos y gestionamos 12 apartamentos turísticos en Airbnb y Booking."
+                  placeholder="We are three agents selling homes and managing 12 holiday apartments."
                   className="w-full resize-none bg-transparent px-3 py-2 text-sm text-white outline-none placeholder:text-estate-cream/50" />
                 <div className="flex items-center justify-between gap-2 px-3 pb-2">
-                  <span className="text-xs text-estate-cream/65">{user ? 'Se guarda en tu cuenta. Si el servidor falla, no se creará una copia local.' : 'Sin cuenta: se guarda solo en este navegador.'}</span>
+                  <span className="text-xs text-estate-cream/65">{user ? 'Saved to your account. We do not silently fall back to local storage.' : 'Without an account, this draft is stored only in this browser.'}</span>
                   <button disabled={!!busy || !prompt.trim()} className="inline-flex items-center gap-1.5 rounded-full bg-estate-lime px-4 py-2 text-sm font-semibold text-estate-forest transition disabled:opacity-50">
-                    {busy === 'chat' && <Loader2 className="h-4 w-4 animate-spin" />} Crear mi app
+                    {busy === 'chat' && <Loader2 className="h-4 w-4 animate-spin" />} Create my workspace
                   </button>
                 </div>
               </form>
