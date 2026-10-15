@@ -23,6 +23,7 @@ const en = {
  tools: 'Workspace tools', chooseTool: 'Choose a tool', operations: 'Operations', intelligence: 'Today Intelligence', overview: 'Overview', insights: 'Insights',
  detailsLabel: 'Property details',
  inbox: 'Inbox', calendar: 'Calendar', secondary: 'More',
+ add: 'Add property',
 };
 const es: Record<keyof typeof en, string> = {
  properties:'Inmuebles',real:'Inmobiliaria',holiday:'Alquiler vacacional',sale:'En venta',rent:'En alquiler',
@@ -46,5 +47,6 @@ const es: Record<keyof typeof en, string> = {
  beds:'Habitaciones',baths:'Baños',area:'Superficie',status:'Estado',
  tools:'Herramientas del espacio',chooseTool:'Elige una herramienta',operations:'Operaciones',intelligence:'Prioridades de hoy',overview:'Resumen',insights:'Análisis',detailsLabel:'Detalles del inmueble',
  inbox:'Bandeja',calendar:'Calendario',secondary:'Más',
+ add:'Añadir inmueble',
 };
 export function usePropertyFeedText() { return useI18n().language === 'es' ? es : en; }

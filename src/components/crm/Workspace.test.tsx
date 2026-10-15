@@ -20,6 +20,13 @@ function Harness({ blueprint, records: initial }: { blueprint: Blueprint; record
 }
 
 describe('Workspace', () => {
+  it('lets an empty property workspace create its first real record from home', async () => {
+    render(<Harness blueprint={composePack('ambos', 'Agency')} records={[]} />);
+    expect(screen.getByText('No properties in this category')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Add property' }));
+    expect(await screen.findByRole('dialog')).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Properties' })).toBeTruthy();
+  });
   it('opens property workspaces on the feed and moves between sections one at a time', () => {
     const bp = composeApp('crm', 'Mi CRM', modulesFor('crm').map((m) => m.key).filter((k) => k !== 'centro'));
     render(<Harness blueprint={bp} records={sampleRecordsFor(bp)} />);

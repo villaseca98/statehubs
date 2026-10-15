@@ -123,6 +123,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
   const titleOf = useMemo(() => makeTitleLookup(blueprint.entities, records), [blueprint.entities, records]);
   const pending = useMemo(() => { const t = computeToday(blueprint, records, now); return t.hoy.length + t.atrasado.length; }, [blueprint, records, now]);
   const entity = view?.entity ? blueprint.entities.find((e) => e.key === view.entity) : undefined;
+  const createEntity = entity ?? (!view && hasPropertyModule ? blueprint.entities.find(e => isProperty(e.key)) : undefined);
   const filters = useViewFilters(blueprint, view && FILTERED.has(view.type) ? view : null, records, { appId, titleOf, now });
   const baseShown = filters.entity ? filters.records : records;
   const contactView = entity?.key === 'contacto_inmo';
@@ -211,10 +212,10 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
                 </p>
                 <h1 className="mt-1 truncate text-[1.9em] font-normal leading-tight tracking-[-0.02em] md:text-[2.8em]">{view ? englishLabel(view.key, view.label) : labelOf(HOY)}</h1>
               </div>
-              {entity && !readOnly && (
-                <button onClick={() => create(entity.key)} className="sh-touch inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(180,22,54,.28)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(180,22,54,.32)] active:scale-[.98] motion-reduce:transform-none"
+              {createEntity && !readOnly && (
+                <button onClick={() => create(createEntity.key)} className="sh-touch inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(180,22,54,.28)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(180,22,54,.32)] active:scale-[.98] motion-reduce:transform-none"
                   style={{ background: ACCENT }}>
-                  <Plus className="h-4 w-4" /> <span className="hidden sm:inline">New: {entity.label.toLowerCase()}</span><span className="sm:hidden">New</span>
+                  <Plus className="h-4 w-4" /> {!view && hasPropertyModule ? <span>{propertyText.add}</span> : <><span className="hidden sm:inline">New: {createEntity.label.toLowerCase()}</span><span className="sm:hidden">New</span></>}
                 </button>
               )}
             </div>

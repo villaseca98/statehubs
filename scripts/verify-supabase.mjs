@@ -1,4 +1,19 @@
 /** Read-only activation audit. Never prints keys, tokens, users or record contents. */
+import { spawnSync } from 'node:child_process';
+import { existsSync, readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+// The cloud network uses an HTTPS proxy; Node fetch does not use it by default.
+if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.execArgv.includes('--use-env-proxy') && process.env.NODE_USE_ENV_PROXY !== '1') {
+ if (!process.allowedNodeEnvironmentFlags.has('--use-env-proxy')) {
+  console.error('BLOCKED Use the environment\'s Node 24 runtime for HTTPS proxy support.');
+  process.exit(1);
+ }
+ const child = spawnSync(process.execPath, ['--use-env-proxy', fileURLToPath(import.meta.url)], { env: process.env, stdio: 'inherit' });
+ process.exit(child.status ?? 1);
+}
+const localConfig = new URL('../.env.local', import.meta.url);
+if (existsSync(localConfig)) process.loadEnvFile(localConfig);
 const url = process.env.VITE_SUPABASE_URL;
 const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const token = process.env.SUPABASE_ACCESS_TOKEN;
@@ -7,10 +22,10 @@ function result(name, ok, detail) {
  console.log(`${ok ? 'PASS' : 'BLOCKED'} ${name}${detail ? `: ${detail}` : ''}`);
  if (!ok) failed = true;
 }
-async function request(name, destination, options = {}) {
+async function request(name, destination, options = {}, allowedStatuses = []) {
  try {
   const response = await fetch(destination, { ...options, signal: AbortSignal.timeout(20000) });
-  if (!response.ok) { result(name, false, `HTTP ${response.status}`); return null; }
+  if (!response.ok && !allowedStatuses.includes(response.status)) { result(name, false, `HTTP ${response.status}`); return null; }
   return await response.json();
  } catch { result(name, false, 'Request could not complete; check network access and configuration.'); return null; }
 }
@@ -28,8 +43,8 @@ if (key) {
 if (key) {
  const settings = await request('Auth settings', `${base.origin}/auth/v1/settings`, { headers: { apikey: key } });
  if (settings) result('Auth reachable with public key', true);
- const rest = await request('REST API', `${base.origin}/rest/v1/`, { headers: { apikey: key } });
- if (rest) result('REST API reachable with public key', true);
+ const anonymous = await request('Anonymous CRM read', `${base.origin}/rest/v1/crm_apps?select=id&limit=0`, { headers: { apikey: key } }, [401, 403]);
+ if (anonymous) result('Anonymous CRM access denied by database privileges', anonymous.code === '42501');
 }
 if (!token) result('SUPABASE_ACCESS_TOKEN', false, 'Supply a management access token securely to inspect deployed configuration.');
 if (token) {
@@ -43,6 +58,7 @@ if (token) {
   result('Auth Site URL', auth.site_url === 'https://statehubs.vercel.app', auth.site_url === 'https://statehubs.vercel.app' ? undefined : 'Expected https://statehubs.vercel.app; review before changing an existing application.');
   result('Email signup enabled', auth.external_email_enabled === true && auth.disable_signup !== true);
   result('Email confirmation enabled', auth.mailer_autoconfirm === false);
+  result('Custom SMTP configured for public email delivery', Boolean(auth.smtp_host));
   // SMTP and Google activation must also be exercised with real sign-in callbacks, not inferred here.
  }
  const functions = await request('Edge functions', `${endpoint}/functions`, { headers });
@@ -59,7 +75,11 @@ if (token) {
   }
  }
  const migrations = await request('Migration history', `${endpoint}/database/query`, { headers, method: 'POST', body: JSON.stringify({ read_only: true, query: 'select version from supabase_migrations.schema_migrations order by version' }) });
- if (Array.isArray(migrations)) console.log(`INFO Recorded migration versions: ${migrations.map(m => m.version).join(', ')}`);
+ if (Array.isArray(migrations)) {
+  const expected = readdirSync(new URL('../supabase/migrations/', import.meta.url)).filter(name => name.endsWith('.sql')).map(name => name.split('_')[0]);
+  const deployed = new Set(migrations.map(m => m.version));
+  result('CRM migration history complete', expected.every(version => deployed.has(version)), `${expected.filter(version => deployed.has(version)).length}/${expected.length} repository migrations recorded`);
+ }
  const bucket = await request('Property media bucket', `${endpoint}/database/query`, { headers, method: 'POST', body: JSON.stringify({ read_only: true, query: "select id, public from storage.buckets where id = 'crm-property-media'" }) });
  if (Array.isArray(bucket)) result('Private property media bucket', bucket.some(b => b.id === 'crm-property-media' && b.public === false));
 }

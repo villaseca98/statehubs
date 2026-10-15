@@ -1,5 +1,7 @@
 # PR #37 stabilization and Supabase activation
 
+Subsequent real Supabase activation and current external blockers: [SUPABASE_ACTIVATION](SUPABASE_ACTIVATION.md).
+
 Primary product reference: [CODEX_STATEHUBS_MASTER_CONTEXT](CODEX_STATEHUBS_MASTER_CONTEXT.md), read in full from `fix/clean-crm-home-no-duplicate-panels` at `a6f3ed6d45f48ddee14cf28a239421216336cfa2`.
 
 ## Scope delivered locally
