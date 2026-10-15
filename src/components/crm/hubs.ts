@@ -2,7 +2,7 @@ import type { View } from '@shared/blueprint/types.ts';
 
 // The sections of an app, grouped in a few hubs so the navigation reads like
 // the business (today, clients, properties, holiday lets, the company) instead
-// of a long list. Sections the hubs don't know go to «Empresa».
+// of a long list. Sections the hubs don't know go to Business.
 
 export type HubKey = 'hoy' | 'clientes' | 'inmuebles' | 'turistico' | 'empresa';
 
@@ -18,14 +18,14 @@ const KNOWN: Record<string, HubKey> = {
   calendario: 'turistico', reservas: 'turistico', limpiezas: 'turistico', incidencias: 'turistico',
 };
 
-const ORDER: [HubKey, string][] = [['hoy', 'Hoy'], ['clientes', 'Clientes'], ['inmuebles', 'Inmuebles'], ['turistico', 'Turístico'], ['empresa', 'Empresa']];
+const ORDER: [HubKey, string][] = [['hoy', 'Home'], ['clientes', 'Clients'], ['inmuebles', 'Properties'], ['turistico', 'Rentals'], ['empresa', 'Business']];
 
 export function hubOf(view: View): HubKey {
   return KNOWN[view.key] ?? (view.type === 'ops' ? 'hoy' : 'empresa');
 }
 
 // Hubs with something in them, in a fixed order. Without an operations
-// centre, «Hoy» holds the built-in today screen (HOY).
+// centre, Home holds the built-in today screen (HOY).
 export function hubsFor(sections: View[]): Hub[] {
   const hubs: Hub[] = ORDER.map(([key, label]) => ({ key, label, sections: [] }));
   for (const v of sections) hubs.find((h) => h.key === hubOf(v))!.sections.push(v.key);
