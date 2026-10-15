@@ -8,6 +8,12 @@ import type { BusyInterval } from '@shared/blueprint/slots.ts';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = () => server() as any;
 
+export interface AutomationApproval {
+ id:string; app_id:string; owner_id:string; source_record_id:string;
+ action_type:'follow_up'|'confirm_appointment'|'review_deadline';
+ title:string; reason:string; status:'pending'|'approved'|'dismissed'|'completed';
+ created_at:string; decided_at:string|null; updated_at:string;
+}
 export interface MatchDecision { app_id: string; contact_id: string; property_id: string; status: 'saved'|'dismissed'|'suggested'; actor_id: string|null; updated_at: string }
 export interface RecordEvent { id: string; record_id: string; actor_id: string | null; kind: 'created' | 'changed' | 'note' | 'call' | 'meeting'; body: string | null; fields: string[]; created_at: string }
 export interface CrmApp { id: string; org_id?: string | null; name: string; current_version: number | null; updated_at: string }
@@ -41,6 +47,9 @@ async function must<T>(p: PromiseLike<{ data: T; error: { message: string } | nu
 }
 
 export const crmApi = {
+  automationApprovals: (appId:string) => must<AutomationApproval[]>(db().from('crm_automation_approvals').select('*').eq('app_id',appId).order('created_at',{ascending:false}).limit(100)),
+  proposeAutomation: (appId:string,ownerId:string,recordId:string,action:AutomationApproval['action_type'],title:string,reason:string) => must<AutomationApproval>(db().from('crm_automation_approvals').insert({app_id:appId,owner_id:ownerId,source_record_id:recordId,action_type:action,title,reason}).select('*').single()),
+  decideAutomation: (id:string,status:'approved'|'dismissed'|'completed') => must<AutomationApproval>(db().rpc('crm_decide_automation_approval',{p_id:id,p_status:status})),
   matchDecisions: async (appId: string) => {
     const rows: MatchDecision[] = [];
     for (let offset = 0; ; offset += 500) {
