@@ -13,7 +13,7 @@ import { Nav } from '@/components/landing/Nav';
 import { Features } from '@/components/landing/Features';
 import { Audience, Channels, Closing, Footer, Leads, Marquee, Numbers } from '@/components/landing/Sections';
 import { Reveal } from '@/components/landing/Backdrop';
-import { getModule, PACKS } from '@shared/blueprint/modules.ts';
+import { PACKS } from '@shared/blueprint/modules.ts';
 import type { PackKey } from '@shared/blueprint/modules.ts';
 
 // Landing: the public web of the CRM for estate agencies and holiday lets.
@@ -24,6 +24,11 @@ import type { PackKey } from '@shared/blueprint/modules.ts';
 // cream, white, forest green and lime. Pieces live in components/landing.
 
 const PACK_ICON: Record<PackKey, typeof Building2> = { compraventa: Building2, turistico: CalendarRange, ambos: Layers };
+const PACK_COPY: Record<PackKey,{title:string;description:string;features:string[]}> = {
+ compraventa:{title:'Real Estate',description:'Turn enquiries into viewings, offers and closed deals.',features:['Properties','Contacts','Sales pipeline','Viewings']},
+ turistico:{title:'Holiday Rentals',description:'Manage stays, guests, availability and daily operations.',features:['Bookings','Guests','Calendar','Turnovers']},
+ ambos:{title:'Real Estate + Holidays',description:'Run sales and short stays in one connected workspace.',features:['Properties','Leads','Reservations','Operations']},
+};
 
 export default function Landing() {
   const { user, loading } = useAuth();
@@ -125,12 +130,12 @@ export default function Landing() {
                     className={`group flex flex-col rounded-[26px] border p-5 text-left transition duration-300 hover:-translate-y-1 disabled:opacity-60 ${main ? 'border-estate-lime bg-estate-cream text-estate-ink' : 'border-white/15 bg-white/[.06] text-white hover:bg-white/[.1]'}`}>
                     <span className="flex items-center gap-3">
                       <span className={`grid h-11 w-11 place-items-center rounded-full ${main ? 'bg-estate-forest text-estate-lime' : 'bg-estate-lime text-estate-forest'}`}><Icon className="h-5 w-5" /></span>
-                      <span className="font-serif text-2xl">{p.name}</span>
+                      <span className="font-serif text-2xl">{PACK_COPY[p.key].title}</span>
                       {busy === p.key ? <Loader2 className="ml-auto h-5 w-5 animate-spin" /> : <ArrowRight className={`ml-auto h-5 w-5 transition group-hover:translate-x-0.5 ${main ? 'text-estate-forest' : 'text-estate-cream/70'}`} />}
                     </span>
-                    <span className={`mt-3 block text-sm ${main ? 'text-estate-muted' : 'text-estate-cream/75'}`}>{p.pitch}</span>
+                    <span className={`mt-3 block text-sm ${main ? 'text-estate-muted' : 'text-estate-cream/75'}`}>{PACK_COPY[p.key].description}</span>
                     <span className="mt-4 flex flex-wrap gap-1.5">
-                      {p.modules.filter((k) => k !== 'centro').map((k) => <span key={k} className={`rounded-full px-2 py-0.5 text-xs ${main ? 'bg-estate-sand text-estate-ink' : 'bg-white/10 text-estate-cream/85'}`}>{getModule(k)?.name}</span>)}
+                      {PACK_COPY[p.key].features.map((feature) => <span key={feature} className={`rounded-full px-2 py-0.5 text-xs ${main ? 'bg-estate-sand text-estate-ink' : 'bg-white/10 text-estate-cream/85'}`}>{feature}</span>)}
                     </span>
                   </button>
                 );
