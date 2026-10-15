@@ -1,6 +1,6 @@
 # StateHubs — 75-capability tracker
 
-Updated 2026-10-13. This tracker reserves every ID from 1 to 75. The supplied prompt defines 12–30 and 36–40 only; undefined IDs are deliberately not assigned invented requirements. Earlier code is inventoried in FEATURE_MATRIX.md. “Partial” distinguishes implemented code from remaining business acceptance or live configuration. No status here asserts production activation.
+Updated 2026-10-15. This tracker reserves every ID from 1 to 75. The supplied prompt defines 12–30 and 36–40 only; undefined IDs are deliberately not assigned invented requirements. Earlier code is inventoried in FEATURE_MATRIX.md. “Partial” distinguishes implemented code from remaining business acceptance or live configuration. No status here asserts production activation.
 
 | ID | Capability | Status | Evidence / remaining work |
 | --- | --- | --- | --- |
@@ -16,7 +16,7 @@ Updated 2026-10-13. This tracker reserves every ID from 1 to 75. The supplied pr
 | 10 | Definition not supplied | Awaiting definition | Reserved for the corresponding master prompt; no completion claim. |
 | 11 | Definition not supplied | Awaiting definition | Reserved for the corresponding master prompt; no completion claim. |
 | 12 | Residential and commercial brokerage | Partial | Existing property/deal modules; no specialized commercial asset workflow. |
-| 13 | Long-term residential rentals | Partial | Rental listings/pipeline exist; leases, rent schedules and renewals pending. |
+| 13 | Long-term residential rentals | Partial | Rental listings/pipeline exist; tested pure monthly rent schedule helper added on feature branch. Persisted leases, payments and renewals pending. |
 | 14 | Holiday and short-term rentals | Partial | Reservations/iCal/calendar exist; transactional double-booking prevention pending. |
 | 15 | Real estate investment management | Partial | Investor role and deterministic preferences; portfolio valuations and returns pending. |
 | 16 | Development and new-build sales | Planned | Planned: development/unit inventory and reservations. |
@@ -84,3 +84,5 @@ Updated 2026-10-13. This tracker reserves every ID from 1 to 75. The supplied pr
 
 - M2.1: matching engine replaces the dashboard budget-margin heuristic with explicit criteria, currency checks, availability, dimensional constraints and missing-data reporting. Targeted engine tests executed before its commit.
 - M2.2: profile cards, persistent decisions, reverse matching and viewing creation verified at 390/1440 px. Full suite: 254 tests. PostgreSQL tenant/read-only/audit/duplicate-pair checks pass; live database activation remains pending. See MATCH_INTELLIGENCE.md.
+
+- M2.3 (proposed): deterministic monthly rent schedule helper and Vitest regression tests added on feature branch. Not integrated into UI or database; CI execution pending. No production activation claimed.
