@@ -82,7 +82,7 @@ function Listing() {
       </Photo>
       <div className="mt-1.5 grid grid-cols-3 gap-1.5">{[0, 1, 2].map((i) => <Photo key={i} className="h-[40px] rounded-lg" />)}</div>
       <div className="mt-2 flex items-end justify-between">
-        <span className="leading-tight"><span className="block text-[18px] font-bold" style={{ ...NUM, color: C.text }}>330.000 €</span><span className="text-[9px]" style={{ color: C.muted }}>3 beds · 2 baños · 110 m² · 4 visitas</span></span>
+        <span className="leading-tight"><span className="block text-[18px] font-bold" style={{ ...NUM, color: C.text }}>330.000 €</span><span className="text-[9px]" style={{ color: C.muted }}>3 beds · 2 baths · 110 m² · 4 viewings</span></span>
         <span className="rounded-full px-2.5 py-1 text-[10px] font-semibold text-white" style={{ background: E.forest }}>Ver ficha</span>
       </div>
     </Card>
@@ -337,7 +337,7 @@ export function ScrollHero({ onStart }: { onStart: () => void }) {
               <Caption title={<>Open your CRM and <span className="sh-accent">know what's next</span>.</>} text="Viewings, arrivals, cleaning and sales in one view, with clear overlap alerts." />
             </Line>
             <Line p={p} from={[0.32, 0.36]} to={[0.46, 0.5]}>
-              <Caption title={<>Leads that arrive <span className="sh-accent">qualified</span>.</>} text="Configure authorized Instagram lead qualification and viewing scheduling workflows. Tú lo encuentras aquí por la mañana." />
+              <Caption title={<>Leads that arrive <span className="sh-accent">qualified</span>.</>} text="Configure authorized Instagram lead qualification and viewing scheduling workflows. Review qualified leads from your CRM." />
             </Line>
             <Line p={p} from={[0.5, 0.54]} to={[0.7, 0.74]}>
               <Caption title={<>Te avisa <span className="sh-accent">antes</span> de que pase.</>} text="Dos reservas en el mismo piso la misma noche: lo ves en rojo antes de que nadie llegue a la puerta." />
