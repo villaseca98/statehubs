@@ -19,6 +19,7 @@ import { LivingWorkspace } from './LivingWorkspace';
 import { BusinessModeCards } from './BusinessModeCards';
 import { ModulePlanner } from './ModulePlanner';
 import { IntelligenceCommandCenter } from './IntelligenceCommandCenter';
+import { AutopilotApprovalPanel } from './AutopilotApprovalPanel';
 import { OpportunityUniverse } from './OpportunityUniverse';
 import { MatchDesk } from './MatchDesk';
 import { CardsView } from './CardsView';
@@ -224,6 +225,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             {contactView && !shown.some(r => r.entity === 'contacto_inmo') && <p role="status" className="mb-4 text-sm" style={{ color: 'var(--crm-muted)' }}>{contactsText.empty}</p>}
             {view && filters.entity && <div className="mb-4"><FilterBar filters={filters} records={records} titleOf={titleOf} dark={dark} /></div>}
             {(!view || view.type === 'ops') && hasPropertyModule && <IntelligenceCommandCenter blueprint={blueprint} records={records} now={now} onOpen={(r)=>setOpenId(r.id)} onCreate={onCreate} readOnly={readOnly} />}
+            {(!view || view.type === 'ops') && hasPropertyModule && <AutopilotApprovalPanel appId={appId} blueprint={blueprint} records={records} readOnly={readOnly} onOpen={(r)=>setOpenId(r.id)} />}
             {(!view || view.type === 'ops') && hasPropertyModule && <ModulePlanner appId={appId ?? blueprint.name} />}
             {(!view || view.type === 'ops') && hasPropertyModule && <BusinessModeCards mode={businessMode} onChoose={chooseBusinessMode} />}
             {(!view || view.type === 'ops') && hasPropertyModule && businessMode !== 'holiday-rentals' && <div className="mb-3 flex items-center justify-end gap-2" role="group" aria-label="Opportunity display"><span className="mr-auto text-xs" style={{color:'var(--crm-muted)'}}>Match Intelligence · one engine, two views</span>{(['cards','universe'] as const).map(p=><button key={p} type="button" aria-pressed={matchPresentation===p} onClick={()=>setMatchPresentation(p)} className="rounded-full border px-3 py-1.5 text-xs font-semibold" style={{borderColor:'var(--crm-border)',background:matchPresentation===p?'var(--crm-primary)':'var(--crm-surface)',color:matchPresentation===p?'white':'var(--crm-text)'}}>{p==='cards'?'Match cards':'Opportunity universe'}</button>)}</div>}
