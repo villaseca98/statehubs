@@ -17,7 +17,7 @@ create unique index if not exists crm_automation_approvals_one_pending on public
 create index if not exists crm_automation_approvals_owner_queue on public.crm_automation_approvals(owner_id,app_id,status,created_at desc);
 alter table public.crm_automation_approvals enable row level security;
 revoke all on public.crm_automation_approvals from anon;
-grant select, insert, update on public.crm_automation_approvals to authenticated;
+grant select, insert on public.crm_automation_approvals to authenticated;
 create policy "Autopilot owner read" on public.crm_automation_approvals for select to authenticated using (
  owner_id = (select auth.uid()) and exists (select 1 from public.crm_apps a where a.id=app_id and a.owner_id=(select auth.uid()))
 );
@@ -30,7 +30,7 @@ create policy "Autopilot owner create" on public.crm_automation_approvals for in
 revoke update on public.crm_automation_approvals from authenticated;
 create or replace function public.crm_decide_automation_approval(p_id uuid,p_status text)
 returns public.crm_automation_approvals
-language plpgsql security definer set search_path = public
+language plpgsql security definer set search_path = ''
 as $$
 declare result public.crm_automation_approvals;
 begin
@@ -46,3 +46,38 @@ end $$;
 revoke all on function public.crm_decide_automation_approval(uuid,text) from public;
 grant execute on function public.crm_decide_automation_approval(uuid,text) to authenticated;
 comment on table public.crm_automation_approvals is 'Human approval ledger; approved means authorized for review, not executed or sent.';
+
+-- Immutable audit of every approval decision, accessible only to its owner.
+create table if not exists public.crm_automation_approval_events (
+ id uuid primary key default gen_random_uuid(),
+ approval_id uuid not null references public.crm_automation_approvals(id) on delete cascade,
+ app_id uuid not null references public.crm_apps(id) on delete cascade,
+ owner_id uuid not null references auth.users(id) on delete cascade,
+ previous_status text not null,
+ new_status text not null,
+ created_at timestamptz not null default now()
+);
+create index if not exists crm_automation_approval_events_lookup on public.crm_automation_approval_events(approval_id,created_at desc);
+alter table public.crm_automation_approval_events enable row level security;
+revoke all on public.crm_automation_approval_events from public, anon, authenticated;
+grant select on public.crm_automation_approval_events to authenticated;
+create policy "Autopilot owner audit read" on public.crm_automation_approval_events
+ for select to authenticated using (
+ owner_id=(select auth.uid()) and exists(select 1 from public.crm_apps a where a.id=app_id and a.owner_id=(select auth.uid()))
+);
+create or replace function public.crm_audit_automation_decision()
+returns trigger language plpgsql security definer set search_path = ''
+as $$
+begin
+ if old.status is distinct from new.status then
+  insert into public.crm_automation_approval_events
+   (approval_id,app_id,owner_id,previous_status,new_status)
+   values(new.id,new.app_id,new.owner_id,old.status,new.status);
+ end if;
+ return new;
+end $$;
+drop trigger if exists crm_audit_automation_decision on public.crm_automation_approvals;
+create trigger crm_audit_automation_decision after update of status
+ on public.crm_automation_approvals for each row
+ execute function public.crm_audit_automation_decision();
+revoke all on function public.crm_audit_automation_decision() from public;
