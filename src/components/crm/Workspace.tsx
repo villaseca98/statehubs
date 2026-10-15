@@ -23,6 +23,7 @@ import { DealMomentumBoard } from './DealMomentumBoard';
 import { OpportunityUniverse } from './OpportunityUniverse';
 import { MatchDesk } from './MatchDesk';
 import { CardsView } from './CardsView';
+import { PropertyFeed } from './PropertyFeed';
 import { RuntimeContext } from './runtimeContext';
 import { FilterBar } from './FilterBar';
 import { useViewFilters } from './useViewFilters';
@@ -232,7 +233,8 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             {(!view || view.type === 'ops') && hasPropertyModule && businessMode !== 'holiday-rentals' && (matchPresentation==='cards'?<MatchDesk records={records} onOpen={(r)=>setOpenId(r.id)} />:<OpportunityUniverse records={records} onOpen={(r)=>setOpenId(r.id)} />)}
             {(!view || view.type === 'ops') && <LivingWorkspace blueprint={blueprint} records={records} onOpen={(r) => setOpenId(r.id)} />}
             {(!view || view.type === 'ops') && <OperationsDashboard blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
-            {!view && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
+            {!view && hasPropertyModule && <PropertyFeed records={records} onOpen={(r)=>setOpenId(r.id)} />}
+            {!view && !hasPropertyModule && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
             {view && view.type === 'worklist' && (
               <WorklistView blueprint={blueprint} view={view} records={shown} dark={dark} titleOf={titleOf} selectedId={openId}
                 onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
