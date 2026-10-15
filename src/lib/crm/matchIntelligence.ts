@@ -13,6 +13,7 @@ const leadMode = (r: AppRecord): MatchMode | null => {
   return null;
 };
 const interested = (r: AppRecord) => ['comprador', 'inversor', 'arrendatario', ''].includes(str(r.data.tipo));
+const currencyOf = (r: AppRecord) => str(r.data.moneda || r.data.currency || 'eur').toUpperCase();
 const nameOf = (r: AppRecord) => str(r.data.nombre || r.data.usuario || r.data.direccion);
 export function matchOpportunities(records: AppRecord[], mode: MatchMode): MatchResult[] {
   const properties = records.filter(r => r.entity === 'inmueble' && propertyMode(r) === mode && !['vendido','alquilado','retirado','reservado'].includes(str(r.data.estado)));
@@ -27,6 +28,7 @@ export function matchOpportunities(records: AppRecord[], mode: MatchMode): Match
     const sqm = num(buyer.data.metros_min);
     const kind = str(buyer.data.tipo_deseado);
     for (const property of properties) {
+      if (currencyOf(buyer) !== currencyOf(property)) continue; // Never compare nominal amounts across currencies.
       const reasons: string[] = [], gaps: string[] = [];
       let points = 0, possible = 0;
       const price = num(property.data.precio);
