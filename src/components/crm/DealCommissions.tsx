@@ -3,7 +3,7 @@ import type { AppRecord } from '@shared/blueprint/types';
 import { crmApi } from '@/lib/crm/api';
 import { isLocalApp, localCrmApi } from '@/lib/crm/localApi';
 import { CURRENCY_CODES } from '@/lib/crm/currencies';
-import { moneyUnits,formatUnits,validateCommission,shareBalance,type CommissionLedger } from '@/lib/crm/commissions';
+import { moneyUnits,formatUnits,validateCommission,shareBalance,type CommissionLedger,type CommissionReceipt } from '@/lib/crm/commissions';
 import { commissionText as t } from '@/i18n/commissions';
 const control='mt-1 block min-h-11 w-full rounded-lg border p-2';
 const button='min-h-11 rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-50';
@@ -14,6 +14,12 @@ export function DealCommissions({appId,record,readOnly}:{appId?:string;record:Ap
  const [error,setError]=useState(''),[notice,setNotice]=useState(''),[currency,setCurrency]=useState(''),[total,setTotal]=useState('');
  const [shares,setShares]=useState([{recipient:'',amount:''}]);const [share,setShare]=useState('0'),[amount,setAmount]=useState(''),[reference,setReference]=useState('');const request=useRef<string|null>(null);
  useEffect(()=>{if(!appId)return;let active=true;setLoading(true);setLoaded(false);setError('');api.commissionLedger(record.id).then(value=>{if(active){setLedger(value);setLoaded(true);}},e=>{if(active)setError(e instanceof Error?e.message:t.error);}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[appId,record.id,api,refresh]);
+ const [reversing,setReversing]=useState<CommissionReceipt|null>(null),[reason,setReason]=useState('');const reversalRequest=useRef<string|null>(null);
+ const reverse=async(e:React.FormEvent)=>{
+  e.preventDefault();if(!ledger||!reversing||readOnly||busy||!loaded)return;setBusy(true);setError('');setNotice('');
+  try{reversalRequest.current??=crypto.randomUUID();const row=await api.reverseCommissionReceipt(reversing.id,reason,reversalRequest.current);setLedger({...ledger,receipts:[...ledger.receipts.filter(r=>r.id!==row.id),row]});setReversing(null);setReason('');reversalRequest.current=null;setNotice(t.saved);}
+  catch(e){setError(e instanceof Error?e.message:t.error);}finally{setBusy(false);}
+ };
  const edit=()=>{request.current=null;setNotice('');};
  const submit=async(e:React.FormEvent)=>{
   e.preventDefault();if(!appId||!loaded||busy||readOnly)return;setError('');setNotice('');setBusy(true);
@@ -41,7 +47,8 @@ export function DealCommissions({appId,record,readOnly}:{appId?:string;record:Ap
    </>:<><label className="block text-sm">{t.share}<select aria-label={t.share} value={share} onChange={e=>{edit();setShare(e.target.value);}} className={control} style={style}>{ledger.shares.map((s,i)=><option key={i} value={i}>{s.recipient}</option>)}</select></label><label className="block text-sm">{t.receiptAmount}<input required inputMode="decimal" value={amount} onChange={e=>{edit();setAmount(e.target.value);}} className={control} style={style}/></label><label className="block text-sm">{t.reference}<input required maxLength={500} value={reference} onChange={e=>{edit();setReference(e.target.value);}} className={control} style={style}/></label></>}
    <button className={`${button} block`} style={{background:'var(--crm-primary)',color:'var(--crm-primary-text)'}}>{ledger?t.receipt:t.create}</button>
   </fieldset></form>}
-  {!!ledger?.receipts.length&&<ol aria-label={t.history} className="space-y-2">{[...ledger.receipts].reverse().map(r=><li key={r.id} className="rounded-lg border p-3 text-sm" style={style}><strong>{formatUnits(r.units,ledger.currency)} · {ledger.shares[r.share_index].recipient}</strong><p className="break-words">{r.reference}</p><time dateTime={r.created_at}>{new Date(r.created_at).toLocaleString('en')}</time><p className="break-all text-xs">{t.actor}: {actor(r.actor_id)}</p></li>)}</ol>}
+  {!!ledger?.receipts.length&&<ol aria-label={t.history} className="space-y-2">{[...ledger.receipts].reverse().map(r=><li key={r.id} className="rounded-lg border p-3 text-sm" style={style}><strong>{formatUnits(r.units,ledger.currency)} · {ledger.shares[r.share_index].recipient}</strong><p className="break-words">{r.reference}</p>{r.reverses&&<p className="text-xs">{t.reversal}</p>}{ledger.receipts.some(entry=>entry.reverses===r.id)&&<p className="text-xs">{t.reversed}</p>}<time dateTime={r.created_at}>{new Date(r.created_at).toLocaleString('en')}</time><p className="break-all text-xs">{t.actor}: {actor(r.actor_id)}</p>{!readOnly&&r.units>0&&!ledger.receipts.some(entry=>entry.reverses===r.id)&&<button type="button" disabled={busy||!loaded} className={button} onClick={()=>{setReversing(r);setReason('');reversalRequest.current=null;setNotice('');}}>{t.reverse}</button>}</li>)}</ol>}
+  {reversing&&ledger&&!readOnly&&<form onSubmit={reverse} className="space-y-3 rounded-lg border p-3" style={style} aria-label={t.reverse}><p className="text-sm">{t.reversalHelp}</p><p className="break-words text-sm font-semibold">{formatUnits(reversing.units,ledger.currency)} · {reversing.reference}</p><label className="block text-sm">{t.reason}<textarea autoFocus required maxLength={500} disabled={busy} value={reason} onChange={e=>{setReason(e.target.value);reversalRequest.current=null;}} className={control} style={style}/></label><div className="flex flex-wrap gap-2"><button className={button} disabled={busy||!reason.trim()}>{t.confirm}</button><button type="button" className={button} disabled={busy} onClick={()=>setReversing(null)}>{t.cancel}</button></div></form>}
  </>}
  </section>;
 }

@@ -43,6 +43,7 @@ async function must<T>(p: PromiseLike<{ data: T; error: { message: string } | nu
 }
 
 export const crmApi = {
+  reverseCommissionReceipt: (receiptId:string,reason:string,request:string) => must<CommissionReceipt>(db().rpc('crm_reverse_commission_receipt',{p_receipt:receiptId,p_reason:reason,p_request:request})),
   commissionLedger: async (dealId:string):Promise<CommissionLedger|null> => {
     const ledger=await must<Omit<CommissionLedger,'receipts'>|null>(db().from('crm_commission_ledgers').select('*').eq('deal_id',dealId).maybeSingle());
     if(!ledger)return null;

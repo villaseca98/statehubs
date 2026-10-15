@@ -47,6 +47,16 @@ function eventFor(a: LocalApp, record: AppRecord, before?: RecordData) {
   (a.events ??= []).push({ id: uid(), record_id: record.id, actor_id: null, kind: before ? 'changed' : 'created', fields, body: null, created_at: now() });
 }
 export const localCrmApi: typeof crmApi = {
+  reverseCommissionReceipt: async (receiptId,reason,request) => {
+    const store=load();const app=Object.values(store).find(a=>a.commissions?.some(l=>l.receipts.some(r=>r.id===receiptId)));const ledger=app?.commissions?.find(l=>l.receipts.some(r=>r.id===receiptId));const original=ledger?.receipts.find(r=>r.id===receiptId);
+    if(!app||!ledger||!original)throw new Error('Receipt unavailable');
+    if(!reason.trim()||reason.length>500||original.units<=0||original.reverses)throw new Error('Invalid receipt reversal');
+    const existing=Object.values(store).flatMap(a=>a.commissions??[]).flatMap(l=>l.receipts).find(r=>r.id===request);
+    if(existing){if(existing.reverses===receiptId&&existing.reference===reason)return existing;throw new Error('Reversal request already used');}
+    if(ledger.receipts.some(r=>r.reverses===receiptId))throw new Error('Receipt already reversed. Reload the ledger');
+    const receipt:CommissionReceipt={id:request,deal_id:ledger.deal_id,share_index:original.share_index,units:-original.units,reference:reason,actor_id:null,created_at:now(),reverses:original.id};ledger.receipts.push(receipt);
+    (app.events??=[]).push({id:uid(),record_id:ledger.deal_id,actor_id:null,kind:'note',body:`Commission receipt reversed · ${original.id} · ${reason}`,fields:[],created_at:now()});save(store);return receipt;
+  },
   commissionLedger: async dealId => Object.values(load()).flatMap(a=>a.commissions??[]).find(l=>l.deal_id===dealId)??null,
   createCommission: async (dealId,input,request) => {
     validateCommission(input);const store=load();const app=Object.values(store).find(a=>a.records.some(r=>r.id===dealId&&r.entity==='operacion'));
