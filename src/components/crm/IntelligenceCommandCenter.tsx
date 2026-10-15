@@ -16,6 +16,9 @@ export function IntelligenceCommandCenter({blueprint,records,now,onOpen,onCreate
  const taskStatusField=taskEntity?.fields.find(f=>['estado','status'].includes(f.key));
  const makeTask=async(recordId:string,title:string)=>{
   if(!taskEntity||!taskTitleField||!onCreate||readOnly||creating)return;
+  if(taskLinkField&&records.some(r=>r.entity===taskEntity.key&&r.data[taskLinkField]===recordId&&!/done|complete|closed|cerrad|hech/i.test(String(r.data.estado||r.data.status||'')))){
+   setNotice('An open follow-up task already exists for this record.');return;
+  }
   if(!window.confirm('Create a follow-up task in your CRM? No message will be sent.'))return;
   setCreating(recordId);setNotice('');
   try{
