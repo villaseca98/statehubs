@@ -58,8 +58,8 @@ const Title = ({ children, className = '' }: { children: ReactNode; className?: 
 type OpsLine = [time: string, who: string, where: string, tag?: [string, string], done?: boolean];
 const OPS: { title: string; icon: typeof LogIn; lines: OpsLine[] }[] = [
   { title: 'Llegadas', icon: LogIn, lines: [['16:00', 'Emma Larsen', 'Malvarrosa Sol', ['Airbnb', 'red']], ['19:30', 'Paolo Ricci', 'Loft Carmen', ['Booking', 'blue']]] },
-  { title: 'Departures', icon: LogOut, lines: [['10:00', 'Martinez Group', 'Ruzafa penthouse', undefined, true], ['11:00', 'Jonas Weber', 'Estudio Cabanyal']] },
-  { title: 'Cleaning', icon: Sparkles, lines: [['11:30', 'Ruzafa penthouse', 'Lucia', undefined, true], ['12:00', 'Estudio Cabanyal', 'Lucia'], ['13:00', 'Malvarrosa Sol', 'Marta']] },
+  { title: 'Departures', icon: LogOut, lines: [['10:00', 'Martinez Group', 'Ruzafa penthouse', undefined, true], ['11:00', 'Jonas Weber', 'Cabanyal Studio']] },
+  { title: 'Cleaning', icon: Sparkles, lines: [['11:30', 'Ruzafa penthouse', 'Lucia', undefined, true], ['12:00', 'Cabanyal Studio', 'Lucia'], ['13:00', 'Malvarrosa Sol', 'Marta']] },
 ];
 
 export function OpsMock() {
@@ -113,7 +113,7 @@ const STAYS: [string, Bar[]][] = [
   ['Loft Carmen', [[0, 2, 'Liam', 'airbnb'], [2, 3, 'Paolo Ricci', 'booking'], [4, 3, 'Sophie Klein', 'airbnb', 1], [9, 4, 'Ana y Luis', 'booking']]],
   ['Ruzafa penthouse', [[1, 6, 'Martinez Group', 'booking'], [8, 5, 'Noah Jensen', 'airbnb']]],
   ['Casa Albufera', [[1, 4, 'Marco', 'directa'], [6, 7, 'The Millers', 'airbnb']]],
-  ['Estudio Cabanyal', [[0, 1, 'Jonas', 'booking'], [3, 2, 'Chloé', 'airbnb'], [6, 3, 'Kenji', 'booking'], [11, 3, 'Zoe', 'airbnb']]],
+  ['Cabanyal Studio', [[0, 1, 'Jonas', 'booking'], [3, 2, 'Chloe', 'airbnb'], [6, 3, 'Kenji', 'booking'], [11, 3, 'Zoe', 'airbnb']]],
 ];
 const DOW = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
@@ -211,7 +211,7 @@ export function PropertiesMock() {
   );
 }
 
-// ---- Ventas: gráfico de área y objetivos ---------------------------------------
+// ---- Sales: area chart and targets ---------------------------------------
 
 const SALES = [18, 22, 19, 27, 25, 31, 29, 36, 34, 41, 39, 46];
 const MONTHS = ['E', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
@@ -316,7 +316,7 @@ export function FiltersMock() {
   );
 }
 
-// ---- Búsqueda ⌘K ----------------------------------------------------------------
+// ---- Search ⌘K ----------------------------------------------------------------
 
 const HITS: [string, [string, string][]][] = [
   ['Properties', [['Malva', 'rrosa Sol · holiday apartment']]],
