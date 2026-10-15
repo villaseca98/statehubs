@@ -48,8 +48,8 @@ function Base() {
     <div className="absolute inset-0 overflow-hidden" style={{ background: C.bg, borderRadius: 24, boxShadow: '0 50px 120px -40px rgba(19,42,30,.55), 0 0 0 1px rgba(30,58,43,.08)' }}>
       <div className="absolute left-3 right-3 top-3 flex h-10 items-center gap-1.5 rounded-full px-1.5 text-[10px]" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
         <LogoMark size={26} tile="dark" />
-        <span className="mr-2 text-[11px] font-semibold" style={{ color: C.text }}>Mediterráneo</span>
-        {['Hoy', 'Clientes', 'Operaciones', 'Inmuebles', 'Reservas'].map((l, i) => (
+        <span className="mr-2 text-[11px] font-semibold" style={{ color: C.text }}>Mediterranean</span>
+        {['Today', 'Clients', 'Deals', 'Properties', 'Bookings'].map((l, i) => (
           <span key={l} className="rounded-full px-3 py-1.5 font-medium" style={i === 0 ? { background: E.forest, color: '#fff' } : { border: `1px solid ${C.border}` }}>{l}</span>
         ))}
         <span className="ml-auto grid h-7 w-7 place-items-center rounded-full" style={{ border: `1px solid ${C.border}` }}><Search className="h-3 w-3" /></span>
@@ -60,7 +60,7 @@ function Base() {
 }
 
 function Figures() {
-  const items: [string, string, typeof Home][] = [['82 %', 'ocupación hoy', Home], ['6.840 €', 'neto del mes', TrendingUp], ['1,2 M€', 'en operaciones', Building2], ['3', 'leads de Instagram', Instagram]];
+  const items: [string, string, typeof Home][] = [['82 %', 'occupancy today', Home], ['6.840 €', 'net this month', TrendingUp], ['1,2 M€', 'in deals', Building2], ['3', 'Instagram leads', Instagram]];
   return (
     <div className="absolute flex gap-2" style={{ left: 16, right: 16, top: 64, height: 38 }}>
       {items.map(([value, label, Icon], i) => (
@@ -76,13 +76,13 @@ function Figures() {
 
 function Listing() {
   return (
-    <Card title="Ático con terraza" extra={<Pill c="lime">En venta</Pill>} style={{ left: 16, top: 112, width: 300, height: 312 }}>
+    <Card title="Penthouse with terrace" extra={<Pill c="lime">For sale</Pill>} style={{ left: 16, top: 112, width: 300, height: 312 }}>
       <Photo className="h-[168px] rounded-xl">
         <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold" style={{ color: E.forest }}>Ruzafa, Valencia</span>
       </Photo>
       <div className="mt-1.5 grid grid-cols-3 gap-1.5">{[0, 1, 2].map((i) => <Photo key={i} className="h-[40px] rounded-lg" />)}</div>
       <div className="mt-2 flex items-end justify-between">
-        <span className="leading-tight"><span className="block text-[18px] font-bold" style={{ ...NUM, color: C.text }}>330.000 €</span><span className="text-[9px]" style={{ color: C.muted }}>3 hab · 2 baños · 110 m² · 4 visitas</span></span>
+        <span className="leading-tight"><span className="block text-[18px] font-bold" style={{ ...NUM, color: C.text }}>330.000 €</span><span className="text-[9px]" style={{ color: C.muted }}>3 beds · 2 baños · 110 m² · 4 visitas</span></span>
         <span className="rounded-full px-2.5 py-1 text-[10px] font-semibold text-white" style={{ background: E.forest }}>Ver ficha</span>
       </div>
     </Card>
@@ -108,7 +108,7 @@ type Bar = [from: number, nights: number, guest: string, color: string, lane?: n
 const ROWS: [string, Bar[]][] = [
   ['Malvarrosa Sol', [[0, 3, 'Emma', CHANNEL.airbnb], [4, 4, 'Familia Dubois', CHANNEL.booking]]],
   ['Loft Carmen', [[0, 2, 'Liam', CHANNEL.airbnb], [2, 3, 'Paolo', CHANNEL.booking], [4, 3, 'Sophie', CHANNEL.airbnb, 1]]],
-  ['Ático Ruzafa', [[1, 6, 'Grupo Martínez', CHANNEL.booking]]],
+  ['Ruzafa penthouse', [[1, 6, 'Martinez Group', CHANNEL.booking]]],
 ];
 
 function Bookings({ p }: { p: MotionValue<number> }) {
@@ -116,7 +116,7 @@ function Bookings({ p }: { p: MotionValue<number> }) {
   const callout = useTransform(p, (v) => windowed(v, 0.56, 0.6, 0.7, 0.74));
   const calloutY = useTransform(callout, (o) => (1 - o) * 10);
   return (
-    <Card title="Reservas por alojamiento" extra={<span className="flex gap-1"><Pill c="red">Airbnb</Pill><Pill c="blue">Booking</Pill></span>} style={{ left: 326, top: 272, width: 378, height: 152, overflow: 'visible' }}>
+    <Card title="Bookings por alojamiento" extra={<span className="flex gap-1"><Pill c="red">Airbnb</Pill><Pill c="blue">Booking</Pill></span>} style={{ left: 326, top: 272, width: 378, height: 152, overflow: 'visible' }}>
       <div className="ml-[76px] grid text-center text-[8.5px]" style={{ gridTemplateColumns: `repeat(${DAYS}, 1fr)`, color: C.muted, ...NUM }}>
         {Array.from({ length: DAYS }, (_, i) => <span key={i} className="mx-auto w-5 rounded-full" style={i === 0 ? { background: E.forest, color: '#fff', fontWeight: 700 } : undefined}>{12 + i}</span>)}
       </div>
@@ -163,8 +163,8 @@ function Lead({ p }: { p: MotionValue<number> }) {
 }
 
 const PIECES: { key: string; label: string; Comp: (props: { p: MotionValue<number> }) => ReactNode }[] = [
-  { key: 'base', label: 'Navegación en píldoras', Comp: Base },
-  { key: 'cifras', label: 'Cifras del día', Comp: Figures },
+  { key: 'base', label: 'Pill navigation', Comp: Base },
+  { key: 'cifras', label: 'Daily figures', Comp: Figures },
   { key: 'ficha', label: 'Fichas con fotos', Comp: Listing },
   { key: 'ventas', label: 'Ventas y objetivos', Comp: Sales },
   { key: 'reservas', label: 'Calendario de reservas', Comp: Bookings },
@@ -239,10 +239,10 @@ function HeroCopy({ onStart }: { onStart: () => void }) {
         <ArrowRight className="h-3.5 w-3.5 shrink-0 transition group-hover:translate-x-0.5" />
       </a>
       <h1 id="hero-title" className="mt-6 text-balance font-serif text-[2.7rem] font-normal leading-[1] tracking-[-0.025em] text-estate-ink sm:text-[4.2rem] lg:text-[5.4rem]">
-        El CRM para inmobiliarias y <span className="sh-accent">alquiler turístico</span>
+        The CRM for real estate and <span className="sh-accent">holiday rentals</span>
       </h1>
       <p className="mx-auto mt-6 max-w-2xl text-pretty text-base text-estate-muted sm:text-xl">
-        Contactos, inmuebles, operaciones y reservas en una sola app. Los leads de Instagram llegan cualificados y con la visita en tu agenda.
+        Contactos, inmuebles, operaciones y reservas en una sola app. Los Instagram leads llegan qualified y con la visita en tu agenda.
       </p>
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <button onClick={onStart} className="group inline-flex items-center gap-2 rounded-full bg-estate-forest px-6 py-3 font-semibold text-white shadow-[0_14px_34px_-14px_rgba(19,42,30,.8)] transition hover:-translate-y-0.5 hover:bg-estate-deep">
@@ -252,7 +252,7 @@ function HeroCopy({ onStart }: { onStart: () => void }) {
           Ver la demo
         </Link>
       </div>
-      <p className="mt-4 text-xs text-estate-muted sm:text-sm">Sin tarjeta y sin cuenta: pruébalo en tu navegador.</p>
+      <p className="mt-4 text-xs text-estate-muted sm:text-sm">No card or account required to explore the demo.</p>
     </div>
   );
 }
@@ -334,10 +334,10 @@ export function ScrollHero({ onStart }: { onStart: () => void }) {
           {/* Story captions share a band at the top */}
           <div ref={band} className="relative mx-auto h-[150px] w-full max-w-3xl px-4 text-center sm:h-[170px]">
             <Line p={p} from={[0.12, 0.17]} to={[0.28, 0.32]}>
-              <Caption title={<>Abres y <span className="sh-accent">sabes qué toca</span>.</>} text="Visitas, llegadas, limpiezas y ventas del día en una pantalla. Lo que se cruza, arriba y en rojo." />
+              <Caption title={<>Open your CRM and <span className="sh-accent">know what's next</span>.</>} text="Viewings, arrivals, cleaning and sales in one view, with clear overlap alerts." />
             </Line>
             <Line p={p} from={[0.32, 0.36]} to={[0.46, 0.5]}>
-              <Caption title={<>Leads que llegan <span className="sh-accent">cualificados</span>.</>} text="El bot de Instagram contesta, pregunta lo que importa y agenda la visita mientras duermes. Tú lo encuentras aquí por la mañana." />
+              <Caption title={<>Leads that arrive <span className="sh-accent">qualified</span>.</>} text="Configure authorized Instagram lead qualification and viewing scheduling workflows. Tú lo encuentras aquí por la mañana." />
             </Line>
             <Line p={p} from={[0.5, 0.54]} to={[0.7, 0.74]}>
               <Caption title={<>Te avisa <span className="sh-accent">antes</span> de que pase.</>} text="Dos reservas en el mismo piso la misma noche: lo ves en rojo antes de que nadie llegue a la puerta." />
