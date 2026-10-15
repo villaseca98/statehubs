@@ -18,6 +18,7 @@ import { OperationsDashboard } from './OperationsDashboard';
 import { LivingWorkspace } from './LivingWorkspace';
 import { BusinessModeCards } from './BusinessModeCards';
 import { ModulePlanner } from './ModulePlanner';
+import { IntelligenceCommandCenter } from './IntelligenceCommandCenter';
 import { MatchDesk } from './MatchDesk';
 import { CardsView } from './CardsView';
 import { RuntimeContext } from './runtimeContext';
@@ -220,6 +221,7 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             </div>}
             {contactView && !shown.some(r => r.entity === 'contacto_inmo') && <p role="status" className="mb-4 text-sm" style={{ color: 'var(--crm-muted)' }}>{contactsText.empty}</p>}
             {view && filters.entity && <div className="mb-4"><FilterBar filters={filters} records={records} titleOf={titleOf} dark={dark} /></div>}
+            {(!view || view.type === 'ops') && hasPropertyModule && <IntelligenceCommandCenter blueprint={blueprint} records={records} now={now} onOpen={(r)=>setOpenId(r.id)} />}
             {(!view || view.type === 'ops') && hasPropertyModule && <ModulePlanner appId={appId ?? blueprint.name} />}
             {(!view || view.type === 'ops') && hasPropertyModule && <BusinessModeCards mode={businessMode} onChoose={chooseBusinessMode} />}
             {(!view || view.type === 'ops') && hasPropertyModule && businessMode !== 'holiday-rentals' && <MatchDesk records={records} onOpen={(r)=>setOpenId(r.id)} />}
