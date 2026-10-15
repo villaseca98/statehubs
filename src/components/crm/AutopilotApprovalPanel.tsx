@@ -32,6 +32,19 @@ export function AutopilotApprovalPanel({appId,blueprint,records,readOnly=false,o
   try{await api.decideAutomation(id,status);await reload()}
   catch(e){setError(e instanceof Error?e.message:'Unable to update approval')}finally{setBusy(false)}
  };
+ const executeApproved=async(approval:AutomationApproval)=>{
+  if(busy||readOnly)return;
+  if(!records.some(record=>record.id===approval.source_record_id)){setError('Source record is unavailable. No action was taken.');return}
+  if(!window.confirm('Log this approved action in the source record activity and mark it complete? This does not contact the client.'))return;
+  setBusy(true);setError('');
+  try{
+   // Stable request ID makes retries idempotent if the status transition fails.
+   await api.addRecordActivity(approval.source_record_id,'note',`Autopilot approved action: ${approval.title}. ${approval.reason}`.trim(),approval.id);
+   await api.decideAutomation(approval.id,'completed');
+   await reload();
+  }catch(e){setError(e instanceof Error?e.message:'Unable to record the action. You can retry safely.')}
+  finally{setBusy(false)}
+ };
  const pending=items.filter(x=>x.status==='pending');
  const approved=items.filter(x=>x.status==='approved');
  return <section aria-label="Autopilot approvals" className="mb-5 rounded-[26px] border p-5 sm:p-6" style={{background:'var(--crm-surface)',borderColor:'var(--crm-border)'}}>
@@ -44,9 +57,9 @@ export function AutopilotApprovalPanel({appId,blueprint,records,readOnly=false,o
     return <div key={p.record.id} className="flex flex-wrap items-center gap-3 rounded-xl border p-3" style={{borderColor:'var(--crm-border)'}}><div className="min-w-0 flex-1"><p className="text-sm font-semibold">{p.title}</p><p className="text-xs" style={{color:'var(--crm-muted)'}}>{p.explanation}</p></div><button onClick={()=>onOpen(p.record)} className="rounded-lg border px-3 py-2 text-xs" style={{borderColor:'var(--crm-border)'}}>View record</button><button disabled={busy||!!existing||readOnly||!appId} onClick={()=>void propose(p.record.id,p.action,p.title,p.reason)} className="rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-50" style={{background:'var(--crm-primary)'}}>{existing?'Queued':'Add to queue'}</button></div>
    }):<p className="text-sm" style={{color:'var(--crm-muted)'}}>No follow-ups need review.</p>}</div></div>
    <div><h3 className="text-sm font-semibold">Pending approval ({pending.length})</h3><div className="mt-2 space-y-2">{pending.map(a=><div key={a.id} className="flex flex-wrap items-center gap-2 rounded-xl border p-3" style={{borderColor:'var(--crm-border)'}}><div className="min-w-0 flex-1"><p className="text-sm font-semibold">{a.title}</p><p className="text-xs" style={{color:'var(--crm-muted)'}}>{a.reason}</p></div><button disabled={busy||readOnly} onClick={()=>void decide(a.id,'approved')} className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 disabled:opacity-50"><Check className="mr-1 inline h-3 w-3"/>Approve</button><button disabled={busy||readOnly} onClick={()=>void decide(a.id,'dismissed')} className="rounded-lg border px-3 py-2 text-xs disabled:opacity-50" style={{borderColor:'var(--crm-border)'}}><X className="mr-1 inline h-3 w-3"/>Dismiss</button></div>)}{!pending.length&&<p className="text-xs" style={{color:'var(--crm-muted)'}}>No pending approvals.</p>}</div></div>
-   {approved.length>0&&<div><h3 className="text-sm font-semibold">Approved for manual execution ({approved.length})</h3><div className="mt-2 space-y-2">{approved.map(a=><div key={a.id} className="flex flex-wrap items-center gap-2 rounded-xl border p-3" style={{borderColor:'var(--crm-border)'}}><div className="min-w-0 flex-1"><p className="text-sm font-semibold">{a.title}</p><p className="text-xs" style={{color:'var(--crm-muted)'}}>Approved · not automatically executed</p></div><button onClick={()=>{const r=records.find(x=>x.id===a.source_record_id);if(r)onOpen(r)}} className="rounded-lg border px-3 py-2 text-xs" style={{borderColor:'var(--crm-border)'}}>Open record</button><button disabled={busy||readOnly} onClick={()=>void decide(a.id,'completed')} className="rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-50" style={{background:'var(--crm-primary)'}}>Mark done</button></div>)}</div></div>}
+   {approved.length>0&&<div><h3 className="text-sm font-semibold">Approved for manual execution ({approved.length})</h3><div className="mt-2 space-y-2">{approved.map(a=><div key={a.id} className="flex flex-wrap items-center gap-2 rounded-xl border p-3" style={{borderColor:'var(--crm-border)'}}><div className="min-w-0 flex-1"><p className="text-sm font-semibold">{a.title}</p><p className="text-xs" style={{color:'var(--crm-muted)'}}>Approved · log the action in CRM activity to complete</p></div><button onClick={()=>{const r=records.find(x=>x.id===a.source_record_id);if(r)onOpen(r)}} className="rounded-lg border px-3 py-2 text-xs" style={{borderColor:'var(--crm-border)'}}>Open record</button><button disabled={busy||readOnly} onClick={()=>void executeApproved(a)} className="rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-50" style={{background:'var(--crm-primary)'}}>Log action &amp; complete</button></div>)}</div></div>}
    {history.length>0&&<div className="rounded-xl border p-4" style={{borderColor:'var(--crm-border)'}}><h3 className="text-sm font-semibold">Decision history</h3><ol className="mt-3 max-h-44 space-y-2 overflow-auto">{history.slice(0,20).map(event=><li key={event.id} className="flex flex-wrap justify-between gap-2 text-xs" style={{color:'var(--crm-muted)'}}><span>{event.previous_status} → {event.new_status}</span><time dateTime={event.created_at}>{new Date(event.created_at).toLocaleString()}</time></li>)}</ol></div>}
-   <p className="flex items-center gap-2 text-xs" style={{color:'var(--crm-muted)'}}>{busy&&<Loader2 className="h-3 w-3 animate-spin"/>}Only the workspace owner can manage this approval queue. No background sending or execution is enabled.</p>
+   <p className="flex items-center gap-2 text-xs" style={{color:'var(--crm-muted)'}}>{busy&&<Loader2 className="h-3 w-3 animate-spin"/>}Only the workspace owner can manage this approval queue. Actions are logged only when you explicitly confirm. No external messages are sent.</p>
   </div>}
  </section>;
 }
