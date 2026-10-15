@@ -8,6 +8,7 @@ import { LanguageSelector } from '@/components/brand/LanguageSelector';
 
 const AppPage = lazy(() => import('@/pages/AppPage'));
 const Onboarding = lazy(() => import('@/pages/Onboarding'));
+const AuthCallback = lazy(() => import('@/pages/AuthCallback'));
 const Demo = lazy(() => import('@/pages/Demo'));
 const Login = lazy(() => import('@/pages/Login'));
 const Account = lazy(() => import('@/pages/Account'));
@@ -23,6 +24,7 @@ function AppRoutes() {
             <Route path="/" element={<Landing />} />
             <Route path="/app/:appId" element={<AppPage />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/demo" element={<Demo />} />
             <Route path="/entrar" element={<Login />} />
             <Route path="/login" element={<Login />} />
