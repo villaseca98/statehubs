@@ -13,7 +13,7 @@ import { Nav } from '@/components/landing/Nav';
 import { Features } from '@/components/landing/Features';
 import { Audience, Channels, Closing, Footer, Leads, Marquee, Numbers } from '@/components/landing/Sections';
 import { Reveal } from '@/components/landing/Backdrop';
-import { composePack, getModule, PACKS } from '@shared/blueprint/modules.ts';
+import { getModule, PACKS } from '@shared/blueprint/modules.ts';
 import type { PackKey } from '@shared/blueprint/modules.ts';
 
 // Landing: the public web of the CRM for estate agencies and holiday lets.
@@ -24,7 +24,6 @@ import type { PackKey } from '@shared/blueprint/modules.ts';
 // cream, white, forest green and lime. Pieces live in components/landing.
 
 const PACK_ICON: Record<PackKey, typeof Building2> = { compraventa: Building2, turistico: CalendarRange, ambos: Layers };
-const PACK_NAME: Record<PackKey, string> = { compraventa: 'My real estate business', turistico: 'My holiday rentals', ambos: 'My real estate business' };
 
 export default function Landing() {
   const { user, loading } = useAuth();
@@ -52,20 +51,10 @@ export default function Landing() {
   };
 
   // Each answer opens the same unified app with the pieces that business uses.
-  const open = async (pack: PackKey) => {
+  const open = (pack: PackKey) => {
     // Account-first onboarding: never create anonymous browser-only production workspaces.
     const mode = pack === 'turistico' ? 'holidays' : pack === 'ambos' ? 'both' : 'real-estate';
     navigate(user ? '/onboarding?mode='+mode : '/register?next='+encodeURIComponent('/onboarding?mode='+mode));
-    return;
-  };
-  const legacyOpen = async (pack: PackKey) => {
-    setBusy(pack); setError('');
-    try {
-      const { api, app } = await newApp();
-      const { proposal } = await api.propose(app.id, composePack(pack, PACK_NAME[pack]));
-      await api.apply(proposal.id);
-      navigate(`/app/${app.id}`);
-    } catch (e) { setError((e as Error).message); setBusy(null); }
   };
   const ask = async () => {
     const message = prompt.trim();
