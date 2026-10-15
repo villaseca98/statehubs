@@ -14,6 +14,7 @@ export interface AutomationApproval {
  action_type:'follow_up'|'confirm_appointment'|'review_deadline';
  title:string; reason:string; status:'pending'|'approved'|'dismissed'|'completed';
  created_at:string; decided_at:string|null; updated_at:string;
+ execute_after?:string|null; attempts?:number; last_error?:string|null; executed_at?:string|null;
 }
 export interface MatchDecision { app_id: string; contact_id: string; property_id: string; status: 'saved'|'dismissed'|'suggested'; actor_id: string|null; updated_at: string }
 export interface RecordEvent { id: string; record_id: string; actor_id: string | null; kind: 'created' | 'changed' | 'note' | 'call' | 'meeting'; body: string | null; fields: string[]; created_at: string }
@@ -48,6 +49,8 @@ async function must<T>(p: PromiseLike<{ data: T; error: { message: string } | nu
 }
 
 export const crmApi = {
+  scheduleAutomation: (id:string,when:string) => must<AutomationApproval>(db().rpc('crm_schedule_approved_automation',{p_id:id,p_when:when})),
+  unscheduleAutomation: (id:string) => must<AutomationApproval>(db().rpc('crm_unschedule_approved_automation',{p_id:id})),
   automationApprovalEvents: (appId:string) => must<AutomationApprovalEvent[]>(db().from('crm_automation_approval_events').select('*').eq('app_id',appId).order('created_at',{ascending:false}).limit(100)),
   automationApprovals: (appId:string) => must<AutomationApproval[]>(db().from('crm_automation_approvals').select('*').eq('app_id',appId).order('created_at',{ascending:false}).limit(100)),
   proposeAutomation: (appId:string,ownerId:string,recordId:string,action:AutomationApproval['action_type'],title:string,reason:string) => must<AutomationApproval>(db().from('crm_automation_approvals').insert({app_id:appId,owner_id:ownerId,source_record_id:recordId,action_type:action,title,reason}).select('*').single()),
