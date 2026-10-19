@@ -1,54 +1,59 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { useState } from 'react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { composePack } from '@shared/blueprint/modules';
 import type { AppRecord } from '@shared/blueprint/types';
+import type { PropertyMarket } from '@/lib/crm/propertyFeed';
 import { PropertyFeed } from './PropertyFeed';
-import { localCrmApi } from '@/lib/crm/localApi';
 const bp = composePack('ambos', 'Agency');
-const sale: AppRecord = { id: 'sale', entity: 'inmueble', data: { direccion: 'Ocean House', operacion: 'venta', precio: 250000, moneda: 'USD' } };
-const rent: AppRecord = { id: 'rent', entity: 'inmueble', data: { direccion: 'City Apartment', operacion: 'alquiler' } };
+const sale: AppRecord = { id: 'sale', entity: 'inmueble', data: { direccion: 'Ocean House', operacion: 'venta', precio: 250000, moneda: 'USD', zona: 'Marina' }, created_at: '2026-10-02T00:00:00Z' };
+const rent: AppRecord = { id: 'rent', entity: 'inmueble', data: { direccion: 'City Apartment', operacion: 'alquiler' }, created_at: '2026-10-01T00:00:00Z' };
 const holiday: AppRecord = { id: 'holiday', entity: 'inmueble', data: { direccion: 'Holiday Villa', operacion: 'turistico', precio_noche: 150, moneda: 'GBP' } };
 beforeEach(() => { localStorage.clear(); vi.restoreAllMocks(); });
-it('shows actual properties, all markets, and recovers after selected records disappear', () => {
- const next = { ...sale, id: 'sale2', data: { ...sale.data, direccion: 'Second House' } };
- const props = { records: [sale, next, rent, holiday], blueprint: bp, onOpen: vi.fn() };
- const { rerender } = render(<PropertyFeed {...props} />);
+function Feed(props: Partial<Parameters<typeof PropertyFeed>[0]> & { records: AppRecord[] }) {
+ const [market, setMarket] = useState<PropertyMarket>('real-estate');
+ return <PropertyFeed blueprint={bp} market={market} onMarket={setMarket} titleOf={() => 'Jordan Agent'} onOpen={vi.fn()} onOpenHub={vi.fn()} {...props} />;
+}
+it('filters the real query by universe, transaction and search', () => {
+ render(<Feed records={[sale, rent, holiday]} />);
  expect(screen.getByRole('heading', { name: 'Ocean House' })).toBeTruthy();
- expect(screen.getByText('$250,000')).toBeTruthy();
- fireEvent.click(screen.getByRole('button', { name: 'Next property' }));
- expect(screen.getByRole('heading', { name: 'Second House' })).toBeTruthy();
- rerender(<PropertyFeed {...props} records={[sale, rent, holiday]} />);
- expect(screen.getByRole('heading', { name: 'Ocean House' })).toBeTruthy();
- fireEvent.click(screen.getByRole('button', { name: /For rent/ }));
  expect(screen.getByRole('heading', { name: 'City Apartment' })).toBeTruthy();
+ expect(screen.getByText('$250,000')).toBeTruthy();
+ fireEvent.click(screen.getByRole('button', { name: /For rent/ }));
+ expect(screen.queryByRole('heading', { name: 'Ocean House' })).toBeNull();
+ fireEvent.click(screen.getByRole('button', { name: /^All/ }));
+ fireEvent.change(screen.getByPlaceholderText('Search properties, areas or references'), { target: { value: 'marina' } });
+ expect(screen.getByText('1 property')).toBeTruthy();
+ fireEvent.change(screen.getByPlaceholderText('Search properties, areas or references'), { target: { value: '' } });
  fireEvent.click(screen.getByRole('button', { name: /Holiday Rentals/ }));
  expect(screen.getByRole('heading', { name: 'Holiday Villa' })).toBeTruthy();
  expect(screen.getByText('£150 / night')).toBeTruthy();
 });
-it('shows linked reservations and viewings with real dates, excluding arbitrary text matches', () => {
- const onOpen = vi.fn();
- const booking: AppRecord = { id: 'reservation', entity: 'reserva', data: { huesped: 'Morgan', alojamiento: holiday.id, entrada: '2026-11-01', salida: '2026-11-03' } };
- const viewing: AppRecord = { id: 'view', entity: 'cita_inmo', data: { titulo: 'Alex viewing', inmueble: sale.id, cuando: '2026-11-02T10:00' } };
- render(<PropertyFeed records={[sale, holiday, booking, viewing, { ...booking, id: 'fake', data: { huesped: holiday.id } }]} blueprint={bp} onOpen={onOpen} />);
- fireEvent.click(screen.getByRole('button', { name: 'Viewings' }));
- fireEvent.click(screen.getByRole('button', { name: /Alex viewing/ }));
- expect(onOpen).toHaveBeenCalledWith(viewing);
- fireEvent.click(screen.getByRole('button', { name: /Holiday Rentals/ }));
- fireEvent.click(screen.getByRole('button', { name: 'Bookings' }));
- expect(screen.getByText('2026-11-01 → 2026-11-03')).toBeTruthy();
- expect(screen.queryByRole('button', { name: /^holiday/ })).toBeNull();
- fireEvent.click(screen.getByRole('button', { name: /Morgan/ }));
- expect(onOpen).toHaveBeenLastCalledWith(booking);
+it('shows real indicators and opens the mini-CRM, Matcher and record', () => {
+ const onOpenHub = vi.fn(), onMatcher = vi.fn(), onOpen = vi.fn();
+ const contact: AppRecord = { id: 'c', entity: 'contacto_inmo', data: { nombre: 'Alex', match_qualified: true } };
+ const viewing: AppRecord = { id: 'v', entity: 'cita_inmo', data: { inmueble: sale.id, contacto: contact.id, cuando: '2099-11-02T10:00' } };
+ render(<Feed records={[{ ...sale, data: { ...sale.data, agente: 'a1' } }, contact, viewing]} onOpenHub={onOpenHub} onMatcher={onMatcher} onOpen={onOpen} />);
+ expect(screen.getByText('1 lead')).toBeTruthy();
+ expect(screen.getByText(/1 qualified/)).toBeTruthy();
+ expect(screen.getByText(/Next viewing/)).toBeTruthy();
+ expect(screen.getByLabelText('Agent: Jordan Agent')).toBeTruthy();
+ fireEvent.click(screen.getByRole('button', { name: 'Open property workspace: Ocean House' }));
+ expect(onOpenHub).toHaveBeenCalledWith('sale', undefined);
+ fireEvent.click(screen.getByRole('button', { name: 'Open Matcher' }));
+ expect(onMatcher).toHaveBeenCalledWith('sale');
+ fireEvent.click(screen.getByRole('button', { name: 'Schedule viewing' }));
+ expect(onOpenHub).toHaveBeenLastCalledWith('sale', 'viewings');
+ fireEvent.click(screen.getByRole('button', { name: 'Edit property' }));
+ expect(onOpen).toHaveBeenCalled();
 });
-it('keeps deletion unavailable to viewers/agents and requires confirmation for owners', () => {
+it('keeps deletion behind permission and confirmation', () => {
  const onDelete = vi.fn();
- const props = { records: [sale], blueprint: bp, onOpen: vi.fn(), onDelete };
- const { rerender } = render(<PropertyFeed {...props} readOnly canDelete />);
- fireEvent.click(screen.getByText('···'));
+ const { rerender } = render(<Feed records={[sale]} onDelete={onDelete} readOnly canDelete />);
  expect(screen.queryByRole('button', { name: 'Delete property' })).toBeNull();
- rerender(<PropertyFeed {...props} canDelete={false} />);
+ rerender(<Feed records={[sale]} onDelete={onDelete} canDelete={false} />);
  expect(screen.queryByRole('button', { name: 'Delete property' })).toBeNull();
- rerender(<PropertyFeed {...props} canDelete />);
+ rerender(<Feed records={[sale]} onDelete={onDelete} canDelete />);
  const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
  fireEvent.click(screen.getByRole('button', { name: 'Delete property' }));
  expect(onDelete).not.toHaveBeenCalled();
@@ -56,43 +61,8 @@ it('keeps deletion unavailable to viewers/agents and requires confirmation for o
  fireEvent.click(screen.getByRole('button', { name: 'Delete property' }));
  expect(onDelete).toHaveBeenCalledWith(sale.id);
 });
-it('uses existing contact relations and qualification, and resets the card context on navigation', () => {
- const contact: AppRecord = { id: 'contact', entity: 'contacto_inmo', data: { nombre: 'Alex', match_qualified: true, email: 'alex@example.com' } };
- const viewing: AppRecord = { id: 'v', entity: 'cita_inmo', data: { inmueble: sale.id, contacto: contact.id } };
- const next = { ...sale, id: 'next' };
- const onMatch = vi.fn();
- render(<PropertyFeed records={[sale, next, contact, viewing]} blueprint={bp} onOpen={vi.fn()} onMatch={onMatch} />);
- fireEvent.click(within(screen.getByRole('group', { name: 'Property details' })).getByRole('button', { name: 'Leads' }));
- expect(screen.getByText('Alex')).toBeTruthy();
- fireEvent.click(screen.getByText('Alex'));
- expect(screen.getByText('Qualification explicitly recorded in CRM')).toBeTruthy();
- expect(screen.getByRole('link', { name: 'alex@example.com' })).toHaveAttribute('href', 'mailto:alex%40example.com');
- fireEvent.click(screen.getByRole('button', { name: 'Find matches for this property' }));
- expect(onMatch).toHaveBeenCalledWith(sale);
- fireEvent.click(screen.getByRole('button', { name: 'Next property' }));
- expect(screen.getByRole('button', { name: 'Details' })).toHaveAttribute('aria-pressed', 'true');
- expect(screen.queryByText('alex@example.com')).toBeNull();
-});
-it('persists internal property notes through the existing activity API and reloads them', async () => {
- const app = await localCrmApi.createApp('');
- const record = await localCrmApi.createRecord(app.id, 'inmueble', sale.data);
- const props = { records: [record], blueprint: bp, appId: app.id, onOpen: vi.fn() };
- const { unmount } = render(<PropertyFeed {...props} />);
- fireEvent.click(screen.getByRole('button', { name: 'Activity' }));
- await screen.findByText('Internal CRM activity. This is not an Instagram comment or direct message.');
- fireEvent.change(screen.getByLabelText('Activity details'), { target: { value: 'Owner confirmed viewing access' } });
- fireEvent.click(screen.getByRole('button', { name: 'Save activity' }));
- await screen.findByText('Owner confirmed viewing access');
- unmount();
- render(<PropertyFeed {...props} readOnly />);
- fireEvent.click(screen.getByRole('button', { name: 'Activity' }));
- expect(await screen.findByText('Owner confirmed viewing access')).toBeTruthy();
- expect(screen.queryByLabelText('Activity details')).toBeNull();
- const events = await localCrmApi.recordEvents(record.id);
- expect(events.filter(e => e.body === 'Owner confirmed viewing access')).toHaveLength(1);
-});
 it('keeps uncategorized records reachable without inventing an operation or currency', () => {
- render(<PropertyFeed records={[{ ...sale, data: { direccion: 'Unclassified', precio: 100 } }]} blueprint={bp} onOpen={vi.fn()} />);
+ render(<Feed records={[{ ...sale, data: { direccion: 'Unclassified', precio: 100 } }]} />);
  expect(screen.getByText('No properties in this category')).toBeTruthy();
  fireEvent.click(screen.getByRole('button', { name: /Properties without a category/ }));
  expect(screen.getByRole('heading', { name: 'Unclassified' })).toBeTruthy();

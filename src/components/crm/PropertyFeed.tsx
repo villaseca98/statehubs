@@ -1,98 +1,88 @@
-import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Building2, MapPin, Pencil, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Building2, Palmtree, Search } from 'lucide-react';
 import type { AppRecord, Blueprint } from '@shared/blueprint/types';
-import { isProperty, linkedToProperty, propertyCategory, recordLabel } from '@/lib/crm/propertyFeed';
-import type { PropertyDeal, PropertyMarket } from '@/lib/crm/propertyFeed';
+import { isProperty, propertyCategory, recordLabel } from '@/lib/crm/propertyFeed';
+import type { PropertyMarket } from '@/lib/crm/propertyFeed';
+import { propertyHub } from '@/lib/crm/propertyHub';
+import { propertyLocation } from '@/lib/crm/propertyFormat';
 import { usePropertyFeedText } from '@/i18n/propertyFeed';
-import { useI18n } from '@/i18n';
-import { PropertyGallery } from './PropertyGallery';
-import { PropertyLeads } from './PropertyLeads';
-import { RecordActivity } from './RecordActivity';
+import { useHubText } from '@/i18n/hub';
+import { PropertyCard } from './PropertyCard';
+import type { HubTab } from './PropertyCard';
 
-const button = 'min-h-11 rounded-xl border px-3 py-2 text-sm font-medium disabled:opacity-40';
-const border = { borderColor: 'var(--crm-border)' };
-type Props = { records: AppRecord[]; blueprint: Blueprint; appId?: string; onOpen: (record: AppRecord) => void; onDelete?: (id: string) => void; onMatch?: (record: AppRecord) => void; readOnly?: boolean; canDelete?: boolean };
+type Deal = 'all' | 'sale' | 'rent';
+type Sort = 'recent' | 'priceUp' | 'priceDown' | 'leads';
+const PAGE = 24;
+const priceOf = (r: AppRecord) => { const v = propertyCategory(r).market === 'holiday-rentals' ? r.data.precio_noche ?? r.data.nightly_price : r.data.precio ?? r.data.price; return typeof v === 'number' ? v : null; };
+const prefKey = (app: string) => `statehubs:feed:${app}`;
+function readPrefs(app: string): { deal?: Deal; sort?: Sort } { try { return JSON.parse(localStorage.getItem(prefKey(app)) ?? '{}'); } catch { return {}; } }
 
-function PropertyCard({ item, records, blueprint, appId, onOpen, onDelete, onMatch, readOnly, canDelete, onNavigate }: Props & { item: AppRecord; onNavigate: (step: number) => void }) {
- const t = usePropertyFeedText();
- const { language } = useI18n();
- const [tab, setTab] = useState<'details' | 'leads' | 'activity' | 'bookings'>('details');
- const title = recordLabel(item, blueprint, t.untitled);
- const holiday = propertyCategory(item).market === 'holiday-rentals';
- const linked = records.filter(r => linkedToProperty(r, item, blueprint) && (holiday ? /^(reserva|reservas|booking|bookings|reservation|reservations)$/i : /^(cita_inmo|visita|viewing|appointment)$/i).test(r.entity));
- const entity = blueprint.entities.find(e => e.key === item.entity);
- const amount = holiday ? item.data.precio_noche ?? item.data.nightly_price : item.data.precio ?? item.data.price ?? item.data.list_price;
- const currency = String(item.data.currency || item.data.moneda || '').toUpperCase();
- let price = t.price;
- if (typeof amount === 'number' && Number.isFinite(amount) && amount >= 0) {
-  try { price = `${new Intl.NumberFormat(language, { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount)}${holiday ? ` ${t.night}` : ''}`; }
-  catch { price = `${new Intl.NumberFormat(language).format(amount)} · ${t.currency}`; }
- }
- const location = String(item.data.ubicacion || item.data.location || item.data.zona || item.data.ciudad || item.data.city || '');
- return <>
-  <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
-   <details className="relative" onKeyDown={e => { if (e.key === 'Escape') { e.currentTarget.open = false; e.currentTarget.querySelector('summary')?.focus(); } }}>
-    <summary aria-label={t.actions} className="grid h-11 w-11 cursor-pointer list-none place-items-center rounded-full border text-xl" style={border}>···</summary>
-    <div className="absolute left-0 top-12 z-20 w-52 rounded-xl border p-1 shadow-xl" style={{ ...border, background: 'var(--crm-surface)' }}>
-     <button type="button" onClick={() => onOpen(item)} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm"><Pencil className="h-4 w-4" />{readOnly ? t.view : t.edit}</button>
-     {!readOnly && canDelete && onDelete && <button type="button" onClick={() => { if (window.confirm(t.confirm)) onDelete(item.id); }} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-red-600"><Trash2 className="h-4 w-4" />{t.delete}</button>}
-    </div>
-   </details>
-   <h2 className="min-w-0 flex-1 truncate text-right text-sm font-semibold">{title}</h2>
-   {item.is_sample && <span className="text-xs" style={{ color: 'var(--crm-muted)' }}>{t.sample}</span>}
-  </div>
-  <PropertyGallery key={item.id} record={item} title={title} onPropertySwipe={onNavigate} />
-  <div className="space-y-4 px-4 py-4 sm:px-5">
-   <div className="flex flex-wrap items-start justify-between gap-2">
-    {location && <p className="flex min-w-0 items-center gap-1 text-sm" style={{ color: 'var(--crm-muted)' }}><MapPin className="h-4 w-4 shrink-0" /><span className="break-words">{location}</span></p>}
-    <p className="break-words font-semibold tabular-nums">{price}</p>
-   </div>
-   <div role="group" aria-label={t.detailsLabel} className="grid grid-cols-4 gap-1 border-b pb-3" style={border}>
-    {(['details', 'leads', 'activity', 'bookings'] as const).map(key => <button type="button" key={key} aria-pressed={tab === key} onClick={() => setTab(key)}
-     className="min-h-11 min-w-0 rounded-xl px-1 py-2 text-xs font-semibold sm:text-sm" style={{ background: tab === key ? 'var(--crm-bg)' : 'transparent' }}>{key === 'bookings' && !holiday ? t.viewings : t[key]}</button>)}
-   </div>
-   <div className="min-h-24 text-sm">
-    {tab === 'details' && <div className="space-y-4"><p className="whitespace-pre-wrap break-words">{String(item.data.descripcion || item.data.description || t.description)}</p>
-     <dl className="flex flex-wrap gap-x-6 gap-y-3">{([
-      [t.beds, item.data.habitaciones ?? item.data.bedrooms], [t.baths, item.data.banos ?? item.data.bathrooms],
-      [t.area, item.data.metros ?? item.data.area_sqm], [t.status, item.data.estado ?? item.data.status],
-     ] as const).filter(([, value]) => value !== undefined && value !== null && value !== '').map(([label, value]) => <div key={label}><dt className="text-xs" style={{ color: 'var(--crm-muted)' }}>{label}</dt><dd className="mt-1 font-medium">{String(value)}</dd></div>)}</dl>
-    </div>}
-    {tab === 'leads' && <PropertyLeads property={item} records={records} blueprint={blueprint} onOpen={onOpen} onMatch={onMatch ? () => onMatch(item) : undefined} />}
-    {tab === 'activity' && <><p className="text-xs" style={{ color: 'var(--crm-muted)' }}>{t.internal}</p>{entity && <RecordActivity appId={appId} record={item} entity={entity} readOnly={!!readOnly} />}</>}
-    {tab === 'bookings' && <div className="space-y-2">{linked.length ? linked.map(r => <button type="button" key={r.id} onClick={() => onOpen(r)} className={`${button} w-full text-left`} style={border}>
-     <span className="block break-words font-semibold">{recordLabel(r, blueprint, holiday ? t.bookings : t.viewings)}</span>
-     <span className="mt-1 block break-words text-xs">{String(r.data.entrada || r.data.check_in || r.data.cuando || r.data.start_date || t.dateMissing)}{holiday && (r.data.salida || r.data.check_out) ? ` → ${String(r.data.salida || r.data.check_out)}` : ''}</span>
-    </button>) : <p>{holiday ? t.noBookings : t.noViewings}</p>}</div>}
-   </div>
-   <button type="button" onClick={() => onOpen(item)} className={`${button} w-full`} style={border}>{t.open}</button>
-  </div>
- </>;
-}
+type Props = {
+ records: AppRecord[]; blueprint: Blueprint; appId?: string; readOnly?: boolean; canDelete?: boolean;
+ market: PropertyMarket; onMarket: (m: PropertyMarket) => void; titleOf: (id: string) => string | undefined;
+ onOpen: (record: AppRecord) => void; onOpenHub: (id: string, tab?: HubTab) => void; onMatcher?: (id: string) => void; onDelete?: (id: string) => void;
+};
 
-export function PropertyFeed(props: Props) {
- const t = usePropertyFeedText();
- const [market, setMarket] = useState<PropertyMarket>('real-estate');
- const [deal, setDeal] = useState<PropertyDeal>('sale');
- const [selected, setSelected] = useState<string | null>(null);
- const properties = props.records.filter(r => isProperty(r.entity));
- const visible = properties.filter(r => { const c = propertyCategory(r); return c.market === market && (market !== 'real-estate' || c.deal === deal); });
- const index = Math.max(0, visible.findIndex(r => r.id === selected));
- const item = visible[index];
- const uncategorized = properties.filter(r => propertyCategory(r).market === 'uncategorized').length;
- return <div className="mx-auto w-full max-w-2xl space-y-4">
-  <div role="group" aria-label={t.categories} className="grid grid-cols-2 gap-2 rounded-2xl border p-1.5" style={{ ...border, background: 'var(--crm-surface)' }}>
-   {(['real-estate', 'holiday-rentals'] as const).map(key => <button key={key} type="button" aria-pressed={market === key} onClick={() => { setMarket(key); setSelected(null); }} className="min-h-12 rounded-xl px-2 py-2 text-sm font-semibold" style={{ background: market === key ? 'var(--crm-primary)' : 'transparent', color: market === key ? 'var(--crm-primary-text)' : 'var(--crm-text)' }}>{key === 'real-estate' ? t.real : t.holiday} <span className="text-xs opacity-70">({properties.filter(r => propertyCategory(r).market === key).length})</span></button>)}
-  </div>
-  {market === 'real-estate' && <div role="group" aria-label={t.transaction} className="flex justify-center gap-2">{(['sale', 'rent'] as const).map(key => <button key={key} type="button" aria-pressed={deal === key} onClick={() => { setDeal(key); setSelected(null); }} className={button} style={{ ...border, background: deal === key ? 'var(--crm-surface)' : 'transparent' }}>{t[key]} ({properties.filter(r => propertyCategory(r).deal === key).length})</button>)}</div>}
-  {uncategorized > 0 && <button type="button" aria-pressed={market === 'uncategorized'} onClick={() => { setMarket('uncategorized'); setSelected(null); }} className="min-h-11 text-xs underline" style={{ color: 'var(--crm-muted)' }}>{t.uncategorized} ({uncategorized})</button>}
-  {item ? <section aria-label={t.feed} className="overflow-hidden rounded-3xl border" style={{ ...border, background: 'var(--crm-surface)' }}>
-   <PropertyCard key={item.id} {...props} item={item} onNavigate={step => { const next = visible[index + step]; if (next) setSelected(next.id); }} />
-   <div className="flex items-center justify-between gap-2 border-t px-4 py-3 sm:px-5" style={border}>
-    <button type="button" aria-label={t.previous} disabled={index === 0} onClick={() => setSelected(visible[index - 1].id)} className={button} style={border}><ArrowLeft aria-hidden="true" className="h-4 w-4" /></button>
-    <span role="status" className="text-xs tabular-nums" style={{ color: 'var(--crm-muted)' }}>{index + 1} / {visible.length}</span>
-    <button type="button" aria-label={t.next} disabled={index === visible.length - 1} onClick={() => setSelected(visible[index + 1].id)} className={button} style={border}><ArrowRight aria-hidden="true" className="h-4 w-4" /></button>
+/** Real Estate (buy/rent) and Holiday Rentals as two visual universes of property cards. Filters change the actual list. */
+export function PropertyFeed({ records, blueprint, appId, readOnly, canDelete, market, onMarket, titleOf, onOpen, onOpenHub, onMatcher, onDelete }: Props) {
+ const t = usePropertyFeedText(); const h = useHubText();
+ const app = appId ?? blueprint.name;
+ const [deal, setDealState] = useState<Deal>(() => readPrefs(app).deal ?? 'all');
+ const [sort, setSortState] = useState<Sort>(() => readPrefs(app).sort ?? 'recent');
+ const [query, setQuery] = useState(''); const [limit, setLimit] = useState(PAGE);
+ const save = (next: { deal?: Deal; sort?: Sort }) => { try { localStorage.setItem(prefKey(app), JSON.stringify({ ...readPrefs(app), ...next })); } catch { /* private browsing: keep it in memory */ } };
+ const setDeal = (d: Deal) => { setDealState(d); setLimit(PAGE); save({ deal: d }); };
+ const setSort = (s: Sort) => { setSortState(s); save({ sort: s }); };
+ const properties = useMemo(() => records.filter(r => isProperty(r.entity)), [records]);
+ const count = (m: PropertyMarket, d: Deal = 'all') => properties.filter(r => { const c = propertyCategory(r); return c.market === m && (d === 'all' || c.deal === d); }).length;
+ const q = query.trim().toLowerCase();
+ const filtered = properties.filter(r => {
+  const c = propertyCategory(r);
+  if (c.market !== market || (market === 'real-estate' && deal !== 'all' && c.deal !== deal)) return false;
+  return !q || [recordLabel(r, blueprint, ''), propertyLocation(r), r.data.referencia, r.data.reference].some(v => String(v ?? '').toLowerCase().includes(q));
+ });
+ const hubs = useMemo(() => new Map(filtered.map(r => [r.id, propertyHub(r, records, blueprint)])), [filtered, records, blueprint]);
+ const sorted = [...filtered].sort((a, b) => {
+  if (sort === 'leads') { const l = (r: AppRecord) => { const x = hubs.get(r.id)!; return x.leads.qualified.length * 1000 + x.leads.potential.length; }; return l(b) - l(a); }
+  if (sort === 'priceUp' || sort === 'priceDown') { const pa = priceOf(a), pb = priceOf(b); if (pa === null) return pb === null ? 0 : 1; if (pb === null) return -1; return sort === 'priceUp' ? pa - pb : pb - pa; }
+  return String(b.created_at ?? '').localeCompare(String(a.created_at ?? ''));
+ });
+ const uncategorized = count('uncategorized');
+ const universes = [{ key: 'real-estate' as const, label: t.real, icon: Building2 }, { key: 'holiday-rentals' as const, label: t.holiday, icon: Palmtree }];
+ return <div className="space-y-5">
+  <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+   <div role="group" aria-label={t.categories} className="grid grid-cols-2 gap-1.5 rounded-[20px] border p-1.5 lg:w-[440px]" style={{ borderColor: 'var(--crm-border)', background: 'var(--crm-surface)' }}>
+    {universes.map(({ key, label, icon: Icon }) => <button key={key} type="button" aria-pressed={market === key} onClick={() => { onMarket(key); setLimit(PAGE); }}
+     className="flex min-h-12 items-center justify-center gap-2 rounded-2xl px-3 text-sm font-semibold transition-all duration-300"
+     style={market === key ? { background: 'var(--crm-primary)', color: 'var(--crm-primary-text)', boxShadow: '0 8px 22px rgba(23,64,45,.25)' } : { color: 'var(--crm-text)' }}>
+     <Icon aria-hidden="true" className="h-4 w-4" />{label}<span className="text-xs tabular-nums opacity-70">{count(key)}</span></button>)}
    </div>
-  </section> : <section className="rounded-3xl border p-6 text-center" style={border}><Building2 aria-hidden="true" className="mx-auto mb-3 h-7 w-7" /><h2 className="font-semibold">{t.empty}</h2><p className="mt-2 text-sm" style={{ color: 'var(--crm-muted)' }}>{t.emptyHelp}</p></section>}
+   <label className="flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-[20px] border px-4" style={{ borderColor: 'var(--crm-border)', background: 'var(--crm-surface)' }}>
+    <Search aria-hidden="true" className="h-4 w-4 shrink-0" style={{ color: 'var(--crm-muted)' }} /><span className="sr-only">{h.search}</span>
+    <input value={query} onChange={e => { setQuery(e.target.value); setLimit(PAGE); }} placeholder={h.search} className="min-w-0 flex-1 bg-transparent text-sm outline-none" />
+   </label>
+  </div>
+  <div className="flex flex-wrap items-center gap-2">
+   {market === 'real-estate' && <div role="group" aria-label={t.transaction} className="flex gap-1">
+    {(['all', 'sale', 'rent'] as const).map(d => <button key={d} type="button" aria-pressed={deal === d} onClick={() => setDeal(d)} className="min-h-11 rounded-full border px-4 text-sm font-medium transition"
+     style={deal === d ? { background: 'var(--crm-soft)', borderColor: 'var(--crm-primary)', color: 'var(--crm-primary)' } : { borderColor: 'var(--crm-border)', background: 'var(--crm-surface)' }}>{d === 'all' ? h.all : t[d]} <span className="tabular-nums opacity-70">({count('real-estate', d)})</span></button>)}
+   </div>}
+   {market === 'holiday-rentals' && <span className="inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-medium" style={{ background: 'var(--crm-soft)', borderColor: 'var(--crm-primary)', color: 'var(--crm-primary)' }}>{h.shortStay}</span>}
+   {uncategorized > 0 && <button type="button" aria-pressed={market === 'uncategorized'} onClick={() => onMarket('uncategorized')} className="min-h-11 rounded-full px-3 text-xs underline" style={{ color: 'var(--crm-muted)' }}>{t.uncategorized} ({uncategorized})</button>}
+   <span className="flex-1" />
+   <span role="status" className="text-xs tabular-nums" style={{ color: 'var(--crm-muted)' }}>{h.results(sorted.length)}</span>
+   <label className="flex items-center gap-2 text-sm"><span className="sr-only">{h.sort}</span>
+    <select value={sort} onChange={e => setSort(e.target.value as Sort)} className="min-h-11 rounded-full border bg-transparent px-3 text-sm" style={{ borderColor: 'var(--crm-border)' }}>
+     <option value="recent">{h.sortRecent}</option><option value="priceUp">{h.sortPriceUp}</option><option value="priceDown">{h.sortPriceDown}</option><option value="leads">{h.sortLeads}</option>
+    </select></label>
+  </div>
+  {sorted.length ? <section aria-label={t.feed} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+   {sorted.slice(0, limit).map((r, i) => <div key={r.id} className="sh-card-in" style={{ animationDelay: `${Math.min(i, 8) * 35}ms` }}>
+    <PropertyCard record={r} blueprint={blueprint} hub={hubs.get(r.id)!} agentName={hubs.get(r.id)!.agentId ? titleOf(hubs.get(r.id)!.agentId!) : undefined}
+     readOnly={readOnly} canDelete={canDelete} onOpenHub={tab => onOpenHub(r.id, tab)} onMatcher={onMatcher ? () => onMatcher(r.id) : undefined}
+     onEdit={() => onOpen(r)} onDelete={onDelete ? () => onDelete(r.id) : undefined} />
+   </div>)}
+  </section> : <section className="rounded-[24px] border p-8 text-center" style={{ borderColor: 'var(--crm-border)', background: 'var(--crm-surface)' }}><Building2 aria-hidden="true" className="mx-auto mb-3 h-7 w-7" style={{ color: 'var(--crm-primary)' }} /><h2 className="font-semibold">{t.empty}</h2><p className="mt-2 text-sm" style={{ color: 'var(--crm-muted)' }}>{t.emptyHelp}</p></section>}
+  {sorted.length > limit && <div className="text-center"><button type="button" onClick={() => setLimit(n => n + PAGE)} className="min-h-11 rounded-full border px-5 text-sm font-medium" style={{ borderColor: 'var(--crm-border)', background: 'var(--crm-surface)' }}>{h.showMore}</button></div>}
  </div>;
 }

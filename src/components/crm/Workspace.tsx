@@ -21,7 +21,10 @@ import { ModulePlanner } from './ModulePlanner';
 import { IntelligenceCommandCenter } from './IntelligenceCommandCenter';
 import { DealMomentumBoard } from './DealMomentumBoard';
 import { OpportunityUniverse } from './OpportunityUniverse';
-import { MatchDesk } from './MatchDesk';
+import { PropertyHub } from './PropertyHub';
+import { Matcher } from './Matcher';
+import { ConversationCenter } from './ConversationCenter';
+import type { HubTab } from './PropertyCard';
 import { CardsView } from './CardsView';
 import { PropertyFeed } from './PropertyFeed';
 import { RuntimeContext } from './runtimeContext';
@@ -35,6 +38,7 @@ import { useProductText } from '@/i18n/product';
 import { useContactText } from '@/i18n/contacts';
 import { usePropertyFeedText } from '@/i18n/propertyFeed';
 import { isProperty } from '@/lib/crm/propertyFeed';
+import type { PropertyMarket } from '@/lib/crm/propertyFeed';
 import { contactStage } from '@/lib/crm/contactLifecycle';
 import type { ContactStage } from '@/lib/crm/contactLifecycle';
 
@@ -76,7 +80,7 @@ const SECTION_EN: Record<string,string> = {
   reservas:'Reservations', alquileres:'Rentals', calendario:'Calendar', operaciones:'Deals', operacion:'Deals',
   tareas:'Tasks', actividades:'Activities', agentes:'Agents', equipo:'Team', facturas:'Invoices',
   pagos:'Payments', propietarios:'Owners', informes:'Reports', oportunidades:'Opportunities',
-  visitas:'Viewings', automatizaciones:'Automations', mensajes:'Messages', negocios:'Business',
+  visitas:'Viewings', automatizaciones:'Automations', mensajes:'Messages', negocios:'Business', instagram:'Inbox',
 };
 const englishLabel = (key:string,label:string) => SECTION_EN[key.toLowerCase()] ?? SECTION_EN[label.toLowerCase()] ?? label;
 
@@ -108,14 +112,21 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
   const [openId, setOpenId] = useState<string | null>(null);
   const [mode, setMode] = useState<ThemeMode>(initialMode);
   const [palette, setPalette] = useState(false);
-  const [matchPresentation,setMatchPresentation] = useState<'cards'|'universe'>('cards');
   const [homeDetail,setHomeDetail] = useState<null|'deals'|'matches'|'insights'|'setup'|'overview'|'intelligence'>(null);
   const [businessMode, setBusinessMode] = useState<'real-estate' | 'holiday-rentals' | null>(() => { try { const value = localStorage.getItem(`statehubs:business-mode:${appId ?? blueprint.name}`); return value === 'real-estate' || value === 'holiday-rentals' ? value : null; } catch { return null; } });
-  const chooseBusinessMode = (value: 'real-estate' | 'holiday-rentals') => { setBusinessMode(value); try { localStorage.setItem(`statehubs:business-mode:${appId ?? blueprint.name}`,value); } catch { /* Private browsing: keep the in-memory selection. */ } };
+  const chooseBusinessMode = (value: 'real-estate' | 'holiday-rentals') => { setBusinessMode(value); setMarket(value); try { localStorage.setItem(`statehubs:business-mode:${appId ?? blueprint.name}`,value); } catch { /* Private browsing: keep the in-memory selection. */ } };
+  // One business-mode selection: the feed's universe switch and the workspace setting are the same value.
+  const [market, setMarket] = useState<PropertyMarket>(() => businessMode ?? 'real-estate');
+  const onMarket = (value: PropertyMarket) => { if (value === 'uncategorized') setMarket(value); else chooseBusinessMode(value); };
+  const [hubView, setHubView] = useState<{ id: string; tab: HubTab } | null>(null);
+  const [matcherId, setMatcherId] = useState<string | null>(null);
+  const [inboxId, setInboxId] = useState<string | null>(null);
   const dark = mode === 'dark';
 
   useEffect(() => { if (section === HOY ? home !== HOY : !sections.some((v) => v.key === section)) setSection(home); }, [sections, section, home]);
   useEffect(() => { if (openId && !records.some((r) => r.id === openId)) setOpenId(null); }, [records, openId]);
+  useEffect(() => { if (hubView && !records.some((r) => r.id === hubView.id)) setHubView(null); }, [records, hubView]);
+  useEffect(() => { if (matcherId && !records.some((r) => r.id === matcherId)) setMatcherId(null); }, [records, matcherId]);
 
   const view: View | null = sections.find((v) => v.key === section) ?? null;
   const hub = hubs.find((h) => h.sections.includes(section)) ?? hubs[0];
@@ -124,7 +135,8 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
   const pending = useMemo(() => { const t = computeToday(blueprint, records, now); return t.hoy.length + t.atrasado.length; }, [blueprint, records, now]);
   const entity = view?.entity ? blueprint.entities.find((e) => e.key === view.entity) : undefined;
   const createEntity = entity ?? (!view && hasPropertyModule ? blueprint.entities.find(e => isProperty(e.key)) : undefined);
-  const filters = useViewFilters(blueprint, view && FILTERED.has(view.type) ? view : null, records, { appId, titleOf, now });
+  // The Inbox has its own search and filters.
+  const filters = useViewFilters(blueprint, view && FILTERED.has(view.type) && view.entity !== 'conversacion' ? view : null, records, { appId, titleOf, now });
   const baseShown = filters.entity ? filters.records : records;
   const contactView = entity?.key === 'contacto_inmo';
   const shown = contactView && contactFilter !== 'all' ? baseShown.filter(r => r.entity !== 'contacto_inmo' || contactStage(r.data) === contactFilter) : baseShown;
@@ -147,7 +159,10 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
     const r = await onCreate(entityKey, data);
     if (r && 'id' in r) setOpenId(r.id);
   };
-  const actions = useMemo(() => ({ canEdit: !readOnly, canDelete: canDelete && !readOnly, createQuietly: readOnly ? () => undefined : onCreate, sendWebhook: readOnly ? undefined : onWebhook }), [readOnly, canDelete, onCreate, onWebhook]);
+  const inboxSection = sections.find(v => v.entity === 'conversacion')?.key;
+  const openConversation = (id: string) => { if (!inboxSection) { setOpenId(id); return; } setHubView(null); setMatcherId(null); setOpenId(null); setInboxId(id); setSection(inboxSection); };
+  const actions = useMemo(() => ({ canEdit: !readOnly, canDelete: canDelete && !readOnly, createQuietly: readOnly ? () => undefined : onCreate, sendWebhook: readOnly ? undefined : onWebhook,
+    openMatcher: (id: string) => setMatcherId(id), openPropertyHub: (id: string) => { setOpenId(null); setHubView({ id, tab: 'overview' }); } }), [readOnly, canDelete, onCreate, onWebhook]);
   const glass = { background: 'var(--crm-surface)', border: '1px solid var(--crm-border)' } as const;
 
   // One element for the hub switcher: a pill in the top bar on a computer,
@@ -212,8 +227,8 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
                 </p>
                 <h1 className="mt-1 truncate text-[1.9em] font-normal leading-tight tracking-[-0.02em] md:text-[2.8em]">{view ? englishLabel(view.key, view.label) : labelOf(HOY)}</h1>
               </div>
-              {createEntity && !readOnly && (
-                <button onClick={() => create(createEntity.key)} className="sh-touch inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(180,22,54,.28)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(180,22,54,.32)] active:scale-[.98] motion-reduce:transform-none"
+              {createEntity && createEntity.key !== 'conversacion' && !readOnly && (
+                <button onClick={() => create(createEntity.key)} className="sh-touch inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(23,64,45,.26)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(23,64,45,.3)] active:scale-[.98] motion-reduce:transform-none"
                   style={{ background: ACCENT }}>
                   <Plus className="h-4 w-4" /> {!view && hasPropertyModule ? <span>{propertyText.add}</span> : <><span className="hidden sm:inline">New: {createEntity.label.toLowerCase()}</span><span className="sm:hidden">New</span></>}
                 </button>
@@ -244,7 +259,8 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             </div>}
             {contactView && !shown.some(r => r.entity === 'contacto_inmo') && <p role="status" className="mb-4 text-sm" style={{ color: 'var(--crm-muted)' }}>{contactsText.empty}</p>}
             {view && filters.entity && <div className="mb-4"><FilterBar filters={filters} records={records} titleOf={titleOf} dark={dark} /></div>}
-            {!view && hasPropertyModule && <PropertyFeed blueprint={blueprint} appId={appId} records={records} onOpen={(r)=>setOpenId(r.id)} onDelete={onDelete} onMatch={(r)=>setOpenId(r.id)} readOnly={readOnly} canDelete={canDelete} />}
+            {!view && hasPropertyModule && <PropertyFeed blueprint={blueprint} appId={appId} records={records} market={market} onMarket={onMarket} titleOf={titleOf}
+              onOpen={(r)=>setOpenId(r.id)} onOpenHub={(id, tab='overview')=>setHubView({ id, tab })} onMatcher={setMatcherId} onDelete={onDelete} readOnly={readOnly} canDelete={canDelete} />}
             {!view && !hasPropertyModule && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r)=>setOpenId(r.id)} />}
             {(!view || view.type === 'ops') && <section className="mx-auto mt-5 max-w-2xl rounded-2xl border p-4" style={{borderColor:'var(--crm-border)',background:'var(--crm-surface)'}}>
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -261,14 +277,14 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
               </div>
               {homeDetail&&<div className="mt-4 border-t pt-4" style={{borderColor:'var(--crm-border)'}}>
                 {homeDetail==='deals'&&hasPropertyModule&&<DealMomentumBoard records={records} now={now} onOpen={(r)=>setOpenId(r.id)} />}
-                {homeDetail==='matches'&&hasPropertyModule&&(businessMode==='holiday-rentals'?<p className="text-sm" style={{color:'var(--crm-muted)'}}>Buyer matching is available in real-estate mode.</p>:<><div className="mb-3 flex gap-2">{(['cards','universe'] as const).map(p=><button key={p} type="button" aria-pressed={matchPresentation===p} onClick={()=>setMatchPresentation(p)} className="rounded-xl border px-3 py-2 text-xs" style={{borderColor:'var(--crm-border)'}}>{p==='cards'?'Matches':'Visual map'}</button>)}</div>{matchPresentation==='cards'?<MatchDesk records={records} onOpen={(r)=>setOpenId(r.id)} />:<OpportunityUniverse records={records} onOpen={(r)=>setOpenId(r.id)} />}</>)}
+                {homeDetail==='matches'&&hasPropertyModule&&(businessMode==='holiday-rentals'?<p className="text-sm" style={{color:'var(--crm-muted)'}}>Buyer matching is available in real-estate mode.</p>:<OpportunityUniverse records={records} onOpen={(r)=>isProperty(r.entity)?setHubView({ id: r.id, tab: 'leads' }):setMatcherId(r.id)} />)}
                 {homeDetail==='insights'&&<LivingWorkspace blueprint={blueprint} records={records} onOpen={(r)=>setOpenId(r.id)} />}
                 {homeDetail==='overview'&&<OperationsDashboard blueprint={blueprint} records={records} now={now} onOpen={(r)=>setOpenId(r.id)} />}
                 {homeDetail==='intelligence'&&hasPropertyModule&&<IntelligenceCommandCenter blueprint={blueprint} records={records} now={now} onOpen={(r)=>setOpenId(r.id)} onCreate={onCreate} readOnly={readOnly} />}
                 {homeDetail==='setup'&&hasPropertyModule&&<><BusinessModeCards mode={businessMode} onChoose={chooseBusinessMode} /><ModulePlanner appId={appId??blueprint.name} /></>}
               </div>}
             </section>}
-            {view && view.type === 'worklist' && (
+            {view && view.type === 'worklist' && view.entity !== 'conversacion' && (
               <WorklistView blueprint={blueprint} view={view} records={shown} dark={dark} titleOf={titleOf} selectedId={openId}
                 onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
             )}
@@ -282,7 +298,11 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
               <TimelineView blueprint={blueprint} view={view} records={records} dark={dark} titleOf={titleOf} selectedId={openId} now={now} onSync={readOnly ? undefined : onSyncIcal}
                 onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
             )}
-            {view && !['worklist', 'analysis', 'ops', 'cards', 'timeline'].includes(view.type) && (
+            {view && view.entity === 'conversacion' && (
+              <ConversationCenter blueprint={blueprint} records={records} appId={appId} readOnly={readOnly} selectedId={inboxId} titleOf={titleOf}
+                onOpenRecord={setOpenId} onOpenProperty={(id) => setHubView({ id, tab: 'overview' })} onMatcher={setMatcherId} />
+            )}
+            {view && view.entity !== 'conversacion' && !['worklist', 'analysis', 'ops', 'cards', 'timeline'].includes(view.type) && (
               <ViewBody blueprint={blueprint} view={view} records={shown} dark={dark} filtered={!!filters.entity} titleOf={titleOf} selectedId={openId}
                 onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />
             )}
@@ -290,6 +310,19 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
         </main>
         </div>
 
+        {hubView && records.some(r => r.id === hubView.id) && (
+          <RecordDialog wide title={`${propertyText.properties}: ${titleOf(hubView.id) ?? ''}`} onClose={() => setHubView(null)}>
+            <PropertyHub key={hubView.id} property={records.find(r => r.id === hubView.id)!} records={records} blueprint={blueprint} appId={appId} readOnly={readOnly}
+              initialTab={hubView.tab} titleOf={titleOf} onClose={() => setHubView(null)} onOpenRecord={setOpenId} onCreate={(entity, data) => void create(entity, data as RecordData)}
+              onMatcher={setMatcherId} onOpenConversation={openConversation} />
+          </RecordDialog>
+        )}
+        {matcherId && records.some(r => r.id === matcherId) && (
+          <RecordDialog wide title={`Matcher: ${titleOf(matcherId) ?? ''}`} onClose={() => setMatcherId(null)}>
+            <Matcher key={matcherId} source={records.find(r => r.id === matcherId)!} records={records} blueprint={blueprint} appId={appId} readOnly={readOnly}
+              onOpen={setOpenId} onClose={() => setMatcherId(null)} />
+          </RecordDialog>
+        )}
         {open && (
           <RecordDialog title={`Details: ${titleOf(open.id) ?? open.entity}`} onClose={() => setOpenId(null)}>
             <RecordPanel key={open.id} onOpen={id => { setRecordTrail(trail => [...trail, open.id]); setOpenId(id); }} onBack={recordTrail.length ? () => { setOpenId(recordTrail[recordTrail.length-1]); setRecordTrail(trail => trail.slice(0,-1)); } : undefined} blueprint={blueprint} appId={appId} record={open} records={records} titleOf={titleOf} dark={dark}
