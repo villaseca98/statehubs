@@ -171,7 +171,7 @@ describe('Workspace', () => {
       expect(app.dataset.theme).toBe('light');
       fireEvent.click(screen.getAllByRole('button', { name: 'Dark mode' })[0]);
       expect(app.dataset.theme).toBe('dark');
-      expect(app.style.getPropertyValue('--crm-bg')).toBe('#111114');
+      expect(app.style.getPropertyValue('--crm-bg')).toBe('#0f1512');
       expect(window.localStorage.getItem('statehubs.tema')).toBe('dark');
     });
   });

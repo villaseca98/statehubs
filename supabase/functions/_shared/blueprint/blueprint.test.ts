@@ -20,10 +20,10 @@ const base = (): Blueprint => {
 const full = (): Blueprint => clone(DEMO_APPS[0].blueprint);
 
 describe('look', () => {
-  it('is a single look: red on white, with a rose accent', () => {
-    expect(LOOK.colors.primary).toBe('#b41636');
-    expect(LOOK.colors.bg).toBe('#f8f8fa');
-    expect(LOOK.colors.accent).toBe('#f3a5b6');
+  it('is a single look: forest green on ivory, with a gold accent', () => {
+    expect(LOOK.colors.primary).toBe('#1f5c43');
+    expect(LOOK.colors.bg).toBe('#f6f3ea');
+    expect(LOOK.colors.accent).toBe('#c8a96a');
   });
 });
 
