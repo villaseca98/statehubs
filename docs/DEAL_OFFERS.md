@@ -10,7 +10,7 @@ The history displays the latest 100 revisions; all revisions remain in the datab
 
 ## Persistence and concurrency
 
-Migration `20261013160000_deal_offer_history.sql` creates an additive RLS-protected table and a security-definer RPC with an empty search path. Only members with write access can append. Every append validates the deal, associated contact and property in the same workspace and sample/real boundary. The actor is derived from the session. Direct insert, update and delete permissions are absent for authenticated clients.
+Migration `20261019120000_deal_offer_history.sql` creates an additive RLS-protected table and a security-definer RPC with an empty search path. Only members with write access can append. Every append validates the deal, associated contact and property in the same workspace and sample/real boundary. The actor is derived from the session. Direct insert, update and delete permissions are absent for authenticated clients.
 
 A row lock on the deal serializes concurrent submissions; expected revision rejects stale edits. A request UUID makes retries idempotent and rejects reuse with altered terms. The client retains the request UUID after a failed request and regenerates it when the draft changes. The history and an activity note are inserted in the same transaction. Relationships cannot switch mid-negotiation; create a separate deal instead. Deleting the deal or workspace cascades its history, consistent with existing CRM deletion semantics; this is not a statutory immutable retention archive. Deleted contact/property IDs remain historical references.
 

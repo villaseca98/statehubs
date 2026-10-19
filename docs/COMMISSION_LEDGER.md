@@ -12,7 +12,7 @@ Amounts use integer minor units, with currency precision pinned in `currencyDeci
 
 ## Database and security
 
-Migration `20261013170000_commission_ledger.sql` adds ledger and receipt tables with RLS and authenticated read policies. Direct client writes are revoked. Creation/receipt RPCs require write access to the deal's workspace, derive the actor from the session and append activity notes in the same transaction. Viewers can read but not mutate. Anonymous calls and cross-agency reads/writes are denied.
+Migration `20261019130000_commission_ledger.sql` adds ledger and receipt tables with RLS and authenticated read policies. Direct client writes are revoked. Creation/receipt RPCs require write access to the deal's workspace, derive the actor from the session and append activity notes in the same transaction. Viewers can read but not mutate. Anonymous calls and cross-agency reads/writes are denied.
 
 Plan creation locks the deal and prevents replacing an existing plan. Receipt creation locks the ledger and sums existing receipts before admitting the next one; concurrent writers cannot collect beyond an allocation. Request UUIDs deduplicate exact retries and reject altered retries. All receipt pages are fetched for the displayed balances. Local/demo mode mirrors the contract with existing browser storage; it does not establish production database durability.
 
@@ -35,7 +35,7 @@ Commission rules/percentage calculation, automatic agent membership linking, edi
 
 ## M2.5 — full receipt reversals
 
-Migration `20261013180000_commission_reversals.sql` adds a nullable, unique reference to the original receipt and an authenticated reversal RPC. Existing positive receipts remain unchanged. A reversal appends the exact opposite minor-unit amount to the same allocation, with a mandatory reason, server actor/time and an activity event. The original receipt remains visible and is marked reversed. This corrects the internal record, not a bank refund.
+Migration `20261019140000_commission_reversals.sql` adds a nullable, unique reference to the original receipt and an authenticated reversal RPC. Existing positive receipts remain unchanged. A reversal appends the exact opposite minor-unit amount to the same allocation, with a mandatory reason, server actor/time and an activity event. The original receipt remains visible and is marked reversed. This corrects the internal record, not a bank refund.
 
 Reversals lock the same ledger as receipt creation. A receipt can be reversed only once; negative reversal entries cannot themselves be reversed. Request IDs make exact retries idempotent and reject changed retry payloads. Viewers, anonymous callers and other tenants cannot reverse. The restored balance can be collected again through the normal overcollection checks. Deletion still follows the existing deal/workspace cascade semantics.
 
