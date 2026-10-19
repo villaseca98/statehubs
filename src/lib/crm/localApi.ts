@@ -1,3 +1,5 @@
+import { validateCommission, shareBalance, type CommissionLedger, type CommissionReceipt } from './commissions';
+import { validateOffer, type OfferRevision } from './offers';
 import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import { cardProposal } from '@shared/blueprint/modules.ts';
 import type { MatchDecision, RecordEvent, CrmApp, CrmMessage, CrmProposal, CrmVersion, GoogleStatus, IcalSyncResult, InstagramStatus, crmApi } from './api';
@@ -7,7 +9,7 @@ import { localAgent } from './localAgent';
 // Same rules as the server: proposals first, every apply is a version,
 // undo restores as a new version, a stale proposal is refused.
 
-interface LocalApp { matches?: MatchDecision[]; events?: RecordEvent[]; app: CrmApp; versions: CrmVersion[]; messages: CrmMessage[]; proposals: CrmProposal[]; records: AppRecord[] }
+interface LocalApp { commissions?: CommissionLedger[]; offers?: OfferRevision[]; matches?: MatchDecision[]; events?: RecordEvent[]; app: CrmApp; versions: CrmVersion[]; messages: CrmMessage[]; proposals: CrmProposal[]; records: AppRecord[] }
 type Store = Record<string, LocalApp>;
 
 const KEY = 'statehubs_local_v1';
@@ -45,6 +47,51 @@ function eventFor(a: LocalApp, record: AppRecord, before?: RecordData) {
   (a.events ??= []).push({ id: uid(), record_id: record.id, actor_id: null, kind: before ? 'changed' : 'created', fields, body: null, created_at: now() });
 }
 export const localCrmApi: typeof crmApi = {
+  reverseCommissionReceipt: async (receiptId,reason,request) => {
+    const store=load();const app=Object.values(store).find(a=>a.commissions?.some(l=>l.receipts.some(r=>r.id===receiptId)));const ledger=app?.commissions?.find(l=>l.receipts.some(r=>r.id===receiptId));const original=ledger?.receipts.find(r=>r.id===receiptId);
+    if(!app||!ledger||!original)throw new Error('Receipt unavailable');
+    if(!reason.trim()||reason.length>500||original.units<=0||original.reverses)throw new Error('Invalid receipt reversal');
+    const existing=Object.values(store).flatMap(a=>a.commissions??[]).flatMap(l=>l.receipts).find(r=>r.id===request);
+    if(existing){if(existing.reverses===receiptId&&existing.reference===reason)return existing;throw new Error('Reversal request already used');}
+    if(ledger.receipts.some(r=>r.reverses===receiptId))throw new Error('Receipt already reversed. Reload the ledger');
+    const receipt:CommissionReceipt={id:request,deal_id:ledger.deal_id,share_index:original.share_index,units:-original.units,reference:reason,actor_id:null,created_at:now(),reverses:original.id};ledger.receipts.push(receipt);
+    (app.events??=[]).push({id:uid(),record_id:ledger.deal_id,actor_id:null,kind:'note',body:`Commission receipt reversed · ${original.id} · ${reason}`,fields:[],created_at:now()});save(store);return receipt;
+  },
+  commissionLedger: async dealId => Object.values(load()).flatMap(a=>a.commissions??[]).find(l=>l.deal_id===dealId)??null,
+  createCommission: async (dealId,input,request) => {
+    validateCommission(input);const store=load();const app=Object.values(store).find(a=>a.records.some(r=>r.id===dealId&&r.entity==='operacion'));
+    if(!app)throw new Error('Deal unavailable');
+    const existing=app.commissions?.find(l=>l.deal_id===dealId);
+    if(existing){if(existing.request_id===request&&existing.currency===input.currency&&existing.total_units===input.total_units&&JSON.stringify(existing.shares)===JSON.stringify(input.shares))return existing;throw new Error('Commission plan already exists. Reload the ledger');}
+    if(Object.values(store).flatMap(a=>a.commissions??[]).some(l=>l.request_id===request))throw new Error('Request already used');
+    const ledger:CommissionLedger={...input,deal_id:dealId,app_id:app.app.id,request_id:request,actor_id:null,created_at:now(),receipts:[]};
+    (app.commissions??=[]).push(ledger);(app.events??=[]).push({id:uid(),record_id:dealId,actor_id:null,kind:'note',body:`Commission allocation plan recorded · ${input.currency}`,fields:[],created_at:now()});save(store);return ledger;
+  },
+  recordCommissionReceipt: async (dealId,index,units,reference,request) => {
+    const store=load();const app=Object.values(store).find(a=>a.commissions?.some(l=>l.deal_id===dealId));const ledger=app?.commissions?.find(l=>l.deal_id===dealId);
+    if(!app||!ledger)throw new Error('Commission unavailable');
+    if(!Number.isInteger(index)||index<0||index>=ledger.shares.length||!Number.isSafeInteger(units)||units<=0||!reference.trim()||reference.length>500)throw new Error('Invalid receipt');
+    const existing=Object.values(store).flatMap(a=>a.commissions??[]).flatMap(l=>l.receipts).find(r=>r.id===request);
+    if(existing){if(existing.deal_id===dealId&&existing.share_index===index&&existing.units===units&&existing.reference===reference)return existing;throw new Error('Receipt request already used');}
+    if(units>shareBalance(ledger,index))throw new Error('Receipt exceeds the outstanding allocation');
+    const receipt:CommissionReceipt={id:request,deal_id:dealId,share_index:index,units,reference,actor_id:null,created_at:now()};ledger.receipts.push(receipt);
+    (app.events??=[]).push({id:uid(),record_id:dealId,actor_id:null,kind:'note',body:`Commission receipt recorded · ${reference}`,fields:[],created_at:now()});save(store);return receipt;
+  },
+  offerRevisions: async dealId => Object.values(load()).flatMap(a=>a.offers??[]).filter(o=>o.deal_id===dealId).sort((a,b)=>b.revision-a.revision).slice(0,100),
+  appendOffer: async (dealId,input,expected,request) => {
+    const store=load();const app=Object.values(store).find(a=>a.records.some(r=>r.id===dealId));const deal=app?.records.find(r=>r.id===dealId);
+    if(!app||!deal||deal.entity!=='operacion')throw new Error('Deal unavailable');
+    const existing=Object.values(store).flatMap(a=>a.offers??[]).find(o=>o.id===request);
+    if(existing){if(existing.deal_id!==dealId||existing.amount!==input.amount||existing.currency!==input.currency||existing.status!==input.status||existing.note!==input.note||existing.revision!==expected+1)throw new Error('Request already used');return existing;}
+    const previous=(app.offers??[]).filter(o=>o.deal_id===dealId).sort((a,b)=>b.revision-a.revision)[0];
+    if((previous?.revision??0)!==expected)throw new Error('Offer changed. Reload before saving');
+    validateOffer(input,previous);
+    const contact=app.records.find(r=>r.id===deal.data.contacto&&['contacto_inmo','lead','cliente'].includes(r.entity));const property=app.records.find(r=>r.id===deal.data.inmueble&&r.entity==='inmueble');
+    if(!contact||!property||Boolean(contact.is_sample)!==Boolean(deal.is_sample)||Boolean(property.is_sample)!==Boolean(deal.is_sample))throw new Error('Link a contact and property from this workspace');
+    if(previous&&(previous.contact_id!==contact.id||previous.property_id!==property.id))throw new Error('Deal relationships changed. Use a separate deal for this negotiation');
+    const revision:OfferRevision={...input,id:request,app_id:app.app.id,deal_id:dealId,contact_id:contact.id,property_id:property.id,revision:expected+1,actor_id:null,created_at:now()};
+    (app.offers??=[]).push(revision);(app.events??=[]).push({id:uid(),record_id:dealId,actor_id:null,kind:'note',body:`Offer revision ${revision.revision}: ${input.status} · ${input.amount} ${input.currency}`,fields:[],created_at:now()});save(store);return revision;
+  },
   matchDecisions: async appId => load()[appId]?.matches ?? [],
   setMatchDecision: async (contactId,propertyId,status) => {
     if (!['saved','dismissed','suggested'].includes(status)) throw new Error('Invalid match decision');
@@ -120,7 +167,7 @@ export const localCrmApi: typeof crmApi = {
   },
   deleteRecord: async (id: string) => {
     const s = load();
-    for (const a of Object.values(s)) { a.records = a.records.filter((r) => r.id !== id); a.events = a.events?.filter(e => e.record_id !== id); a.matches = a.matches?.filter(m=>m.contact_id!==id&&m.property_id!==id); }
+    for (const a of Object.values(s)) { a.records = a.records.filter((r) => r.id !== id); a.events = a.events?.filter(e => e.record_id !== id); a.commissions = a.commissions?.filter(l=>l.deal_id!==id); a.offers = a.offers?.filter(o=>o.deal_id!==id); a.matches = a.matches?.filter(m=>m.contact_id!==id&&m.property_id!==id); }
     save(s);
     return null;
   },
@@ -165,6 +212,8 @@ export const localCrmApi: typeof crmApi = {
   clearSamples: async (appId: string) => update(appId, (a) => {
     const before = a.records.length;
     a.records = a.records.filter((r) => !r.is_sample);
+    const remainingIds=new Set(a.records.map(r=>r.id));
+    a.commissions=a.commissions?.filter(l=>remainingIds.has(l.deal_id));
     return before - a.records.length;
   }),
   ask: async (appId: string, message: string) => update(appId, (a) => {

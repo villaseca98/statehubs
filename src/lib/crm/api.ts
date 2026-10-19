@@ -1,3 +1,5 @@
+import type { CommissionInput, CommissionLedger, CommissionReceipt } from './commissions';
+import type { OfferInput, OfferRevision } from './offers';
 import { server } from '@/lib/supabase';
 import type { AppRecord, Blueprint, RecordData } from '@shared/blueprint/types.ts';
 import type { Change } from '@shared/blueprint/diff.ts';
@@ -41,6 +43,18 @@ async function must<T>(p: PromiseLike<{ data: T; error: { message: string } | nu
 }
 
 export const crmApi = {
+  reverseCommissionReceipt: (receiptId:string,reason:string,request:string) => must<CommissionReceipt>(db().rpc('crm_reverse_commission_receipt',{p_receipt:receiptId,p_reason:reason,p_request:request})),
+  commissionLedger: async (dealId:string):Promise<CommissionLedger|null> => {
+    const ledger=await must<Omit<CommissionLedger,'receipts'>|null>(db().from('crm_commission_ledgers').select('*').eq('deal_id',dealId).maybeSingle());
+    if(!ledger)return null;
+    const receipts:CommissionReceipt[]=[];
+    for(let offset=0;;offset+=500){const page=await must<CommissionReceipt[]>(db().from('crm_commission_receipts').select('*').eq('deal_id',dealId).order('created_at').order('id').range(offset,offset+499));receipts.push(...page);if(page.length<500)break;}
+    return {...ledger,receipts};
+  },
+  createCommission: (dealId:string,input:CommissionInput,request:string) => must<Omit<CommissionLedger,'receipts'>>(db().rpc('crm_create_commission',{p_deal:dealId,p_currency:input.currency,p_total:input.total_units,p_shares:input.shares,p_request:request})),
+  recordCommissionReceipt: (dealId:string,index:number,units:number,reference:string,request:string) => must<CommissionReceipt>(db().rpc('crm_record_commission_receipt',{p_deal:dealId,p_share:index,p_units:units,p_reference:reference,p_request:request})),
+  offerRevisions: (dealId: string) => must<OfferRevision[]>(db().from('crm_offer_revisions').select('*').eq('deal_id',dealId).order('revision',{ascending:false}).limit(100)),
+  appendOffer: (dealId: string, input: OfferInput, expected: number, request: string) => must<OfferRevision>(db().rpc('crm_append_offer',{p_deal:dealId,p_amount:input.amount,p_currency:input.currency,p_status:input.status,p_note:input.note,p_expected:expected,p_request:request})),
   matchDecisions: async (appId: string) => {
     const rows: MatchDecision[] = [];
     for (let offset = 0; ; offset += 500) {
