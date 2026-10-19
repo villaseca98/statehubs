@@ -14,8 +14,8 @@ Implemented means code exists and the indicated local workflow is covered; it do
 | Dashboard | Partial | real-record counts, priorities and tests; no role-specific or complete organization metrics |
 | Advanced search/filter/saved views | Partial | filters + CommandPalette tests; local datasets and browser-local saved views |
 | Duplicate detection | Partial | analysis.ts reporting; no identity merge/uniqueness workflow |
-| Properties | Partial | grid/table/detail/edit/private assets; maps/listing syndication/versioned ownership absent |
-| Property matching | Partial | Currency-safe explainable engine, profiles, forward/reverse cards, persistent shortlists/dismissals and linked viewing actions; PostgreSQL isolation and browser checks pass; live migration pending (MATCH_INTELLIGENCE.md) |
+| Properties | Partial | card grid with real indicators, universe/deal filters, search, sort; per-property mini-CRM (leads, conversations, viewings/bookings, deals, activity); maps/listing syndication absent |
+| Property matching | Implemented locally | One deterministic engine (`matching.ts`, English aliases) for record panel, Matcher, map and search; swipe Matcher persists saved/dismissed through `crm_set_match_decision`; session-only MatchDesk removed (AUDITORIA_CONSOLIDACION_2026-10-19.md) |
 | Holiday rentals | Partial | reservations/services/incidents/timeline tests; transactional booking exclusion absent |
 | Residential rentals | Planned | no dedicated lease, rent schedule or renewal domain |
 | Calendar | Partial | timeline day/week/month, appointment helpers; global timezone migration pending |
@@ -23,6 +23,7 @@ Implemented means code exists and the indicated local workflow is covered; it do
 | iCal | Implemented; live verification pending | crm-ical + parser/sync tests; availability import only, no prices/messages/payments |
 | Instagram assistant | Partial; live release blocked | OAuth/signed webhook/bot; retry/idempotency failure window, Meta approval/credentials unverified |
 | Meta lead ingestion | Partial; configuration pending | signed ingress, source/event dedup; fixed destination app, potential invisible entity in pack |
+| Conversation inbox | Partial | three-column inbox over `conversacion` records, transcript bubbles, context panel, internal notes; outbound replies and WhatsApp/email/web adapters not implemented and shown as not connected |
 | WhatsApp/email | Link actions only | tel/mailto/wa.me; no WhatsApp Business or email inbox adapter |
 | Webhook automation | Partial | matching/payload/public URL checks; no durable jobs/retries/audit, before data from caller |
 | AI blueprint assistant | Implemented; provider verification pending | crm-agent + shared validation; no general AI CRM copilot |

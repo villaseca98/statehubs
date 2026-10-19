@@ -25,18 +25,22 @@ export function linkedToProperty(record: AppRecord, property: AppRecord, bluepri
  const declared = blueprint.entities.find(e => e.key === record.entity)?.fields.filter(f => f.type === 'relation' && f.relation === property.entity).map(f => f.key) ?? [];
  return [...declared, ...PROPERTY_LINKS].some(key => record.data[key] === property.id);
 }
-export function propertyContacts(property: AppRecord, records: AppRecord[], blueprint: Blueprint) {
+export const CONTACT_ENTITY = /^(contacto_inmo|lead|leads|contact|contacts|contacto|contactos|cliente|clientes|buyer|buyers|prospect|prospects)$/i;
+export const contactInactive = (r: AppRecord) => r.data.crm_archived === true || ['descartado', 'perdido'].includes(str(r.data.temperatura || r.data.estado));
+/** Contacts tied to a property directly or through a viewing, deal, booking or conversation. */
+export function linkedContacts(property: AppRecord, records: AppRecord[], blueprint: Blueprint, includeInactive = false) {
  const related = records.filter(r => linkedToProperty(r, property, blueprint));
  const contactIds = new Set<string>();
  for (const r of related) {
   const fields = blueprint.entities.find(e => e.key === r.entity)?.fields.filter(f => f.type === 'relation' && /^(contacto_inmo|lead|cliente|contact|contacto|buyer)$/.test(f.relation ?? '')).map(f => f.key) ?? [];
   for (const key of [...fields, 'contacto', 'contact_id', 'lead', 'lead_id', 'buyer_id']) if (typeof r.data[key] === 'string') contactIds.add(r.data[key] as string);
  }
- return records.filter(r => /^(contacto_inmo|lead|leads|contact|contacts|contacto|contactos|cliente|clientes|buyer|buyers|prospect|prospects)$/i.test(r.entity)
-  && r.data.crm_archived !== true && !['descartado', 'perdido'].includes(str(r.data.temperatura || r.data.estado))
+ return records.filter(r => CONTACT_ENTITY.test(r.entity)
+  && (includeInactive || !contactInactive(r))
   && Boolean(r.is_sample) === Boolean(property.is_sample)
   && (linkedToProperty(r, property, blueprint) || contactIds.has(r.id)));
 }
+export const propertyContacts = (property: AppRecord, records: AppRecord[], blueprint: Blueprint) => linkedContacts(property, records, blueprint);
 export function explicitlyQualified(record: AppRecord) {
  // Temperature, a saved match and a successful past deal do not qualify a person.
  if (typeof record.data.match_qualified === 'boolean') return record.data.match_qualified;

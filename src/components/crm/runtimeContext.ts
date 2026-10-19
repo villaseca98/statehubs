@@ -9,6 +9,9 @@ export interface RuntimeActions {
   canDelete?: boolean;
   createQuietly: (entity: string, data: RecordData) => unknown;
   sendWebhook?: (record: AppRecord) => Promise<string> | string | void;
+  /** Open the Matcher for a property or contact, and the mini-CRM of a property. */
+  openMatcher?: (id: string) => void;
+  openPropertyHub?: (id: string) => void;
 }
 
 export const RuntimeContext = createContext<RuntimeActions | null>(null);

@@ -1,7 +1,7 @@
 // Phase 2 product interface defaults to English. Domain keys remain compatible.
 export const matchingText = {
  currencyUnspecified:'Currency unspecified', propertyOverview:'Property overview', perNight:' / night', perMonth:' / month', owner:'Owner', relatedRecord:'Related record',
- title:'Match intelligence', preferences:'Matching profile', qualified:'Qualified for reverse matching', intent:'Transaction intent', unknown:'Not specified', sale:'Purchase', rent:'Long-term rental',
+ title:'Match intelligence', openMatcher:'Open Matcher', preferences:'Matching profile', qualified:'Qualified for reverse matching', intent:'Transaction intent', unknown:'Not specified', sale:'Purchase', rent:'Long-term rental',
  currency:'Currency (ISO 4217)', budget:'Maximum budget', price:'Asking price', location:'Preferred areas (comma separated)', type:'Property type', bedrooms:'Minimum bedrooms', bathrooms:'Minimum bathrooms', area:'Minimum floor area (m²)',
  features:'Must-have features (comma separated)', propertyFeatures:'Property features (comma separated)', verified:'Feature list verified complete', exclusions:'Excluded features (comma separated)', use:'Intended use / investment objective', by:'Move-in or purchase deadline', availableFrom:'Available from', last:'Last meaningful contact',
  qualifiedOnly:'Qualified contacts only', suggested:'Suggestions', saved:'Saved shortlist', dismissed:'Dismissed', save:'Save match', dismiss:'Dismiss', restore:'Restore suggestion',

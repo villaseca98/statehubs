@@ -34,7 +34,7 @@ export function MatchIntelligence({appId,record,records,blueprint,readOnly,onUpd
  };
  if(!CONTACT_ENTITIES.has(record.entity)&&record.entity!=='inmueble')return null;
  return <section className="mb-6 border-b pb-5" style={{borderColor:'var(--crm-border)'}} aria-label={t.title}>
-  <h3 className="font-semibold">{t.title}</h3><p className="mt-2 text-xs" style={{color:'var(--crm-muted)'}}>{t.explain}</p>
+  <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{t.title}</h3>{runtime?.openMatcher&&<button type="button" className={button} onClick={()=>runtime.openMatcher?.(record.id)} style={{background:'var(--crm-primary)',color:'var(--crm-primary-text)',borderColor:'transparent'}}>{t.openMatcher}</button>}</div><p className="mt-2 text-xs" style={{color:'var(--crm-muted)'}}>{t.explain}</p>
   <MatchingProfile record={record} readOnly={readOnly} onUpdate={onUpdate}/>
   {record.entity==='inmueble'&&<label className="mb-3 flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={qualified} onChange={e=>setQualified(e.target.checked)}/>{t.qualifiedOnly}</label>}
   {!appId&&<p className="mb-3 text-xs">{t.demo}</p>}

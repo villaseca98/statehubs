@@ -1,0 +1,54 @@
+import { beforeEach, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { composePack } from '@shared/blueprint/modules';
+import type { AppRecord } from '@shared/blueprint/types';
+import { localCrmApi } from '@/lib/crm/localApi';
+import { RuntimeContext } from './runtimeContext';
+import { PropertyHub } from './PropertyHub';
+const bp = composePack('ambos', 'Agency');
+const home: AppRecord = { id: 'p', entity: 'inmueble', data: { direccion: 'Ocean House', operacion: 'venta', precio: 250000, moneda: 'EUR' } };
+const alex: AppRecord = { id: 'c', entity: 'contacto_inmo', data: { nombre: 'Alex', match_qualified: true, email: 'alex@example.com', telefono: '+34 600 111 222' } };
+const deal: AppRecord = { id: 'd', entity: 'operacion', data: { titulo: 'Alex offer', etapa: 'negociacion', inmueble: 'p', contacto: 'c', importe: 240000, comision: 3 } };
+const conv: AppRecord = { id: 'i', entity: 'conversacion', data: { usuario: '@alex', contacto: 'c', transcripcion: '[22:00] @alex: Is it available?' } };
+const base = { blueprint: bp, readOnly: false, titleOf: (id: string) => ({ c: 'Alex' } as Record<string, string>)[id], onClose: vi.fn(), onOpenRecord: vi.fn(), onCreate: vi.fn(), onMatcher: vi.fn(), onOpenConversation: vi.fn() };
+beforeEach(() => localStorage.clear());
+it('shows leads, conversations and deals from the shared records', () => {
+ const props = { ...base, onMatcher: vi.fn(), onOpenConversation: vi.fn() };
+ render(<PropertyHub {...props} property={home} records={[home, alex, deal, conv]} />);
+ fireEvent.click(screen.getByRole('button', { name: /^Leads/ }));
+ expect(screen.getByRole('link', { name: 'Email' })).toHaveAttribute('href', 'mailto:alex%40example.com');
+ expect(screen.getByRole('link', { name: 'WhatsApp' })).toHaveAttribute('href', 'https://wa.me/34600111222');
+ fireEvent.click(screen.getByRole('button', { name: 'Find matching properties' }));
+ expect(props.onMatcher).toHaveBeenCalledWith('c');
+ fireEvent.click(screen.getByRole('button', { name: /^Conversations/ }));
+ fireEvent.click(screen.getByRole('button', { name: /Is it available/ }));
+ expect(props.onOpenConversation).toHaveBeenCalledWith('i');
+ fireEvent.click(screen.getByRole('button', { name: /^Offers & deals/ }));
+ expect(screen.getByText('€240,000')).toBeTruthy();
+ expect(screen.getByText('Commission: €7,200')).toBeTruthy();
+});
+it('requests a viewing as pending, never as confirmed', async () => {
+ const createQuietly = vi.fn().mockResolvedValue({ id: 'new' });
+ render(<RuntimeContext.Provider value={{ canEdit: true, createQuietly }}><PropertyHub {...base} property={home} records={[home, alex]} initialTab="viewings" /></RuntimeContext.Provider>);
+ fireEvent.change(screen.getByLabelText('Date and time'), { target: { value: '2099-01-02T10:00' } });
+ fireEvent.change(screen.getByLabelText('Contact'), { target: { value: 'c' } });
+ fireEvent.click(screen.getByRole('button', { name: 'Schedule' }));
+ await screen.findByText(/Viewing requested/);
+ expect(createQuietly).toHaveBeenCalledWith('cita_inmo', expect.objectContaining({ cuando: '2099-01-02T10:00', inmueble: 'p', contacto: 'c', resultado: 'pendiente' }));
+});
+it('lists bookings for holiday rentals with their recorded dates', () => {
+ const villa: AppRecord = { id: 'h', entity: 'inmueble', data: { direccion: 'Villa', operacion: 'turistico' } };
+ const booking: AppRecord = { id: 'b', entity: 'reserva', data: { huesped: 'Morgan', alojamiento: 'h', entrada: '2099-11-01', salida: '2099-11-03' } };
+ render(<PropertyHub {...base} property={villa} records={[villa, booking]} initialTab="viewings" />);
+ expect(screen.getByText('2099-11-01 → 2099-11-03')).toBeTruthy();
+ expect(screen.queryByRole('button', { name: 'Open Matcher' })).toBeNull();
+});
+it('persists internal notes through the existing activity API', async () => {
+ const app = await localCrmApi.createApp('');
+ const record = await localCrmApi.createRecord(app.id, 'inmueble', home.data);
+ render(<PropertyHub {...base} appId={app.id} property={record} records={[record]} initialTab="activity" />);
+ fireEvent.change(await screen.findByLabelText('Activity details'), { target: { value: 'Owner confirmed access' } });
+ fireEvent.click(screen.getByRole('button', { name: 'Save activity' }));
+ await screen.findByText('Owner confirmed access');
+ expect((await localCrmApi.recordEvents(record.id)).filter(e => e.body === 'Owner confirmed access')).toHaveLength(1);
+});

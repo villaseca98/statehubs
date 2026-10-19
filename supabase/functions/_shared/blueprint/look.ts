@@ -26,20 +26,20 @@ export interface Look {
 export const LOOK: Look = {
   density: 'comfortable',
   radius: 18,
-  // White surfaces, charcoal text and StateHubs red throughout the workspace.
+  // Ivory surfaces, deep ink text and forest green throughout the workspace.
   colors: {
-    bg: '#f8f8fa', surface: '#fdfcfb', border: '#e8e8ed', text: '#19191d', muted: '#686872',
-    primary: '#b41636', primaryText: '#ffffff', navBg: '#fdfcfb', navText: '#555560', navActive: '#b41636',
-    soft: '#fceef1', accent: '#f3a5b6',
+    bg: '#f6f3ea', surface: '#fffdf7', border: '#e4dfcf', text: '#17241d', muted: '#5c695f',
+    primary: '#1f5c43', primaryText: '#fffdf7', navBg: '#fbf8ef', navText: '#4d5a52', navActive: '#1f5c43',
+    soft: '#e5eee6', accent: '#c8a96a',
   },
 };
 
-// The same identity at night: charcoal surfaces, soft borders
+// The same identity at night: deep green-charcoal surfaces, soft borders
 // and text that reads without glare.
 export const LOOK_DARK: LookColors = {
-  bg: '#111114', surface: '#1b1b20', border: '#303038', text: '#f5f5f7', muted: '#a4a4ae',
-  primary: '#c51d42', primaryText: '#ffffff', navBg: '#16161a', navText: '#c0c0c8', navActive: '#ffffff',
-  soft: '#351b24', accent: '#f3a5b6',
+  bg: '#0f1512', surface: '#17201b', border: '#2b372f', text: '#eef3ee', muted: '#a3b0a7',
+  primary: '#7cc49c', primaryText: '#0d1a14', navBg: '#121a16', navText: '#c2cdc5', navActive: '#ffffff',
+  soft: '#1f3329', accent: '#c8a96a',
 };
 
 // StateHubs corporate colours (legacy 'red' property kept for compatibility).
