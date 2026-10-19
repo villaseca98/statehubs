@@ -4,7 +4,7 @@ import type { AppRecord, Blueprint } from '@shared/blueprint/types.ts';
 import { globalSearch } from '@/lib/crm/filters';
 import {computeToday} from '@/lib/crm/today';
 import {prioritizeWork} from '@/lib/crm/operationalIntelligence';
-import {matchOpportunities} from '@/lib/crm/matchIntelligence';
+import {matchesForMode} from '@/lib/crm/matching';
 import type { SearchHit } from '@/lib/crm/filters';
 
 // Cmd/Ctrl+K: find any record of any section (by name, phone, email or
@@ -39,8 +39,8 @@ export function CommandPalette({ blueprint, records, sections, onClose, onRecord
       return queue.slice(0,8).map(a=>({kind:'record' as const,id:a.record.id,title:a.title,subtitle:a.reason+' · '+a.explanation,score:a.score}));
     }
     if(/^(match|buyers? for|properties for|compatible)/.test(q)){
-      const results=matchOpportunities(records,/rent|tenant|lease/.test(q)?'rent':'sale');
-      return results.slice(0,8).map(m=>({kind:'record' as const,id:m.property.id,title:String(m.property.data.direccion||m.property.data.nombre||'Property'),subtitle:`${m.score}% criteria fit · ${m.reasons.join(', ')}`,score:m.score}));
+      const results=matchesForMode(records,/rent|tenant|lease/.test(q)?'rent':'sale',8);
+      return results.map(m=>({kind:'record' as const,id:m.property.id,title:String(m.property.data.direccion||m.property.data.address||m.property.data.nombre||'Property'),subtitle:`${m.score}/100 criteria met · ${String(m.contact.data.nombre||m.contact.data.name||'Contact')}`,score:m.score??0}));
     }
     return standard;
   },[blueprint,records,sections,query,mode]);

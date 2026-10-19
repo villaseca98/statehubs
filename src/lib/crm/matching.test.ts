@@ -43,4 +43,8 @@ describe('explainable matching',()=>{
   expect(matchProperty(c({crm_archived:true}),property).eligible).toBe(false);
   expect(matchProperty({...contact,is_sample:true},property).eligible).toBe(false);
  });
+ it('never offers a property to owners or sellers who are not also looking',()=>{
+  expect(matchProperty(c({tipo:'vendedor'}),property).eligible).toBe(false);
+  expect(matchProperty(c({tipo:'vendedor',crm_role_comprador:true}),property).eligible).toBe(true);
+ });
 });
