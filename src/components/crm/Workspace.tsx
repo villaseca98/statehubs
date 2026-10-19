@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { BrainCircuit, Briefcase, Building2, CalendarDays, CalendarRange, Columns3, LayoutDashboard, LayoutGrid, ListChecks, Moon, Palmtree, Plus, Search, Sun, Table2, Users } from 'lucide-react';
+import { BrainCircuit, Briefcase, Building2, CalendarDays, CalendarRange, Columns3, LayoutDashboard, LayoutGrid, ListChecks, MessagesSquare, Moon, MoreHorizontal, Palmtree, Plus, Search, Sun, Table2, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { AppRecord, Blueprint, RecordData, View } from '@shared/blueprint/types.ts';
 import { computeToday } from '@/lib/crm/today';
@@ -23,23 +23,24 @@ import { DealMomentumBoard } from './DealMomentumBoard';
 import { OpportunityUniverse } from './OpportunityUniverse';
 import { MatchDesk } from './MatchDesk';
 import { CardsView } from './CardsView';
+import { PropertyFeed } from './PropertyFeed';
 import { RuntimeContext } from './runtimeContext';
 import { FilterBar } from './FilterBar';
 import { useViewFilters } from './useViewFilters';
 import { CommandPalette } from './CommandPalette';
 import { HOY, hubsFor } from './hubs';
+import type { Hub } from './hubs';
 import { AppLogo } from '@/components/brand/Logo';
 import { useProductText } from '@/i18n/product';
 import { useContactText } from '@/i18n/contacts';
+import { usePropertyFeedText } from '@/i18n/propertyFeed';
+import { isProperty } from '@/lib/crm/propertyFeed';
 import { contactStage } from '@/lib/crm/contactLifecycle';
 import type { ContactStage } from '@/lib/crm/contactLifecycle';
 
-// The app itself. No sidebar: the sections are grouped in a few hubs
-// (Hoy, Clientes, Inmuebles, Turístico, Empresa) in a floating bar at the
-// top, which becomes a dock at the bottom on a phone. Each hub shows its
-// sections as tabs. Records open in a side drawer so you never lose your
-// place, and the tools that change the app (pieces, the AI, history) sit
-// at the top right, out of the way of daily work.
+// Property workspaces use Properties/Inbox/Calendar/More; other blueprints
+// keep their existing hubs. Records open in one shared drawer. Navigation
+// becomes a bottom dock on mobile; existing views remain in secondary tabs.
 
 export interface Tool { key: string; label: string; icon: LucideIcon; onClick: () => void; badge?: string | number; active?: boolean }
 
@@ -63,6 +64,7 @@ export interface WorkspaceProps {
 
 const ICON: Record<string, LucideIcon> = { table: Table2, kanban: Columns3, calendar: CalendarDays, worklist: ListChecks, analysis: BrainCircuit, ops: LayoutDashboard, cards: LayoutGrid, timeline: CalendarRange };
 const HUB_ICON: Record<string, LucideIcon> = { hoy: Sun, clientes: Users, inmuebles: Building2, turistico: Palmtree, empresa: Briefcase };
+const PROPERTY_HUB_ICON: Record<string, LucideIcon> = { hoy: Building2, clientes: MessagesSquare, turistico: CalendarDays, empresa: MoreHorizontal };
 // Sections that get the filter bar (search, rules, sort, saved views).
 const FILTERED = new Set<string>(['table', 'kanban', 'worklist', 'calendar', 'cards']);
 const ACCENT = 'var(--crm-primary)';
@@ -81,21 +83,35 @@ const englishLabel = (key:string,label:string) => SECTION_EN[key.toLowerCase()] 
 export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecord, onDelete, onWebhook, onSyncIcal, tools = [], banner, now, className = '', appId, readOnly = false, canDelete = true }: WorkspaceProps) {
   const text = useProductText();
   const contactsText = useContactText();
+  const propertyText = usePropertyFeedText();
   const [contactFilter, setContactFilter] = useState<ContactStage | 'all'>('all');
   const onUpdate = (id: string, patch: RecordData) => { if (!readOnly) persistRecord(id, patch); };
   const sections = useMemo(() => blueprint.views.filter((v) => v.type !== 'dashboard'), [blueprint.views]);
-  const hubs = useMemo(() => hubsFor(sections), [sections]);
-  // With an operations centre first, the app opens there and it replaces «Hoy».
-  const home = sections[0]?.type === 'ops' ? sections[0].key : HOY;
+  const hasPropertyModule = blueprint.entities.some(e => isProperty(e.key));
+  const hubs = useMemo(() => {
+    if (!hasPropertyModule) return hubsFor(sections);
+    const inbox = sections.filter(v => v.entity === 'conversacion');
+    const calendar = sections.filter(v => v.type === 'calendar' || v.type === 'timeline');
+    const primary = new Set([...inbox, ...calendar].map(v => v.key));
+    const result: Hub[] = [
+      { key: 'hoy', label: 'Properties', sections: [HOY] },
+      { key: 'clientes', label: 'Inbox', sections: inbox.map(v => v.key) },
+      { key: 'turistico', label: 'Calendar', sections: calendar.map(v => v.key) },
+      { key: 'empresa', label: 'More', sections: sections.filter(v => !primary.has(v.key)).map(v => v.key) },
+    ];
+    return result.filter(h => h.sections.length);
+  }, [sections, hasPropertyModule]);
+  // Property-first home takes precedence over legacy dashboard ordering.
+  const home = !hasPropertyModule && sections[0]?.type === 'ops' ? sections[0].key : HOY;
   const [section, setSection] = useState<string>(home);
   const [recordTrail, setRecordTrail] = useState<string[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [mode, setMode] = useState<ThemeMode>(initialMode);
   const [palette, setPalette] = useState(false);
   const [matchPresentation,setMatchPresentation] = useState<'cards'|'universe'>('cards');
+  const [homeDetail,setHomeDetail] = useState<null|'deals'|'matches'|'insights'|'setup'|'overview'|'intelligence'>(null);
   const [businessMode, setBusinessMode] = useState<'real-estate' | 'holiday-rentals' | null>(() => { try { const value = localStorage.getItem(`statehubs:business-mode:${appId ?? blueprint.name}`); return value === 'real-estate' || value === 'holiday-rentals' ? value : null; } catch { return null; } });
   const chooseBusinessMode = (value: 'real-estate' | 'holiday-rentals') => { setBusinessMode(value); try { localStorage.setItem(`statehubs:business-mode:${appId ?? blueprint.name}`,value); } catch { /* Private browsing: keep the in-memory selection. */ } };
-  const hasPropertyModule = blueprint.entities.some(e=>e.key==='inmueble');
   const dark = mode === 'dark';
 
   useEffect(() => { if (section === HOY ? home !== HOY : !sections.some((v) => v.key === section)) setSection(home); }, [sections, section, home]);
@@ -107,11 +123,15 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
   const titleOf = useMemo(() => makeTitleLookup(blueprint.entities, records), [blueprint.entities, records]);
   const pending = useMemo(() => { const t = computeToday(blueprint, records, now); return t.hoy.length + t.atrasado.length; }, [blueprint, records, now]);
   const entity = view?.entity ? blueprint.entities.find((e) => e.key === view.entity) : undefined;
+  const createEntity = entity ?? (!view && hasPropertyModule ? blueprint.entities.find(e => isProperty(e.key)) : undefined);
   const filters = useViewFilters(blueprint, view && FILTERED.has(view.type) ? view : null, records, { appId, titleOf, now });
   const baseShown = filters.entity ? filters.records : records;
   const contactView = entity?.key === 'contacto_inmo';
   const shown = contactView && contactFilter !== 'all' ? baseShown.filter(r => r.entity !== 'contacto_inmo' || contactStage(r.data) === contactFilter) : baseShown;
-  const labelOf = (key: string) => (key === HOY ? 'Home' : englishLabel(key, sections.find((v) => v.key === key)?.label ?? key));
+  const labelOf = (key: string) => (key === HOY ? (hasPropertyModule ? propertyText.properties : 'Home') : englishLabel(key, sections.find((v) => v.key === key)?.label ?? key));
+  const hubLabel = (key: string, fallback: string) => hasPropertyModule
+    ? ({ hoy: propertyText.properties, clientes: propertyText.inbox, turistico: propertyText.calendar, empresa: propertyText.secondary }[key] ?? fallback)
+    : HUB_EN[key] ?? fallback;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPalette((p) => !p); } };
@@ -136,15 +156,15 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
     <nav aria-label="Hubs" className="fixed inset-x-3 bottom-3 z-30 mx-auto flex max-w-md justify-around gap-1 rounded-[22px] p-1.5 shadow-[0_16px_48px_rgba(11,16,32,.22)] md:static md:z-auto md:mx-0 md:max-w-none md:flex-col md:justify-start md:gap-2 md:rounded-none md:p-0 md:shadow-none"
       style={glass}>
       {hubs.map((h) => {
-        const Icon = HUB_ICON[h.key];
+        const Icon = hasPropertyModule ? (PROPERTY_HUB_ICON[h.key] ?? HUB_ICON[h.key]) : HUB_ICON[h.key];
         const active = h.key === hub.key;
-        const badge = h.key === 'hoy' && home === HOY && pending ? pending : undefined;
+        const badge = !hasPropertyModule && h.key === 'hoy' && home === HOY && pending ? pending : undefined;
         return (
           <button key={h.key} onClick={() => go(h.sections[0])} aria-current={active ? 'page' : undefined}
             className="relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-2 py-1.5 text-[0.72em] font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm active:scale-[.97] motion-reduce:transform-none md:min-h-11 md:flex-none md:flex-row md:gap-3 md:rounded-xl md:px-3.5 md:text-[0.95em]"
             style={active ? { background: ACCENT, color: '#fff' } : { color: 'var(--crm-muted)' }}>
             <Icon className="h-[18px] w-[18px] md:h-4 md:w-4" style={active ? { color: 'var(--crm-accent)' } : undefined} />
-            <span className="truncate">{HUB_EN[h.key] ?? h.label}</span>
+            <span className="truncate">{hubLabel(h.key, h.label)}</span>
             {badge !== undefined && <span className="absolute right-1 top-0.5 rounded-full px-1.5 text-[10px] font-semibold leading-4 text-white md:static md:leading-[18px]" style={{ background: ACCENT }}>{badge}</span>}
           </button>
         );
@@ -188,14 +208,14 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             <div className="mb-5 flex flex-wrap items-end gap-x-4 gap-y-3">
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2 text-[0.78em] font-semibold uppercase tracking-[0.16em]" style={{ color: 'var(--crm-muted)' }}>
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: ACCENT }} />{HUB_EN[hub.key] ?? hub.label}
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: ACCENT }} />{hubLabel(hub.key, hub.label)}
                 </p>
-                <h1 className="mt-1 truncate text-[1.9em] font-normal leading-tight tracking-[-0.02em] md:text-[2.8em]">{view ? englishLabel(view.key, view.label) : 'Home'}</h1>
+                <h1 className="mt-1 truncate text-[1.9em] font-normal leading-tight tracking-[-0.02em] md:text-[2.8em]">{view ? englishLabel(view.key, view.label) : labelOf(HOY)}</h1>
               </div>
-              {entity && !readOnly && (
-                <button onClick={() => create(entity.key)} className="sh-touch inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(180,22,54,.28)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(180,22,54,.32)] active:scale-[.98] motion-reduce:transform-none"
+              {createEntity && !readOnly && (
+                <button onClick={() => create(createEntity.key)} className="sh-touch inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold text-white shadow-[0_8px_24px_rgba(180,22,54,.28)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(180,22,54,.32)] active:scale-[.98] motion-reduce:transform-none"
                   style={{ background: ACCENT }}>
-                  <Plus className="h-4 w-4" /> <span className="hidden sm:inline">New: {entity.label.toLowerCase()}</span><span className="sm:hidden">New</span>
+                  <Plus className="h-4 w-4" /> {!view && hasPropertyModule ? <span>{propertyText.add}</span> : <><span className="hidden sm:inline">New: {createEntity.label.toLowerCase()}</span><span className="sm:hidden">New</span></>}
                 </button>
               )}
             </div>
@@ -224,15 +244,30 @@ export function Workspace({ blueprint, records, onCreate, onUpdate: persistRecor
             </div>}
             {contactView && !shown.some(r => r.entity === 'contacto_inmo') && <p role="status" className="mb-4 text-sm" style={{ color: 'var(--crm-muted)' }}>{contactsText.empty}</p>}
             {view && filters.entity && <div className="mb-4"><FilterBar filters={filters} records={records} titleOf={titleOf} dark={dark} /></div>}
-            {(!view || view.type === 'ops') && hasPropertyModule && <IntelligenceCommandCenter blueprint={blueprint} records={records} now={now} onOpen={(r)=>setOpenId(r.id)} onCreate={onCreate} readOnly={readOnly} />}
-            {(!view || view.type === 'ops') && hasPropertyModule && <DealMomentumBoard records={records} now={now} onOpen={(r)=>setOpenId(r.id)} />}
-            {(!view || view.type === 'ops') && hasPropertyModule && <ModulePlanner appId={appId ?? blueprint.name} />}
-            {(!view || view.type === 'ops') && hasPropertyModule && <BusinessModeCards mode={businessMode} onChoose={chooseBusinessMode} />}
-            {(!view || view.type === 'ops') && hasPropertyModule && businessMode !== 'holiday-rentals' && <div className="mb-3 flex items-center justify-end gap-2" role="group" aria-label="Opportunity display"><span className="mr-auto text-xs" style={{color:'var(--crm-muted)'}}>Match Intelligence · one engine, two views</span>{(['cards','universe'] as const).map(p=><button key={p} type="button" aria-pressed={matchPresentation===p} onClick={()=>setMatchPresentation(p)} className="rounded-full border px-3 py-1.5 text-xs font-semibold" style={{borderColor:'var(--crm-border)',background:matchPresentation===p?'var(--crm-primary)':'var(--crm-surface)',color:matchPresentation===p?'white':'var(--crm-text)'}}>{p==='cards'?'Match cards':'Opportunity universe'}</button>)}</div>}
-            {(!view || view.type === 'ops') && hasPropertyModule && businessMode !== 'holiday-rentals' && (matchPresentation==='cards'?<MatchDesk records={records} onOpen={(r)=>setOpenId(r.id)} />:<OpportunityUniverse records={records} onOpen={(r)=>setOpenId(r.id)} />)}
-            {(!view || view.type === 'ops') && <LivingWorkspace blueprint={blueprint} records={records} onOpen={(r) => setOpenId(r.id)} />}
-            {(!view || view.type === 'ops') && <OperationsDashboard blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
-            {!view && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r) => setOpenId(r.id)} />}
+            {!view && hasPropertyModule && <PropertyFeed blueprint={blueprint} appId={appId} records={records} onOpen={(r)=>setOpenId(r.id)} onDelete={onDelete} onMatch={(r)=>setOpenId(r.id)} readOnly={readOnly} canDelete={canDelete} />}
+            {!view && !hasPropertyModule && <TodayView blueprint={blueprint} records={records} now={now} onOpen={(r)=>setOpenId(r.id)} />}
+            {(!view || view.type === 'ops') && <section className="mx-auto mt-5 max-w-2xl rounded-2xl border p-4" style={{borderColor:'var(--crm-border)',background:'var(--crm-surface)'}}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div><h2 className="text-sm font-semibold">Workspace tools</h2><p className="mt-1 text-xs" style={{color:'var(--crm-muted)'}}>Everything else, in one place.</p></div>
+                <select aria-label="Workspace tool" value={homeDetail??''} onChange={e=>setHomeDetail(e.target.value as typeof homeDetail||null)} className="rounded-xl border bg-transparent px-3 py-2 text-sm" style={{borderColor:'var(--crm-border)'}}>
+                  <option value="">Choose a tool</option>
+                  {hasPropertyModule&&<option value="deals">Deals</option>}
+                  {hasPropertyModule&&<option value="matches">Matching</option>}
+                  <option value="insights">{propertyText.insights}</option>
+                  <option value="overview">{propertyText.overview}</option>
+                  {hasPropertyModule && <option value="intelligence">{propertyText.intelligence}</option>}
+                  {hasPropertyModule&&<option value="setup">Workspace settings</option>}
+                </select>
+              </div>
+              {homeDetail&&<div className="mt-4 border-t pt-4" style={{borderColor:'var(--crm-border)'}}>
+                {homeDetail==='deals'&&hasPropertyModule&&<DealMomentumBoard records={records} now={now} onOpen={(r)=>setOpenId(r.id)} />}
+                {homeDetail==='matches'&&hasPropertyModule&&(businessMode==='holiday-rentals'?<p className="text-sm" style={{color:'var(--crm-muted)'}}>Buyer matching is available in real-estate mode.</p>:<><div className="mb-3 flex gap-2">{(['cards','universe'] as const).map(p=><button key={p} type="button" aria-pressed={matchPresentation===p} onClick={()=>setMatchPresentation(p)} className="rounded-xl border px-3 py-2 text-xs" style={{borderColor:'var(--crm-border)'}}>{p==='cards'?'Matches':'Visual map'}</button>)}</div>{matchPresentation==='cards'?<MatchDesk records={records} onOpen={(r)=>setOpenId(r.id)} />:<OpportunityUniverse records={records} onOpen={(r)=>setOpenId(r.id)} />}</>)}
+                {homeDetail==='insights'&&<LivingWorkspace blueprint={blueprint} records={records} onOpen={(r)=>setOpenId(r.id)} />}
+                {homeDetail==='overview'&&<OperationsDashboard blueprint={blueprint} records={records} now={now} onOpen={(r)=>setOpenId(r.id)} />}
+                {homeDetail==='intelligence'&&hasPropertyModule&&<IntelligenceCommandCenter blueprint={blueprint} records={records} now={now} onOpen={(r)=>setOpenId(r.id)} onCreate={onCreate} readOnly={readOnly} />}
+                {homeDetail==='setup'&&hasPropertyModule&&<><BusinessModeCards mode={businessMode} onChoose={chooseBusinessMode} /><ModulePlanner appId={appId??blueprint.name} /></>}
+              </div>}
+            </section>}
             {view && view.type === 'worklist' && (
               <WorklistView blueprint={blueprint} view={view} records={shown} dark={dark} titleOf={titleOf} selectedId={openId}
                 onOpen={(r) => setOpenId(r.id)} onCreate={create} onUpdate={onUpdate} />

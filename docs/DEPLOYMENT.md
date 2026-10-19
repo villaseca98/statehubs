@@ -1,5 +1,7 @@
 # Development, verification and deployment
 
+Current live Supabase activation and remaining Vercel/email/provider requirements: [SUPABASE_ACTIVATION](SUPABASE_ACTIVATION.md). Historical audit results below are not current deployment claims.
+
 ## Local development
 
 Use `/workspace/statehubs` in the cloud checkout. Node 24.19.0 / npm 11.9.0 validated here; GitHub quality CI currently selects Node 20. No package engine pin is present. The actual Vercel Node version remains unknown; align runtimes deliberately after checking its settings/logs.
@@ -27,7 +29,7 @@ This bypasses cache ancestor ownership checks only; payload integrity checks rem
 
 ## Supabase and integrations
 
-Without VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY the app runs locally. Neither is configured here. No private credentials should ever be VITE_* values. Apply all eight migration files in timestamp order to staging first; README's initial migration alone is insufficient for the current code. Review subsequent migrations explicitly before production.
+Without VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY the app runs locally. The current cloud instance has these public bindings in ignored `.env.local`; Vercel still needs its own build-time bindings. No private credentials should ever be VITE_* values. Reconcile all 12 migration files in timestamp order; this instance has applied and verified them against the owner-supplied project. For other targets, stage first; README's initial migration alone is insufficient for the current code. Review subsequent migrations explicitly before production.
 
 Auth requires configured callback URLs/provider settings. Provider credentials belong to Edge secrets (Google, Meta/Instagram, Anthropic); see existing CLAUDE.md and integration docs for exact current names. No live provider or production project was configured by this audit. SQL changes and Edge code are not deployed by merely building the frontend.
 
@@ -45,7 +47,7 @@ Use an ephemeral PostgreSQL 16 database, never a real Supabase project for `phas
 
 The same order is encoded in `.github/workflows/tenant-security.yml`. Test only synthetic data; remove the temporary container after the run. These checks exercise real PostgreSQL policies with emulated auth/storage tables. Follow up with two real users, JWTs, signed Storage requests and each Edge action in staging before commercial rollout.
 
-## Audit execution record
+## Historical audit execution record
 
 - Initial `npm ci`: 344 packages installed reproducibly at baseline; no manifest/lock changes.
 - Before SEC-01 correction: focused address suite **12 failed / 7 passed**, demonstrating the regression.

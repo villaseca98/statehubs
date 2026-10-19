@@ -44,3 +44,7 @@ Current operational delivery and activation: [OPERATIONAL_DELIVERY](OPERATIONAL_
 D4a contact lifecycle implementation and limits: [CONTACT_LIFECYCLE](CONTACT_LIFECYCLE.md).
 
 D4b linked dossier and activity evidence: [RECORD_ACTIVITY](RECORD_ACTIVITY.md).
+
+PR #37 stabilization: property-first home, contextual gallery/leads/internal activity/linked bookings and simplified navigation now reuse existing records and services. Local verification and external activation limits are recorded in [PR37_STABILIZATION](PR37_STABILIZATION.md). No new schema or live deployment is claimed; transactional booking collision prevention and official provider Inbox remain pending.
+
+Supabase activation update: all 12 migrations and six Edge functions are deployed to the owner-supplied project. Real JWT/role/tenant/Storage tests and connected browser note persistence pass. Public email, Vercel build-time variables and live provider integrations remain external blockers; see [SUPABASE_ACTIVATION](SUPABASE_ACTIVATION.md).
